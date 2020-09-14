@@ -1,0 +1,1 @@
+from .hentai import Hentai
