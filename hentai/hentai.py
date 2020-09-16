@@ -2,14 +2,24 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
-from typing import List, Tuple, Literal
+from typing import List, Tuple
 from urllib.parse import urljoin, urlparse
 
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+
+
+@dataclass
+class Tag:
+    id: int
+    type: str
+    name: str
+    url: str
+    count: int
 
 @unique
 class Format(Enum):
@@ -84,21 +94,23 @@ class Hentai(RequestHandler):
     def upload_date(self) -> datetime:
         return datetime.fromtimestamp(self.json['upload_date'])
 
+    _tag = lambda self, type: [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in self.json['tags'] if tag['type'] == type]
+    
     @property
-    def tags(self) -> List[str]:
-        raise NotImplementedError()
+    def tags(self) -> List[Tag]:
+        return Hentai._tag(self, 'tag')
 
     @property
-    def language(self) -> List[str]:
-        raise NotImplementedError()
+    def language(self) -> List[Tag]:
+        return Hentai._tag(self, 'language')
 
     @property
-    def artist(self) -> str:
-        raise NotImplementedError()
+    def artist(self) -> List[Tag]:
+        return Hentai._tag(self, 'artist')
 
     @property
-    def category(self) -> List[str]:
-        raise NotImplementedError()
+    def category(self) -> List[Tag]:
+        return Hentai._tag(self, 'category')
 
     @property
     def num_pages(self) -> int:
@@ -120,14 +132,11 @@ class Hentai(RequestHandler):
         return int(urlparse(response.url).path[3:-1])
 
     @staticmethod
-    def get_homepage(page: int = 1, timeout: Tuple[float, float] = RequestHandler.TIMEOUT) -> List[Hentai]:
+    def get_homepage(page: int = 1, timeout: Tuple[float, float] = RequestHandler.TIMEOUT) -> List[dict]:
         response = Hentai.call_api(urljoin(Hentai.HOME, 'api/galleries/all'), timeout, params = { 'page' : page })
-        return [Hentai(response['result'][index]['id']) for index in range(len(response['result']))]
+        return response['result']
 
     @staticmethod
-    def convert2tag_name(tag_id: int) -> str:
-        raise NotImplementedError()
-
-    @staticmethod
-    def search_by_tag(tag_name: str) -> List[Hentai]:
-        raise NotImplementedError()
+    def search_by_query(query: str, timeout: Tuple[float, float] = RequestHandler.TIMEOUT) -> List[dict]:
+        response = Hentai.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), timeout, params = { 'query' : query })
+        return response['result']
