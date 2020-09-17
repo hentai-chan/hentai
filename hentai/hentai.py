@@ -39,25 +39,37 @@ class Extension(Enum):
 
 class RequestHandler(object):
     TIMEOUT = (3.05, 1)
-    # sleep time in-between failures = backoff_factor * (2 ** (total - 1))
-    retry_strategy = Retry(
-        total = 5, 
-        status_forcelist = [413, 429, 500, 502, 503, 504], 
-        backoff_factor = 1
-    )
+    TOTAL = 5
+    STATUS_FORCELIST = [413, 429, 500, 502, 503, 504]
+    BACKOFF_FACTOR = 1
 
-    assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
+    def __init__(self, 
+                 timeout: Tuple[float, float] = TIMEOUT, 
+                 total: int = TOTAL, 
+                 status_forcelist: List[int] = STATUS_FORCELIST, 
+                 backoff_factor: int = BACKOFF_FACTOR):
+        self.timeout = timeout
+        self.total = total        
+        self.status_forcelist = status_forcelist
+        self.backoff_factor = backoff_factor
 
-    session = requests.Session()
-    session.mount("https://", HTTPAdapter(max_retries = retry_strategy))
-    session.hooks['response'] = [assert_status_hook]
-    session.headers.update({
-        "User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36 Edg/85.0.564.51"
-    })
+    @property
+    def retry_strategy(self) -> Retry:
+        return Retry(self.total, self.status_forcelist, self.backoff_factor)
 
-    @staticmethod
-    def call_api(url: str, timeout: Tuple[float, float] = TIMEOUT, params: dict = {}) -> dict:
-        response = RequestHandler.session.get(url, timeout = timeout, params = params)
+    @property
+    def session(self):
+        assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
+        session = requests.Session()
+        session.mount("https://", HTTPAdapter(max_retries = self.retry_strategy))
+        session.hooks['response'] = [assert_status_hook]
+        session.headers.update({
+            "User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36 Edg/85.0.564.51"
+        })
+        return session
+    
+    def call_api(self, url: str, params: dict = {}) -> dict:
+        response = self.session.get(url, timeout = self.timeout, params = params)
         response.encoding = 'utf-8'
         return response.json()
 
@@ -66,12 +78,18 @@ class Hentai(RequestHandler):
     _URL = urljoin(HOME, '/g/')
     _API = urljoin(HOME, '/api/gallery/')
 
-    def __init__(self, id: int, timeout: Tuple[float, float] = RequestHandler.TIMEOUT):
+    def __init__(self, 
+                 id: int, 
+                 timeout: Tuple[float, float] = RequestHandler.TIMEOUT, 
+                 total: int = RequestHandler.TOTAL, 
+                 status_forcelist: List[int] = RequestHandler.STATUS_FORCELIST, 
+                 backoff_factor: int = RequestHandler.BACKOFF_FACTOR):
         self.id = id
-        self.timeout = timeout
+        super().__init__(timeout, total, status_forcelist, backoff_factor)
+        self.handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
         self.url = urljoin(Hentai._URL, str(self.id))
         self.api = urljoin(Hentai._API, str(self.id))
-        self.json = Hentai.call_api(self.api, self.timeout)
+        self.json = self.handler.call_api(self.api)
     
     @property
     def media_id(self) -> int:
@@ -127,16 +145,17 @@ class Hentai(RequestHandler):
         return [image_url(num) for num in range(1, self.num_pages + 1)] 
 
     @staticmethod
-    def get_random_id() -> int:
-        response = Hentai.session.get(urljoin(Hentai.HOME, 'random'))
+    def get_random_id(handler = RequestHandler()) -> int:
+        response = handler.session.get(urljoin(Hentai.HOME, 'random'))
         return int(urlparse(response.url).path[3:-1])
 
     @staticmethod
-    def get_homepage(page: int = 1, timeout: Tuple[float, float] = RequestHandler.TIMEOUT) -> List[dict]:
-        response = Hentai.call_api(urljoin(Hentai.HOME, 'api/galleries/all'), timeout, params = { 'page' : page })
+    def get_homepage(page: int = 1, handler = RequestHandler()) -> List[dict]:
+        response = handler.call_api(urljoin(Hentai.HOME, 'api/galleries/all'), params = { 'page' : page })
         return response['result']
 
     @staticmethod
-    def search_by_query(query: str, timeout: Tuple[float, float] = RequestHandler.TIMEOUT) -> List[dict]:
-        response = Hentai.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), timeout, params = { 'query' : query })
+    def search_by_query(query: str, page: int = 1, handler = RequestHandler()) -> List[dict]:
+        payload = { 'query' : query, 'page' : page }
+        response = handler.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), params = payload)
         return response['result']
