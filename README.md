@@ -7,6 +7,10 @@
 
 This python package implements a wrapper class around `nhentai.net`'s RESTful API.
 
+<p align="center">
+  <img height="150" style="margin-top:15px" src="./docs/hentai.svg">
+</p>
+
 ## Basic Usage
 
 This package makes it very easy to browse through [https://nhentai.net](https://nhentai.net/).
