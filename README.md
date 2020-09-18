@@ -46,7 +46,7 @@ print(doujin.title(Format.Pretty))
 # [Tag(id=3981, type='artist', name='shindol', url='/artist/shindol/', count=279)]
 print(doujin.artist)
 
-# ['dark skin', 'group', 'mmf threesome', 'story arc', 'ahegao', 'anal', ... ]
+# ['dark skin', 'group', ... ]
 print([tag.name for tag in doujin.tags])
 
 # 2016-10-18 14:28:49
@@ -59,6 +59,8 @@ print(doujin.image_urls)
 Apart from that, `Hentai` also provides a handful of miscellaneous static methods:
 
 ```python
+from hentai import Sort
+
 # recommend me something good!
 random_id = Hentai.get_random_id()
 
@@ -66,7 +68,8 @@ random_id = Hentai.get_random_id()
 print(Hentai(random_id).title())
 
 # advanced search with queries
-print([Hentai.get_title(doujin) for doujin in Hentai.search_by_query('tag:loli')])
+for doujin in Hentai.search_by_query('tag:loli', sort=Sort.PopularWeek):
+    print(Hentai.get_title(doujin))
 ```
 
 See also [https://nhentai.net/info/](https://nhentai.net/info/) for more information
