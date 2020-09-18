@@ -96,6 +96,10 @@ class Hentai(RequestHandler):
         self.json = self.handler.call_api(self.api) 
     
     @staticmethod
+    def get_id(json: dict) -> int:
+        return int(json['id'])
+
+    @staticmethod
     def get_media_id(json: dict) -> int:
         return int(json['media_id'])
 
@@ -104,7 +108,7 @@ class Hentai(RequestHandler):
         return Hentai.get_media_id(self.json)   
 
     @staticmethod
-    def get_title(json: dict, format: Format) -> str:
+    def get_title(json: dict, format: Format=Format.English) -> str:
         return json['title'].get(format.value)
 
     def title(self, format: Format=Format.English) -> str:
