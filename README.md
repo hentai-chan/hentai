@@ -1,20 +1,39 @@
-# Python Hentai API Wrapper
+<div align="center">
+  <img height="150" style="margin-top:15px" src="./docs/hentai.svg">
+</div>
 
-![CI](https://github.com/hentai-chan/hentai/workflows/CI/badge.svg)
-![PyPI](https://github.com/hentai-chan/hentai/workflows/PyPI/badge.svg)
-![Version](https://img.shields.io/pypi/v/hentai?color=blue&label=Release)
-[![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-
-This python package implements a wrapper class around `nhentai.net`'s RESTful API.
+<h1 align="center">Python Hentai API Wrapper</h1>
 
 <p align="center">
-  <img height="150" style="margin-top:15px" src="./docs/hentai.svg">
+    <a href="https://github.com/hentai-chan/hentai/actions?query=workflow%3ACI">
+        <img src="https://github.com/hentai-chan/hentai/workflows/CI/badge.svg">
+    </a>
+    <a href="https://pypi.org/project/hentai/">
+        <img src="https://github.com/hentai-chan/hentai/workflows/PyPI/badge.svg">
+    </a>
+    <img src="https://img.shields.io/pypi/v/hentai?color=blue&label=Release">
+    <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">
+        <img src="https://img.shields.io/badge/License-GPLv3-blue.svg">
+    </a>
 </p>
+
+<p align="center">
+This python package implements a wrapper class around <code>nhentai</code>'s
+RESTful API. Note that the content of this module is generally considered NSFW.
+</p>
+
+## Installation
+
+Get the most recent stable release from PyPI:
+
+```bash
+pip install hentai
+```
 
 ## Basic Usage
 
-This package makes it very easy to browse through [https://nhentai.net](https://nhentai.net/).
-It implements a flat namespace for easy access of the most common endpoints:
+`Hentai` makes it very easy to browse through [https://nhentai.net](https://nhentai.net/).
+It implements a flat namespace for easy access of all their endpoints:
 
 ```python
 from hentai import Hentai, Format
@@ -33,11 +52,11 @@ print([tag.name for tag in doujin.tags])
 # 2016-10-18 14:28:49
 print(doujin.upload_date)
 
-# ['https://i.nhentai.net/galleries/987560/1.jpg', 'https://i.nhentai.net/galleries/987560/2.jpg', ... ]
+# ['https://i.nhentai.net/galleries/987560/1.jpg', ... ]
 print(doujin.image_urls)
 ```
 
-Aside from that, this package also provides a handful of miscellaneous static method:
+Apart from that, `Hentai` also provides a handful of miscellaneous static methods:
 
 ```python
 # recommend me something good!
@@ -47,8 +66,12 @@ random_id = Hentai.get_random_id()
 print(Hentai(random_id).title())
 
 # advanced search with queries
-print(Hentai.search_by_query('tag:loli'))
+print([Hentai.get_title(doujin) for doujin in Hentai.search_by_query('tag:loli')])
 ```
 
 See also [https://nhentai.net/info/](https://nhentai.net/info/) for more information
 on search queries.
+
+## Documentation
+
+Follows soon.
