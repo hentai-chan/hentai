@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
@@ -13,6 +14,13 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 
+try:
+    assert sys.version_info.major == 3
+    assert sys.version_info.minor > 7
+except AssertionError:
+    raise RuntimeError("Hentai requires Python 3.8+!") 
+
+
 @dataclass
 class Tag:
     id: int
@@ -20,6 +28,13 @@ class Tag:
     name: str
     url: str
     count: int
+
+
+@unique
+class Sort(Enum):
+    PopularToday = 'popular-today'
+    PopularWeek = 'popular-week'
+    Popular = 'popular'
 
 
 @unique
@@ -217,8 +232,8 @@ class Hentai(RequestHandler):
         return next(Hentai.browse_homepage(page, page, handler))
 
     @staticmethod
-    def search_by_query(query: str, page: int=1, handler=RequestHandler()) -> List[dict]:
-        payload = { 'query' : query, 'page' : page }
+    def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[dict]:
+        payload = { 'query' : query, 'page' : page, 'sort': sort.value }
         response = handler.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload)
         return response['result']
 
