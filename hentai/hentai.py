@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
+from pathlib import Path
 from typing import Iterator, List, Tuple
 from urllib.parse import urljoin, urlparse
 
 import requests
-from requests.models import Response
+from requests import HTTPError
 from requests.adapters import HTTPAdapter
+from requests.models import Response
 from requests.packages.urllib3.util.retry import Retry
 
 
@@ -87,7 +90,7 @@ class RequestHandler(object):
         })
         return session
     
-    def call_api(self, url: str, params: dict={}) -> Response:
+    def call_api(self, url: str, params: dict={}, **kwargs) -> Response:
         response = self.session.get(url, timeout = self.timeout, params = params)
         response.encoding = 'utf-8'
         return response
@@ -109,7 +112,14 @@ class Hentai(RequestHandler):
         self.handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
         self.url = urljoin(Hentai._URL, str(self.id))
         self.api = urljoin(Hentai._API, str(self.id))
-        self.json = self.handler.call_api(self.api).json()
+        self.response = self.handler.call_api(self.api)
+        self.json = self.response.json()
+
+    def __str__(self) -> str:
+        return self.title()
+
+    def __repr__(self) -> str:
+        return f"ID({self.id})"
     
     @staticmethod
     def get_id(json: dict) -> int:
@@ -216,6 +226,27 @@ class Hentai(RequestHandler):
     def image_urls(self) -> List[str]:
         return Hentai.get_image_urls(self.json, self.media_id, self.num_pages)
 
+    def download(self, dest: Path=Path(os.path.expanduser("~\\Desktop"))) -> None:
+        dest = dest.joinpath(self.title(Format.Pretty))
+        dest.mkdir(parents=True, exist_ok=True)
+        for image_url in self.image_urls:
+            response = self.handler.call_api(image_url, stream=True)
+            filename = dest.joinpath(dest.joinpath(image_url).name)
+            print(filename)
+            with open(filename, mode='wb') as file_handler:
+                file_handler.write(response.content)
+
+    @staticmethod
+    def download_queue(ids: List[int], dest=os.path.expanduser("~\\Desktop")) -> None:
+        [Hentai(id).download(dest) for id in ids]
+
+    @staticmethod
+    def exists(id: int) -> bool:
+        try:
+            return RequestHandler().call_api(urljoin(Hentai._URL, str(id))).ok        
+        except HTTPError:
+            return False
+
     @staticmethod
     def get_random_id(handler=RequestHandler()) -> int:
         response = handler.session.get(urljoin(Hentai.HOME, 'random'))
@@ -234,7 +265,7 @@ class Hentai(RequestHandler):
 
     @staticmethod
     def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[dict]:
-        payload = { 'query' : query, 'page' : page, 'sort': sort.value }
+        payload = { 'query' : query, 'page' : page, 'sort' : sort.value }
         response = handler.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
         return response['result']
 
@@ -244,9 +275,3 @@ class Hentai(RequestHandler):
         response = handler.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
         for page in range(1, int(response['num_pages']) + 1):
             yield Hentai.search_by_query(query, page, handler)
-
-    def __str__(self) -> str:
-        return self.title()
-
-    def __repr__(self) -> str:
-        return f"ID({self.id})"
