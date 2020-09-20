@@ -1,5 +1,5 @@
 <div align="center">
-  <img height="150" style="margin-top:15px" src="./docs/hentai.svg">
+  <img height="150" style="margin-top:15px" src="https://raw.githubusercontent.com/hentai-chan/hentai/master/docs/hentai.svg">
 </div>
 
 <h1 align="center">Python Hentai API Wrapper</h1>
