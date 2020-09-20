@@ -1,1 +1,3 @@
-from .hentai import Hentai
+from .hentai import Hentai, Format, Sort, RequestHandler
+
+__version__ = "1.0a"
