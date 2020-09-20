@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime
 from itertools import chain
+from random import choices
 
 import requests
 
@@ -94,11 +95,11 @@ class TestHentai(unittest.TestCase):
         self.assertLessEqual(26671, self.test_case4.num_favorites, msg=str(self.test_case4))
 
     def test_image_urls(self):
-        expected1 = self.test_case1.image_urls[-5:]
-        expected2 = self.test_case2.image_urls[-5:]
-        expected3 = self.test_case3.image_urls[-5:]
-        expected4 = self.test_case4.image_urls[-5:]
-        for image_url in chain(expected1, expected2, expected3, expected4):
+        choice1 = choices(self.test_case1.image_urls, k=5)
+        choice2 = choices(self.test_case2.image_urls, k=5)
+        choice3 = choices(self.test_case3.image_urls, k=5)
+        choice4 = choices(self.test_case4.image_urls, k=5)
+        for image_url in chain(choice1, choice2, choice3, choice4):
             response = requests.get(image_url)
             self.assertTrue(response.ok, msg=f"Failing URL: {image_url}")
 
