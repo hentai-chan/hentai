@@ -10,6 +10,7 @@ from typing import Iterator, List, Tuple
 from urllib.parse import urljoin, urlparse
 
 import requests
+from requests.models import Response
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
@@ -86,10 +87,10 @@ class RequestHandler(object):
         })
         return session
     
-    def call_api(self, url: str, params: dict={}) -> dict:
+    def call_api(self, url: str, params: dict={}) -> Response:
         response = self.session.get(url, timeout = self.timeout, params = params)
         response.encoding = 'utf-8'
-        return response.json()
+        return response
 
 
 class Hentai(RequestHandler):
@@ -108,7 +109,7 @@ class Hentai(RequestHandler):
         self.handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
         self.url = urljoin(Hentai._URL, str(self.id))
         self.api = urljoin(Hentai._API, str(self.id))
-        self.json = self.handler.call_api(self.api) 
+        self.json = self.handler.call_api(self.api).json()
     
     @staticmethod
     def get_id(json: dict) -> int:
@@ -145,7 +146,7 @@ class Hentai(RequestHandler):
 
     @property
     def thumbnail(self):
-        return Hentai.get_cover(self.json, self.media_id)
+        return Hentai.get_thumbnail(self.json, self.media_id)
 
     @staticmethod
     def get_upload_date(json: dict) -> datetime:
@@ -208,7 +209,7 @@ class Hentai(RequestHandler):
     @staticmethod
     def get_image_urls(json: dict, media_id: int, num_pages: int) -> List[str]:
         extension = lambda num: Extension.convert(json['images']['pages'][num]['t'])
-        image_url = lambda num: f"https://i.nhentai.net/galleries/{media_id}/{num}.{extension(num-1)}"
+        image_url = lambda num: f"https://i.nhentai.net/galleries/{media_id}/{num}.{extension(num - 1)}"
         return [image_url(num) for num in range(1, num_pages + 1)] 
 
     @property
@@ -224,7 +225,7 @@ class Hentai(RequestHandler):
     def browse_homepage(start_page: int, end_page: int, handler=RequestHandler()) -> Iterator[List[dict]]:
         for page in range(start_page, end_page + 1):
             payload = { 'page' : page }
-            response = handler.call_api(urljoin(Hentai.HOME, 'api/galleries/all'), params=payload)
+            response = handler.call_api(urljoin(Hentai.HOME, 'api/galleries/all'), params=payload).json()
             yield response['result']
 
     @staticmethod
@@ -234,12 +235,18 @@ class Hentai(RequestHandler):
     @staticmethod
     def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[dict]:
         payload = { 'query' : query, 'page' : page, 'sort': sort.value }
-        response = handler.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload)
+        response = handler.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
         return response['result']
 
     @staticmethod
     def search_all_by_query(query: str, handler=RequestHandler()) -> Iterator[List[dict]]:
         payload = { 'query' : query, 'page' : 1 }
-        response = handler.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload)
+        response = handler.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
         for page in range(1, int(response['num_pages']) + 1):
             yield Hentai.search_by_query(query, page, handler)
+
+    def __str__(self) -> str:
+        return self.title()
+
+    def __repr__(self) -> str:
+        return f"ID({self.id})"
