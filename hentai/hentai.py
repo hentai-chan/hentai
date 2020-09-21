@@ -232,7 +232,6 @@ class Hentai(RequestHandler):
         for image_url in self.image_urls:
             response = self.handler.call_api(image_url, stream=True)
             filename = dest.joinpath(dest.joinpath(image_url).name)
-            print(filename)
             with open(filename, mode='wb') as file_handler:
                 file_handler.write(response.content)
 
