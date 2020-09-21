@@ -1,3 +1,4 @@
+import sys
 import unittest
 from datetime import datetime
 from itertools import chain
@@ -102,6 +103,14 @@ class TestHentai(unittest.TestCase):
         for image_url in chain(choice1, choice2, choice3, choice4):
             response = requests.get(image_url)
             self.assertTrue(response.ok, msg=f"Failing URL: {image_url}")
+
+    def test_exists(self):
+        self.assertTrue(Hentai.exists(self.test_case1.id), msg=str(self.test_case1))
+        self.assertTrue(Hentai.exists(self.test_case2.id), msg=str(self.test_case2))
+        self.assertTrue(Hentai.exists(self.test_case3.id), msg=str(self.test_case3))
+        self.assertTrue(Hentai.exists(self.test_case4.id), msg=str(self.test_case4))
+        self.assertFalse(Hentai.exists(sys.maxsize), msg=f"Should have failed:{sys.maxsize}")
+        self.assertFalse(Hentai.exists(-69), msg=f"Should have failed:{-69}")    
 
     def test_random_id(self):
         random_id = Hentai.get_random_id()
