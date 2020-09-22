@@ -1,5 +1,5 @@
-import sys
 import json
+import sys
 import unittest
 from datetime import datetime
 from itertools import chain
@@ -61,11 +61,10 @@ class TestHentai(unittest.TestCase):
         self.assertEqual(Hentai.get_thumbnail(self.test_reference4), self.test_response4.thumbnail, msg=str(self.test_response4))
 
     def test_upload_date(self):
-        format = "%Y/%m/%d"
-        self.assertEqual(Hentai.get_upload_date(self.test_reference1).strftime(format), self.test_response1.upload_date.strftime(format), msg=str(self.test_response1))
-        self.assertEqual(Hentai.get_upload_date(self.test_reference2).strftime(format), self.test_response2.upload_date.strftime(format), msg=str(self.test_response2))
-        self.assertEqual(Hentai.get_upload_date(self.test_reference3).strftime(format), self.test_response3.upload_date.strftime(format), msg=str(self.test_response3))
-        self.assertEqual(Hentai.get_upload_date(self.test_reference4).strftime(format), self.test_response4.upload_date.strftime(format), msg=str(self.test_response4))
+        self.assertEqual(Hentai.get_upload_date(self.test_reference1), self.test_response1.upload_date, msg=str(self.test_response1))
+        self.assertEqual(Hentai.get_upload_date(self.test_reference2), self.test_response2.upload_date, msg=str(self.test_response2))
+        self.assertEqual(Hentai.get_upload_date(self.test_reference3), self.test_response3.upload_date, msg=str(self.test_response3))
+        self.assertEqual(Hentai.get_upload_date(self.test_reference4), self.test_response4.upload_date, msg=str(self.test_response4))
 
     def test_tags(self):
         # out of sync error candidate
