@@ -269,8 +269,8 @@ class Hentai(RequestHandler):
         return response['result']
 
     @staticmethod
-    def search_all_by_query(query: str, handler=RequestHandler()) -> Iterator[List[dict]]:
+    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler()) -> Iterator[List[dict]]:
         payload = { 'query' : query, 'page' : 1 }
         response = handler.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
         for page in range(1, int(response['num_pages']) + 1):
-            yield Hentai.search_by_query(query, page, handler)
+            yield Hentai.search_by_query(query, page, sort, handler)
