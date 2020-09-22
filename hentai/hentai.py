@@ -141,22 +141,22 @@ class Hentai(RequestHandler):
         return Hentai.get_title(self.json, format)
 
     @staticmethod
-    def get_cover(json: dict, media_id: int) -> str:
+    def get_cover(json: dict) -> str:
         cover_ext = Extension.convert(json['images']['cover']['t'])
-        return f"https://t.nhentai.net/galleries/{media_id}/cover.{cover_ext}"
+        return f"https://t.nhentai.net/galleries/{Hentai.get_media_id(json)}/cover.{cover_ext}"
 
     @property
     def cover(self) -> str:
-        return Hentai.get_cover(self.json, self.media_id)
+        return Hentai.get_cover(self.json)
 
     @staticmethod
-    def get_thumbnail(json: dict, media_id: int) -> str:
+    def get_thumbnail(json: dict) -> str:
         thumb_ext = Extension.convert(json['images']['thumbnail']['t'])
-        return f"https://t.nhentai.net/galleries/{media_id}/thumb.{thumb_ext}"
+        return f"https://t.nhentai.net/galleries/{Hentai.get_media_id(json)}/thumb.{thumb_ext}"
 
     @property
     def thumbnail(self):
-        return Hentai.get_thumbnail(self.json, self.media_id)
+        return Hentai.get_thumbnail(self.json)
 
     @staticmethod
     def get_upload_date(json: dict) -> datetime:
@@ -217,14 +217,14 @@ class Hentai(RequestHandler):
         return Hentai.get_num_favorites(self.json)
 
     @staticmethod
-    def get_image_urls(json: dict, media_id: int, num_pages: int) -> List[str]:
+    def get_image_urls(json: dict) -> List[str]:
         extension = lambda num: Extension.convert(json['images']['pages'][num]['t'])
-        image_url = lambda num: f"https://i.nhentai.net/galleries/{media_id}/{num}.{extension(num - 1)}"
-        return [image_url(num) for num in range(1, num_pages + 1)] 
+        image_url = lambda num: f"https://i.nhentai.net/galleries/{Hentai.get_media_id(json)}/{num}.{extension(num - 1)}"
+        return [image_url(num) for num in range(1, Hentai.get_num_pages(json) + 1)] 
 
     @property
     def image_urls(self) -> List[str]:
-        return Hentai.get_image_urls(self.json, self.media_id, self.num_pages)
+        return Hentai.get_image_urls(self.json)
 
     def download(self, dest: Path=Path(os.path.expanduser("~\\Desktop"))) -> None:
         dest = dest.joinpath(self.title(Format.Pretty))
