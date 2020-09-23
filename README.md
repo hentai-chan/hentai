@@ -77,4 +77,10 @@ on search queries.
 
 ## Documentation
 
-Follows soon.
+I know this is important. I will be working on automating this in a timely manner.
+Stay tuned!
+
+## Get In Touch
+
+You can reach me at [dev.hentai-chan@outlook.com](mailto:dev.hentai-chan@outlook.com)
+for private questions and inquires that don't belong to the issue tab.
