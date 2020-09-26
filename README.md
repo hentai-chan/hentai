@@ -12,6 +12,7 @@
         <img src="https://github.com/hentai-chan/hentai/workflows/PyPI/badge.svg">
     </a>
     <img src="https://img.shields.io/pypi/v/hentai?color=blue&label=Release">
+    <img src="https://img.shields.io/badge/Python-3.7%20%7C%203.8-blue">
     <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">
         <img src="https://img.shields.io/badge/License-GPLv3-blue.svg">
     </a>
@@ -78,7 +79,8 @@ on search queries.
 ## Documentation
 
 I know this is important. I will be working on automating this in a timely manner.
-Stay tuned!
+Stay tuned! In the mean time, use the [wiki](https://github.com/hentai-chan/hentai/wiki)
+as a first point of reference.
 
 ## Get In Touch
 
