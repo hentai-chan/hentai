@@ -12,7 +12,7 @@ from typing import Iterator, List, Tuple
 from urllib.parse import urljoin, urlparse
 
 import requests
-from requests import HTTPError
+from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
 from requests.models import Response
 from requests.packages.urllib3.util.retry import Retry
@@ -20,9 +20,9 @@ from requests.packages.urllib3.util.retry import Retry
 
 try:
     assert sys.version_info.major == 3
-    assert sys.version_info.minor > 7
+    assert sys.version_info.minor >= 7
 except AssertionError:
-    raise RuntimeError("Hentai requires Python 3.8+!") 
+    raise RuntimeError("Hentai requires Python 3.7+!") 
 
 
 @dataclass
@@ -33,12 +33,48 @@ class Tag:
     url: str
     count: int
 
+    @staticmethod
+    def get_ids(tags: List[Tag]) -> List[int]:
+        return [tag.id for tag in tags]
+
+    @staticmethod
+    def get_types(tags: List[Tag]) -> List[str]:
+        return [tag.type for tag in tags]
+
+    @staticmethod
+    def get_names(tags: List[Tag]) -> List[str]:
+        return [tag.name for tag in tags]
+
+    @staticmethod
+    def get_urls(tags: List[Tag]) -> List[str]:
+        return [tag.url for tag in tags]
+
+    @staticmethod
+    def get_counts(tags: List[Tag]) -> List[int]:
+        return [tag.count for tag in tags]
+
+
+@dataclass
+class Page:
+    url: str
+    ext: str
+    width: int
+    height: int
+
+    @property
+    def filename(self) -> Path:
+        num = Path(urlparse(self.url).path).name
+        return Path(num).with_suffix(self.ext)
+
 
 @unique
 class Sort(Enum):
-    PopularToday = 'popular-today'
+    PopularYear = 'popular-year'
+    PopularMonth = 'popular-month'
     PopularWeek = 'popular-week'
+    PopularToday = 'popular-today'
     Popular = 'popular'
+    Date = 'date'
 
 
 @unique
@@ -56,7 +92,7 @@ class Extension(Enum):
 
     @classmethod
     def convert(cls, key: str) -> str:
-        return cls(key).name.lower()
+        return f".{cls(key).name.lower()}"
 
 
 class RequestHandler(object):
@@ -80,7 +116,7 @@ class RequestHandler(object):
         return Retry(self.total, self.status_forcelist, self.backoff_factor)
 
     @property
-    def session(self):
+    def session(self) -> Session:
         assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
         session = requests.Session()
         session.mount("https://", HTTPAdapter(max_retries = self.retry_strategy))
@@ -143,7 +179,7 @@ class Hentai(RequestHandler):
     @staticmethod
     def get_cover(json: dict) -> str:
         cover_ext = Extension.convert(json['images']['cover']['t'])
-        return f"https://t.nhentai.net/galleries/{Hentai.get_media_id(json)}/cover.{cover_ext}"
+        return f"https://t.nhentai.net/galleries/{Hentai.get_media_id(json)}/cover{cover_ext}"
 
     @property
     def cover(self) -> str:
@@ -152,7 +188,7 @@ class Hentai(RequestHandler):
     @staticmethod
     def get_thumbnail(json: dict) -> str:
         thumb_ext = Extension.convert(json['images']['thumbnail']['t'])
-        return f"https://t.nhentai.net/galleries/{Hentai.get_media_id(json)}/thumb.{thumb_ext}"
+        return f"https://t.nhentai.net/galleries/{Hentai.get_media_id(json)}/thumb{thumb_ext}"
 
     @property
     def thumbnail(self):
@@ -169,12 +205,12 @@ class Hentai(RequestHandler):
     _tag = lambda json, type: [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type]
     
     @staticmethod
-    def get_tags(json: dict) -> List[Tag]:
+    def get_tag(json: dict) -> List[Tag]:
         return Hentai._tag(json, 'tag')
 
     @property
-    def tags(self) -> List[Tag]:
-        return Hentai.get_tags(self.json)
+    def tag(self) -> List[Tag]:
+        return Hentai.get_tag(self.json)
 
     @staticmethod
     def get_language(json: dict) -> List[Tag]:
@@ -217,10 +253,19 @@ class Hentai(RequestHandler):
         return Hentai.get_num_favorites(self.json)
 
     @staticmethod
+    def get_pages(json: dict) -> List[Page]:
+        pages = json['images']['pages']
+        extension = lambda num: Extension.convert(pages[num]['t'])
+        image_url = lambda num: f"https://i.nhentai.net/galleries/{Hentai.get_media_id(json)}/{num}{extension(num - 1)}"
+        return [Page(image_url(num), Extension.convert(_['t']), _['w'], _['h']) for num, _ in enumerate(pages)]
+
+    @property
+    def pages(self) -> List[Page]:
+        return Hentai.get_pages(self.json)
+
+    @staticmethod
     def get_image_urls(json: dict) -> List[str]:
-        extension = lambda num: Extension.convert(json['images']['pages'][num]['t'])
-        image_url = lambda num: f"https://i.nhentai.net/galleries/{Hentai.get_media_id(json)}/{num}.{extension(num - 1)}"
-        return [image_url(num) for num in range(1, Hentai.get_num_pages(json) + 1)] 
+        return [image.url for image in Hentai.get_pages(json)]
 
     @property
     def image_urls(self) -> List[str]:
