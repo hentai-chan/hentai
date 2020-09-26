@@ -257,7 +257,7 @@ class Hentai(RequestHandler):
         pages = json['images']['pages']
         extension = lambda num: Extension.convert(pages[num]['t'])
         image_url = lambda num: f"https://i.nhentai.net/galleries/{Hentai.get_media_id(json)}/{num}{extension(num - 1)}"
-        return [Page(image_url(num), Extension.convert(_['t']), _['w'], _['h']) for num, _ in enumerate(pages)]
+        return [Page(image_url(num + 1), Extension.convert(_['t']), _['w'], _['h']) for num, _ in enumerate(pages)]
 
     @property
     def pages(self) -> List[Page]:
