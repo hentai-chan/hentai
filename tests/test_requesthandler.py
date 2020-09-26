@@ -7,7 +7,7 @@ class TestRequestHandler(unittest.TestCase):
 
     def test_call_api(self):
         response = RequestHandler().call_api(url="https://nhentai.net/api/galleries/all")
-        self.assertTrue(response.status_code)
+        self.assertTrue(response.ok)
         
 
 if __name__ == '__main__':

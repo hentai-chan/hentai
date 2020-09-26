@@ -68,10 +68,10 @@ class TestHentai(unittest.TestCase):
 
     def test_tags(self):
         # out of sync error candidate
-        self.assertEqual(Hentai.get_tags(self.test_reference1), self.test_response1.tags, msg=str(self.test_response1))
-        self.assertEqual(Hentai.get_tags(self.test_reference2), self.test_response2.tags, msg=str(self.test_response2))
-        self.assertEqual(Hentai.get_tags(self.test_reference3), self.test_response3.tags, msg=str(self.test_response3))
-        self.assertEqual(Hentai.get_tags(self.test_reference4), self.test_response4.tags, msg=str(self.test_response4))
+        self.assertEqual(Hentai.get_tag(self.test_reference1), self.test_response1.tag, msg=str(self.test_response1))
+        self.assertEqual(Hentai.get_tag(self.test_reference2), self.test_response2.tag, msg=str(self.test_response2))
+        self.assertEqual(Hentai.get_tag(self.test_reference3), self.test_response3.tag, msg=str(self.test_response3))
+        self.assertEqual(Hentai.get_tag(self.test_reference4), self.test_response4.tag, msg=str(self.test_response4))
 
     def test_language(self):
         self.assertEqual(Hentai.get_language(self.test_reference1), self.test_response1.language, msg=str(self.test_response1))
