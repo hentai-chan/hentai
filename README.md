@@ -48,7 +48,7 @@ print(doujin.title(Format.Pretty))
 print(doujin.artist)
 
 # ['dark skin', 'group', ... ]
-print([tag.name for tag in doujin.tags])
+print([tag.name for tag in doujin.tag])
 
 # 2016-10-18 14:28:49
 print(doujin.upload_date)
