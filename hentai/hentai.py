@@ -28,7 +28,7 @@ except AssertionError:
 @dataclass
 class Tag:
     """
-    A data class that bundles related `Tag` properties.
+    A data class that bundles related `Tag` properties and useful helper methods.
     """
     id: int
     type: str
@@ -37,39 +37,85 @@ class Tag:
     count: int
 
     @staticmethod
-    def get_ids(tags: List[Tag]) -> List[int]:
+    def get_ids(tags: List[Tag]) -> int or List[int]:
         """
-        Return all IDs of a list of `Tag` objects.
+        Return a list of IDs corresponding to the passed Tag objects.
+        
+        Example:
+        ```python
+        >>> from hentai import Hentai, Tag
+        >>> doujin = Hentai(177013)
+        >>> Tag.get_ids(doujin.artist)
+        3981
+        ```
         """
-        return [tag.id for tag in tags]
+        ids = [tag.id for tag in tags]
+        return ids[0] if len(ids) == 1 else ids
 
     @staticmethod
-    def get_types(tags: List[Tag]) -> List[str]:
+    def get_types(tags: List[Tag]) -> str or List[str]:
         """
-        Return all types of a list of `Tag` objects.
+        Return a list of types corresponding to the passed Tag objects.
+
+        Example:
+        ```python
+        >>> from hentai import Hentai, Tag
+        >>> doujin = Hentai(256045)
+        >>> Tag.get_types(doujin.artist)
+        artist
+        ```
         """
-        return [tag.type for tag in tags]
+        types = [tag.type for tag in tags]
+        return types[0] if len(types) == 1 else types 
 
     @staticmethod
-    def get_names(tags: List[Tag]) -> List[str]:
+    def get_names(tags: List[Tag]) -> str or List[str]:
         """
-        Return all names of a list of `Tag` objects.
+        Return a list of capitalized names corresponding to the passed Tag objects.
+
+        Example:
+        ```python
+        >>> from hentai import Hentai, Tag
+        >>> doujin = Hentai(256045)
+        >>> Tag.get_names(doujin.artist)
+        Shindol
+        ```
         """
-        return [tag.name for tag in tags]
+        capitalize_all = lambda sequence: ' '.join([word.capitalize() for word in sequence.split(' ')])
+        artists = [capitalize_all(tag.name) for tag in tags]
+        return artists[0] if len(artists) == 1 else artists
 
     @staticmethod
-    def get_urls(tags: List[Tag]) -> List[str]:
+    def get_urls(tags: List[Tag]) -> str or List[str]:
         """
-        Return all URLs of a list of `Tag` objects.
+        Return a list of URLs corresponding to the passed Tag objects.
+        
+        Example:
+        ```python
+        >>> from hentai import Hentai, Tag
+        >>> doujin = Hentai(256045)
+        >>> Tag.get_urls(doujin.artist)
+        /artist/shindol/
+        ```
         """
-        return [tag.url for tag in tags]
+        urls = [tag.url for tag in tags]
+        return urls[0] if len(urls) == 1 else urls
 
     @staticmethod
-    def get_counts(tags: List[Tag]) -> List[int]:
+    def get_counts(tags: List[Tag]) -> int or List[int]:
         """
-        Return all counts (of occurrences on `nhentai.net`) of a list of `Tag` objects.
+        Return a list of counts (of occurrences) corresponding to the passed Tag objects.
+
+        Example:
+        ```python
+        >>> from hentai import Hentai, Tag
+        >>> doujin = Hentai(256045)
+        >>> Tag.get_urls(doujin.artist)
+        12
+        ```
         """
-        return [tag.count for tag in tags]
+        counts = [tag.count for tag in tags]
+        return counts[0] if len(counts) == 1 else counts
 
 
 @dataclass
@@ -85,7 +131,14 @@ class Page:
     @property
     def filename(self) -> Path:
         """
-        Return the file name for this `Page`.
+        Return the file name for this `Page` as Path object.
+
+        Example:
+        ```python
+        >>> from hentai import Hentai
+        >>> doujin = Hentai(177013)
+        >>> [page.filename for page in doujin.pages]
+        [WindowsPath('1.jpg'), WindowsPath('2.jpg'), ...]
         """
         num = Path(urlparse(self.url).path).name
         return Path(num).with_suffix(self.ext)
