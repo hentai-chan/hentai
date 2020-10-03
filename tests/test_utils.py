@@ -19,7 +19,8 @@ class TestUtils(unittest.TestCase):
     
     @classmethod
     def tearDownClass(cls):
-        remove_file = lambda file: Path(file).unlink(missing_ok=True)
+        # missing_ok=True is only available in python 3.8+
+        remove_file = lambda file: Path(file).unlink()
         remove_dir = lambda dir: shutil.rmtree(dir, ignore_errors=True)
 
         remove_file(cls.tiny_evil_file)
