@@ -1,0 +1,97 @@
+from hentai.hentai import Sort
+import json
+import random
+import shutil
+import unittest
+from pathlib import Path
+from urllib.parse import urljoin
+
+import requests
+from hentai import Format, Hentai, Option, Utils
+
+
+class TestUtils(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tiny_evil = Hentai(269582)
+        cls.tiny_evil_file = Path(f"{cls.tiny_evil.title(Format.Pretty)}.json")
+        cls.tiny_evil_dir = Path(cls.tiny_evil.title(Format.Pretty))
+    
+    @classmethod
+    def tearDownClass(cls):
+        remove_file = lambda file: Path(file).unlink(missing_ok=True)
+        remove_dir = lambda dir: shutil.rmtree(dir, ignore_errors=True)
+
+        remove_file(cls.tiny_evil_file)
+        remove_dir(cls.tiny_evil_dir)
+    
+    def test_random_id(self):
+        print("Setting make_request flag to 'False'")
+        random_id = Utils.get_random_id(make_request=False)
+        response = requests.get(urljoin(Hentai._URL, str(random_id)))
+        self.assertTrue(response.ok, msg=f"Failing ID: {random_id}. Failing URL: {response.url}")
+
+    def test_random_hentai(self):
+        print("Setting make_request flag to 'False'")
+        random_hentai = Utils.get_random_hentai(make_request=False)
+        response = requests.get(random_hentai.url)
+        self.assertTrue(response.ok, msg=f"Failing ID: {random_hentai.id}. Failing URL: {response.url}")
+
+    def test_download_queue(self):
+        Utils.download_queue([self.tiny_evil.id])
+        self.assertTrue(self.tiny_evil_dir.is_dir())
+
+    def test_get_homepage(self):
+        homepage = Utils.get_homepage()
+        for doujin in homepage:
+            self.assertIsNotNone(doujin, msg="Result should not be 'None'.")
+            self.assertTrue(Hentai.get_id(doujin), msg="ValueError: ID")
+            self.assertTrue(Hentai.get_title(doujin), msg="ValueError: Title")
+            self.assertTrue(Hentai.get_media_id(doujin), msg="ValueError: MediaID")
+            self.assertTrue(Hentai.get_upload_date(doujin), msg="ValueError: UploadDate")
+            self.assertTrue(Hentai.get_cover(doujin), msg="ValueError: Cover")
+            self.assertTrue(Hentai.get_thumbnail(doujin), msg="ValueError: Thumbnail")
+            self.assertTrue(Hentai.get_image_urls(doujin), msg="ValueError: ImageURLs")
+            self.assertTrue(Hentai.get_num_pages(doujin), msg="ValueError: NumberOfPages")     
+
+    def test_search_all_by_query(self):
+        popular_3d = Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek)
+        for doujin in popular_3d:
+            self.assertIsNotNone(doujin, msg="Result should not be 'None'.")
+            self.assertTrue(Hentai.get_id(doujin), msg="ValueError: ID")
+            self.assertTrue(Hentai.get_title(doujin), msg="ValueError: Title")
+            self.assertTrue(Hentai.get_media_id(doujin), msg="ValueError: MediaID")
+            self.assertTrue(Hentai.get_upload_date(doujin), msg="ValueError: UploadDate")
+            self.assertTrue(Hentai.get_cover(doujin), msg="ValueError: Cover")
+            self.assertTrue(Hentai.get_thumbnail(doujin), msg="ValueError: Thumbnail")
+            self.assertTrue(Hentai.get_image_urls(doujin), msg="ValueError: ImageURLs")
+            self.assertTrue(Hentai.get_num_pages(doujin), msg="ValueError: NumberOfPages")           
+
+    def test_export(self):
+        # case 1 selects three options at random for populating options in export
+        print(f"CASE 1: Exports '{self.tiny_evil.title(Format.Pretty)}' as {self.tiny_evil_file} to '{Path().cwd()}'")
+        random_options = random.sample([opt for opt in Option if opt.value != 'raw'], k=3)
+        print(f"CASE 1: Passing {','.join([opt.name for opt in random_options])} as options")
+        self.tiny_evil.export(self.tiny_evil_file, options=random_options)
+
+        with open(self.tiny_evil_file, mode='r', encoding='utf-8') as file_handler:
+            test_data = json.load(file_handler)['result'][0]
+            self.assertEqual(3, len(test_data.keys()), msg="Keys don't match up (expected 3)")
+            self.assertIn(random_options[0].value, test_data, msg=f"KeyError: {random_options[0].name} (Option 1)")
+            self.assertIn(random_options[1].value, test_data, msg=f"KeyError: {random_options[1].name} (Option 2)")
+            self.assertIn(random_options[2].value, test_data, msg=f"KeyError: {random_options[2].name} (Option 3)")  
+
+        # case 2 checks if three randomly selected options are in test_data
+        print(f"CASE 2: Passing all options available")
+        self.tiny_evil.export(self.tiny_evil_file)    
+
+        with open(self.tiny_evil_file, mode='r', encoding='utf-8') as file_handler:
+            test_data = json.load(file_handler)['result'][0]
+            self.assertEqual(15, len(test_data.keys()), msg="Keys don't match up (expected 15)")
+            self.assertIn(random_options[0].value, test_data, msg=f"KeyError {random_options[0].name} (Option 1)")
+            self.assertIn(random_options[1].value, test_data, msg=f"KeyError {random_options[1].name} (Option 2)")
+            self.assertIn(random_options[2].value, test_data, msg=f"KeyError {random_options[2].name} (Option 3)")
+
+
+if __name__ == '__main__':
+    unittest.main()
