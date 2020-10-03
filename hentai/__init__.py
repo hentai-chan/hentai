@@ -1,3 +1,3 @@
-from .hentai import Hentai, RequestHandler, Format, Extension, Sort, Tag, Page
+from .hentai import *
 
 __version__ = "1.2"

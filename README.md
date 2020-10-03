@@ -57,19 +57,19 @@ print(doujin.upload_date)
 print(doujin.image_urls)
 ```
 
-Apart from that, `Hentai` also provides a handful of miscellaneous static methods:
+Apart from that, the `hentai.Utils` module also provides a handful of miscellaneous
+helper methods in its utility class:
 
 ```python
-from hentai import Sort
+from hentai import Utils, Sort
+
+print(Utils.get_random_id())
 
 # recommend me something good!
-random_id = Hentai.get_random_id()
-
-# format defaults to 'English'
-print(Hentai(random_id).title())
+print(Utils.get_random_hentai())
 
 # advanced search with queries
-for doujin in Hentai.search_by_query('tag:loli', sort=Sort.PopularWeek):
+for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
     print(Hentai.get_title(doujin))
 ```
 
