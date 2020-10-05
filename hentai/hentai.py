@@ -531,7 +531,8 @@ class Hentai(RequestHandler):
             response = self.handler.call_api(image_url, stream=True)
             filename = dest.joinpath(dest.joinpath(image_url).name)
             with open(filename, mode='wb') as file_handler:
-                file_handler.write(response.content)
+                for chunk in response.iter_content(1024):
+                    file_handler.write(chunk)
 
     def export(self, filename: Path, options: List[Option]=None) -> None:
         """
@@ -617,15 +618,19 @@ class Utils(object):
         [Hentai(id).download(dest) for id in ids]
 
     @staticmethod
-    def browse_homepage(start_page: int, end_page: int, handler=RequestHandler()) -> Iterator[List[dict]]:
+    def browse_homepage(start_page: int, end_page: int, handler=RequestHandler()) -> List[dict]:
         """
         Return an iterated list of nhentai response objects that are currently 
         featured on the homepage in range of `[start_page, end_page]`.
         """
+        if start_page > end_page:
+            raise ValueError("Invalid argument passed to function (requires start_page <= end_page).")
+        data = []
         for page in range(start_page, end_page + 1):
             payload = { 'page' : page }
             response = handler.call_api(urljoin(Hentai.HOME, 'api/galleries/all'), params=payload).json()
-            yield response['result']
+            data.extend(response['result'])
+        return data
 
     @staticmethod
     def get_homepage(page: int=1, handler=RequestHandler()) -> List[dict]:
@@ -633,7 +638,7 @@ class Utils(object):
         Return an iterated list of nhentai response objects that are currently 
         featured on the homepage.
         """
-        return next(Utils.browse_homepage(page, page, handler))
+        return Utils.browse_homepage(page, page, handler)
 
     @staticmethod
     def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[dict]:
