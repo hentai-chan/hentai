@@ -1,4 +1,3 @@
-from hentai.hentai import Sort
 import json
 import random
 import shutil
@@ -7,7 +6,7 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 import requests
-from hentai import Format, Hentai, Option, Utils
+from hentai import Format, Hentai, Option, Sort, Utils
 
 
 class TestUtils(unittest.TestCase):
