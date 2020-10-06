@@ -76,11 +76,11 @@ def speedtest(ctx, threads, ping_target, save):
     # ping
     click.secho(f"Ping ({ping_target})")
     click.secho("Min\t\t", nl=False, fg='yellow')
-    click.secho(f"{res_ping.rtt_min_ms} ms")
+    click.secho(f"{res_ping.rtt_min_ms:.2f} ms")
     click.secho("Avg\t\t", nl=False, fg='yellow')
-    click.secho(f"{res_ping.rtt_avg_ms} ms")
+    click.secho(f"{res_ping.rtt_avg_ms:.2f} ms")
     click.secho("Max\t\t", nl=False, fg='yellow')
-    click.secho(f"{res_ping.rtt_max_ms} ms\n")
+    click.secho(f"{res_ping.rtt_max_ms:.2f} ms\n")
     
     # bandwidth
     click.secho(f"{session['isp']} ({session['country']})")
