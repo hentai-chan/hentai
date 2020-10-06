@@ -22,8 +22,13 @@
 
 # Python Hentai API Wrapper
 
-This python package implements a wrapper class around `nhentai`'s RESTful API.
-Note that the content of this module is generally considered NSFW.
+This python package implements a wrapper class around nhentai's RESTful API.
+Please be aware that this is not an official API, technical questions about
+nhentai.net should be redirected to
+[support@nhentai.com](mailto:support@nhentai.com).
+Further note that the content of this module is generally considered NSFW. Finally,
+I would like to comment at this point that you should under no circumstances use
+this module to make an unreasonable amount of requests in a short period of time.
 
 ## Installation
 
@@ -33,13 +38,12 @@ Get the most recent stable release from PyPI:
 pip install hentai
 ```
 
-Alternatively, if you're looking to make a 
-[contribution](https://github.com/hentai-chan/hentai/blob/dev-hentai/CONTRIBUTING.md) 
+Alternatively, if you're looking to make a
+[contribution](https://github.com/hentai-chan/hentai/blob/dev-hentai/CONTRIBUTING.md)
 fork this repository and run
 
 ```bash
 python -m venv venv/
-# if you're on linux, use 'source venv/bin/activate'
 venv/Scripts/Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements/dev.txt
@@ -50,8 +54,8 @@ release candidate.
 
 ## Basic Usage
 
-`Hentai` makes it very easy to browse through [https://nhentai.net](https://nhentai.net/).
-It implements a flat namespace for easy access of all their endpoints:
+`Hentai` makes it very easy to browse through nhentai.net. It implements a flat
+namespace for easy access of all their endpoints:
 
 ```python
 from hentai import Hentai, Format
@@ -80,7 +84,7 @@ print(doujin.image_urls)
 doujin.download()
 ```
 
-Apart from that, `hentai.Utils` also provides a handful of miscellaneous helper 
+Apart from that, `hentai.Utils` also provides a handful of miscellaneous helper
 methods:
 
 ```python
