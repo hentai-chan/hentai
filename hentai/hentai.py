@@ -30,6 +30,7 @@ from enum import Enum, unique
 from pathlib import Path
 from typing import Iterator, List, Tuple
 from urllib.parse import urljoin, urlparse
+from urllib.request import getproxies
 
 import requests
 from requests import HTTPError, Session
@@ -283,7 +284,7 @@ class RequestHandler(object):
         """
         Returns the GET request encoded in `utf-8`.
         """
-        response = self.session.get(url, timeout = self.timeout, params = params, **kwargs)
+        response = self.session.get(url, timeout = self.timeout, params = params, proxies=getproxies(), **kwargs)
         response.encoding = 'utf-8'
         return response
 
@@ -469,7 +470,7 @@ class Hentai(RequestHandler):
     @staticmethod
     def get_category(json: dict) -> List[Tag]:
         """
-        Return all tags of type category of this `Hentai` object.
+        Return all tags of type category of an nhentai response object.
         """
         return Hentai._tag(json, 'category')
 
