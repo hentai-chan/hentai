@@ -31,6 +31,14 @@ Get the most recent stable release from PyPI:
 pip install hentai
 ```
 
+Alternatively, if you're looking to make a contribution fork this repository and run
+
+```bash
+python -m venv venv/
+python -m pip install --upgrade pip
+pip install -r requirements/dev.txt
+```
+
 ## Basic Usage
 
 `Hentai` makes it very easy to browse through [https://nhentai.net](https://nhentai.net/).
