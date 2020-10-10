@@ -1,3 +1,6 @@
 -r common.txt
 click
+hentai
 pythonping
+matplotlib
+pandas
