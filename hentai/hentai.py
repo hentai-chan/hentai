@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Implements a wrapper class around nhentai's RESTful API.
@@ -280,7 +280,7 @@ class RequestHandler(object):
         })
         return session
     
-    def call_api(self, url: str, params: dict={}, **kwargs) -> Response:
+    def get(self, url: str, params: dict={}, **kwargs) -> Response:
         """
         Returns the GET request encoded in `utf-8`.
         """
@@ -322,7 +322,7 @@ class Hentai(RequestHandler):
         self.handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
         self.url = urljoin(Hentai._URL, str(self.id))
         self.api = urljoin(Hentai._API, str(self.id))
-        self.response = self.handler.call_api(self.api)
+        self.response = self.handler.get(self.api)
         self.json = self.response.json()
 
     def __str__(self) -> str:
@@ -547,7 +547,7 @@ class Hentai(RequestHandler):
         dest = dest.joinpath(self.title(Format.Pretty))
         dest.mkdir(parents=True, exist_ok=True)
         for image_url in self.image_urls:
-            response = self.handler.call_api(image_url, stream=True)
+            response = self.handler.get(image_url, stream=True)
             filename = dest.joinpath(dest.joinpath(image_url).name)
             with open(filename, mode='wb') as file_handler:
                 for chunk in response.iter_content(1024):
@@ -568,7 +568,7 @@ class Hentai(RequestHandler):
         """
         if make_request:
             try:
-                return RequestHandler().call_api(urljoin(Hentai._URL, str(id))).ok        
+                return RequestHandler().get(urljoin(Hentai._URL, str(id))).ok        
             except HTTPError:
                 return False
         else:
@@ -647,7 +647,7 @@ class Utils(object):
         data = []
         for page in range(start_page, end_page + 1):
             payload = { 'page' : page }
-            response = handler.call_api(urljoin(Hentai.HOME, 'api/galleries/all'), params=payload).json()
+            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params=payload).json()
             data.extend(response['result'])
         return data
 
@@ -666,7 +666,7 @@ class Utils(object):
         search `query` sorted by `sort`.
         """
         payload = { 'query' : query, 'page' : page, 'sort' : sort.value }
-        response = handler.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
+        response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
         return response['result']
 
     @staticmethod
@@ -688,7 +688,7 @@ class Utils(object):
         """
         data = []
         payload = { 'query' : query, 'page' : 1, 'sort' : sort.value }
-        response = handler.call_api(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
+        response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
         for page in range(1, int(response['num_pages']) + 1):
             data.extend(Utils.search_by_query(query, page, sort, handler))
         return data
