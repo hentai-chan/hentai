@@ -34,6 +34,14 @@ Commit messages that only change a few lines of code should be compressed
 into one line, else try to be more descriptive and outline the reasons
 that justify each modification.
 
+## Workflow
+
+After forking this repository you can open a new `dev-*` branch. When working in
+a team it's better to let all changes come together in a release branch, before
+they go on to `master` where they get build and deployed to PyPI.
+
+![workflow](https://z5nr5g.am.files.1drv.com/y4m2grUfT9k-D0HXiTeRqDrOcPeJBNtFceA-H-N2bSwW3lJwMoyg7aEaPoGo_O4VHUHajhZPUalxd78z6wXDrmnImCNBtxL6iCB7zcuHBT2Bo7LXoePqopC5Ikrr7BPKpIMf8y5wli4xDnzTUoTwQ5qLS_rjtrwzcfTF4zWDwpDj3ifGrft2fZ6N7xmP7yAhhWjGjjBydPiMIBkI9xhOxiCnA?width=548&height=451&cropmode=none)
+
 ## Additional Sources
 
 You may find it useful to browse through code of similar repositories.
