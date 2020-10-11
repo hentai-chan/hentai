@@ -32,7 +32,9 @@ from typing import Iterator, List, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
+import faker.providers.user_agent
 import requests
+from faker import Faker
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
 from requests.models import Response
@@ -244,6 +246,7 @@ class RequestHandler(object):
     _status_forcelist = [413, 429, 500, 502, 503, 504]
     # sleep between fails = backoff_factor * (2 ** (total - 1))
     _backoff_factor = 1
+    _fake = Faker()
 
     def __init__(self, 
                  timeout: Tuple[float, float]=_timeout, 
@@ -276,7 +279,7 @@ class RequestHandler(object):
         session.mount("https://", HTTPAdapter(max_retries = self.retry_strategy))
         session.hooks['response'] = [assert_status_hook]
         session.headers.update({
-            "User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36 Edg/85.0.564.51"
+            "User-Agent" : RequestHandler._fake.chrome(version_from=80, version_to=86, build_from=4100, build_to=4200)
         })
         return session
     
