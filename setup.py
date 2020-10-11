@@ -10,5 +10,5 @@ with open("hentai/__init__.py", encoding='utf8') as file_handler:
 setup(
     name="hentai",
     version=version,
-    install_requires=["requests"],
+    install_requires=[ "requests", "faker" ],
 )
