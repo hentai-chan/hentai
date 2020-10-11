@@ -1,8 +1,10 @@
-<div align="center">
+<p align="center">
   <img height="150" style="margin-top:15px" src="https://raw.githubusercontent.com/hentai-chan/hentai/master/docs/hentai.svg">
-</div>
+</p>
 
-<h1 align="center">Python Hentai API Wrapper</h1>
+<p align="center">
+  <i>“De gustibus non est disputandum.”</i>
+</p>
 
 <p align="center">
     <a href="https://github.com/hentai-chan/hentai/actions?query=workflow%3ACI">
@@ -18,10 +20,15 @@
     </a>
 </p>
 
-<p align="center">
-This python package implements a wrapper class around <code>nhentai</code>'s
-RESTful API. Note that the content of this module is generally considered NSFW.
-</p>
+# Python Hentai API Wrapper
+
+This python package implements a wrapper class around nhentai's RESTful API.
+Please be aware that this is not an official API, technical questions about
+nhentai.net should be redirected to
+[support@nhentai.com](mailto:support@nhentai.com).
+Further note that the content of this module is generally considered NSFW. Finally,
+I would like to comment at this point that you should under no circumstances use
+this module to make an unreasonable amount of requests in a short period of time.
 
 ## Installation
 
@@ -31,23 +38,32 @@ Get the most recent stable release from PyPI:
 pip install hentai
 ```
 
-Alternatively, if you're looking to make a contribution fork this repository and run
+Alternatively, if you're looking to make a
+[contribution](https://github.com/hentai-chan/hentai/blob/dev-hentai/CONTRIBUTING.md)
+fork this repository and run
 
 ```bash
 python -m venv venv/
+venv/Scripts/Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements/dev.txt
 ```
 
+Make sure to checkout `rec-hentai` so that your work is up-to-date with the next
+release candidate.
+
 ## Basic Usage
 
-`Hentai` makes it very easy to browse through [https://nhentai.net](https://nhentai.net/).
-It implements a flat namespace for easy access of all their endpoints:
+`Hentai` makes it very easy to browse through nhentai.net. It implements a flat
+namespace for easy access of all their endpoints:
 
 ```python
 from hentai import Hentai, Format
 
 doujin = Hentai(177013)
+
+# True
+Hentai.exists(doujin.id)
 
 # METAMORPHOSIS
 print(doujin.title(Format.Pretty))
@@ -63,10 +79,13 @@ print(doujin.upload_date)
 
 # ['https://i.nhentai.net/galleries/987560/1.jpg', ... ]
 print(doujin.image_urls)
+
+# get the source
+doujin.download()
 ```
 
-Apart from that, the `hentai.Utils` module also provides a handful of miscellaneous
-helper methods in its utility class:
+Apart from that, `hentai.Utils` also provides a handful of miscellaneous helper
+methods:
 
 ```python
 from hentai import Utils, Sort

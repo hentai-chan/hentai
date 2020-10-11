@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import configparser
 import csv
@@ -12,6 +12,8 @@ import click
 import hentai
 from hentai import Hentai
 from pythonping import ping
+import matplotlib.pyplot as plt
+import pandas as pd
 
 from speedtest import Speedtest
 
@@ -42,8 +44,31 @@ def cli(ctx):
 @click.option('--threads', type=click.INT, default=None, help="Set number of threads for this speed test.")
 @click.option('--ping-target', type=click.STRING, default='www.google.com', help="Set server as ping target.")
 @click.option('--save/--no-save', is_flag=True, default=False, help="Store speedtest result as file to disk.")
+@click.option('--plot/--no-plot', is_flag=True, default=False, help="Plot speedtest from existing test results.")
 @click.pass_context
-def speedtest(ctx, threads, ping_target, save):
+def speedtest(ctx, threads, ping_target, save, plot):
+    filename = Path(os.path.expanduser("~/Desktop")).joinpath('speedtest.json')
+
+    if plot:
+        data = pd.read_json(filename)
+        df = pd.DataFrame(data)
+        df.epos = [datetime.fromtimestamp(x).strftime("%d.%m %H:%M %p") for x in df.epos]
+
+        ax = plt.gca()   
+        ax.set_xlabel("Date")
+        ax.set_ylabel("MB/s")
+        ax.set_title(f"ISP: {df.isp[0]} ({df.country[0]})")       
+
+        df.plot(kind='line', x='epos', y='download', color='red', ax=ax, grid=True)
+        df.plot(kind='line', x='epos', y='upload', color='blue', ax=ax, grid=True)    
+
+        plt.margins(0,0)
+        plt.ylim(ymin=0, ymax=12)
+        plt.xticks(rotation=45)
+        plt.legend(['Downstream', 'Upstream'])
+        plt.show()
+        return
+
     click.echo("Initialize speed test . . .\n")
     test = Speedtest()    
     test.get_servers()
@@ -76,11 +101,11 @@ def speedtest(ctx, threads, ping_target, save):
     # ping
     click.secho(f"Ping ({ping_target})")
     click.secho("Min\t\t", nl=False, fg='yellow')
-    click.secho(f"{res_ping.rtt_min_ms} ms")
+    click.secho(f"{res_ping.rtt_min_ms:.2f} ms")
     click.secho("Avg\t\t", nl=False, fg='yellow')
-    click.secho(f"{res_ping.rtt_avg_ms} ms")
+    click.secho(f"{res_ping.rtt_avg_ms:.2f} ms")
     click.secho("Max\t\t", nl=False, fg='yellow')
-    click.secho(f"{res_ping.rtt_max_ms} ms\n")
+    click.secho(f"{res_ping.rtt_max_ms:.2f} ms\n")
     
     # bandwidth
     click.secho(f"{session['isp']} ({session['country']})")
@@ -94,7 +119,6 @@ def speedtest(ctx, threads, ping_target, save):
     click.secho(f"{28*'='}\n", fg='green')
 
     if save:
-        filename = Path(os.path.expanduser("~/Desktop")).joinpath('speedtest.json')
         data = []
         
         if os.path.isfile(filename) is False:
@@ -110,12 +134,14 @@ def speedtest(ctx, threads, ping_target, save):
                 json.dump(data, file_handler)
 
         click.echo(f"Stored test results to '{filename}'.\n")
+    
     ctx.exit()
 
 @cli.command()
 @click.option('--delay', type=click.INT, default=0, help="Set delay between GET requests in seconds.")
+@click.option('--delete-duplicates', is_flag=True, default=False, help="Remove duplicate IDs from source file.")
 @click.pass_context
-def update_ids(ctx, delay):
+def update_ids(ctx, delay, delete_duplicates):
     global id
     filename = ctx.obj['FILENAME']
     is_file = os.path.isfile(filename)
@@ -123,6 +149,19 @@ def update_ids(ctx, delay):
     if is_file is False:
         click.secho("Warning: file not found. Creating a new CSV file as replacement now.", fg='yellow')
         Path(filename).touch()
+
+    if delete_duplicates:
+        tmp_filename = './data/tmp.csv'
+        with open(filename, mode='r') as in_file, open(tmp_filename, mode='w') as out_file:
+            unique_ids = set()
+            for line in in_file:
+                if line in unique_ids: 
+                    click.secho(f"Duplicate detected: id={line}", fg='yellow')
+                    continue
+                unique_ids.add(line)
+                out_file.write(line)
+        Path(tmp_filename).replace(filename)        
+        return
 
     with open(filename, mode='r', encoding='cp932') as file_handler:
         reader = csv.reader(file_handler)
