@@ -83,9 +83,9 @@ class Tag:
         ### Example:
         ```python
         >>> from hentai import Hentai, Tag
-        >>> doujin = Hentai(256045)
+        >>> doujin = Hentai(177013)
         >>> Tag.get_types(doujin.artist)
-        artist
+        'artist'
         ```
         """
         types = [tag.type for tag in tags]
@@ -99,9 +99,9 @@ class Tag:
         ### Example:
         ```python
         >>> from hentai import Hentai, Tag
-        >>> doujin = Hentai(256045)
+        >>> doujin = Hentai(177013)
         >>> Tag.get_names(doujin.artist)
-        Shindol
+        'Shindol'
         ```
         """
         capitalize_all = lambda sequence: ' '.join([word.capitalize() for word in sequence.split(' ')])
@@ -116,9 +116,9 @@ class Tag:
         ### Example:
         ```python
         >>> from hentai import Hentai, Tag
-        >>> doujin = Hentai(256045)
+        >>> doujin = Hentai(177013)
         >>> Tag.get_urls(doujin.artist)
-        /artist/shindol/
+        '/artist/shindol/'
         ```
         """
         urls = [tag.url for tag in tags]
@@ -132,9 +132,9 @@ class Tag:
         ### Example:
         ```python
         >>> from hentai import Hentai, Tag
-        >>> doujin = Hentai(256045)
-        >>> Tag.get_urls(doujin.artist)
-        12
+        >>> doujin = Hentai(177013)
+        >>> Tag.get_counts(doujin.artist)
+        279
         ```
         """
         counts = [tag.count for tag in tags]
@@ -232,7 +232,7 @@ class Extension(Enum):
         ```python
         >>> from hentai import Extension
         >>> Extension.convert('j')
-        .jpg
+        '.jpg'
         ```
         """
         return f".{cls(key).name.lower()}"
@@ -318,7 +318,7 @@ class Hentai(RequestHandler):
         >>> from hentai import Hentai
         >>> doujin = Hentai(177013)
         >>> print(doujin)
-        [ShindoLA] METAMORPHOSIS (Complete) [English]
+        '[ShindoLA] METAMORPHOSIS (Complete) [English]'
         ```
         """
         self.id = id
@@ -599,11 +599,11 @@ class Utils(object):
 
     ### Example 1
     ```python
-    from hentai import Utils
+    >>> from hentai import Utils
     >>> random_id = Utils.get_random_id()
     >>> # the id changes after each invocation
     >>> print(random_id)
-    >>> 177013
+    177013
     ```
 
     ### Example 2
@@ -612,9 +612,9 @@ class Utils(object):
     >>> # fetches 25 responses per query
     >>> for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
     ...   print(Hentai.get_title(doujin))
-    "Ikenai Koto ja Nai kara"
-    "Onigashima Keimusho e Youkoso"
-    "Matayurushou to Hitori de Dekiru Himari-chan"
+    Ikenai Koto ja Nai kara
+    Onigashima Keimusho e Youkoso
+    Matayurushou to Hitori de Dekiru Himari-chan
     ```
     """
     @staticmethod
@@ -692,9 +692,9 @@ class Utils(object):
         >>> popular_3d = Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek)
         >>> for doujin in popular_3d:
         ...   print(Hentai.get_title(doujin, format=Format.Pretty))
-        "A Rebel's Journey:  Chang'e"
-        "COMIC KURiBERON 2019-06 Vol. 80"
-        "Mixed Wrestling Japan 2019"
+        A Rebel's Journey:  Chang'e
+        COMIC KURiBERON 2019-06 Vol. 80
+        Mixed Wrestling Japan 2019
         ```
         """
         data = []
@@ -711,7 +711,7 @@ class Utils(object):
 
         ### Example:
         ```python
-        from hentai import Utils, Sort, Option
+        >>> from hentai import Utils, Sort, Option
         >>> popular_loli = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
         >>> # filter file content using options
         >>> custom = [Option.ID, Option.Title, Option.UploadDate]
