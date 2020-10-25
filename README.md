@@ -14,7 +14,7 @@
         <img src="https://github.com/hentai-chan/hentai/workflows/PyPI/badge.svg">
     </a>
     <img src="https://img.shields.io/pypi/v/hentai?color=blue&label=Release">
-    <img src="https://img.shields.io/badge/Python-3.7%20%7C%203.8-blue">
+    <img src="https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9-blue">
     <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">
         <img src="https://img.shields.io/badge/License-GPLv3-blue.svg">
     </a>
@@ -38,6 +38,9 @@ Get the most recent stable release from PyPI:
 pip install hentai
 ```
 
+<details>
+<summary>Dev Notes for Contributors</summary>
+
 Alternatively, if you're looking to make a
 [contribution](https://github.com/hentai-chan/hentai/blob/dev-hentai/CONTRIBUTING.md)
 fork this repository and run
@@ -51,6 +54,14 @@ pip install -r requirements/dev.txt
 
 Make sure to checkout `rec-hentai` so that your work is up-to-date with the next
 release candidate.
+
+</details>
+
+## Documentation
+
+You can find the [documentation](http://hentaichan.pythonanywhere.com/projects/hentai)
+online, or use the [wiki](https://github.com/hentai-chan/hentai/wiki) to learn more
+about this module.
 
 ## Basic Usage
 
@@ -102,12 +113,6 @@ for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
 
 See also [https://nhentai.net/info/](https://nhentai.net/info/) for more information
 on search queries.
-
-## Documentation
-
-I know this is important. I will be working on automating this in a timely manner.
-Stay tuned! In the mean time, use the [wiki](https://github.com/hentai-chan/hentai/wiki)
-as a first point of reference.
 
 ## Get In Touch
 
