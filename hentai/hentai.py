@@ -386,6 +386,22 @@ class Hentai(RequestHandler):
         return Hentai.get_title(self.json, format)
 
     @staticmethod
+    def get_scanlator(json: dict) -> str:
+        """
+        Return the scanlator of an raw nhentai response object. This information
+        is often not specified by the provider.
+        """
+        return json['scanlator']
+
+    @property
+    def scanlator(self) -> str:
+        """
+        Return the scanlator of this `Hentai` object. This information is often 
+        not specified by the provider.
+        """
+        return Hentai.get_scanlator(self.json)
+
+    @staticmethod
     def get_cover(json: dict) -> str:
         """
         Return the cover URL of an raw nhentai response object.
