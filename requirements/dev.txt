@@ -1,6 +1,6 @@
 -r common.txt
-click
-hentai
-pythonping
-matplotlib
-pandas
+click==7.1.1
+hentai==2.0
+pythonping==1.0.14
+matplotlib==3.3.2
+pandas==1.1.3
