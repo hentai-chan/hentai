@@ -33,7 +33,6 @@ from typing import Iterator, List, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
-import faker.providers.user_agent
 import requests
 from faker import Faker
 from requests import HTTPError, Session
@@ -188,6 +187,7 @@ class Option(Enum):
     Raw = 'raw'
     ID = 'id'
     Title = 'title'
+    Scanlator = 'scanlator'
     URL = 'url'
     API = 'api'
     MediaID = 'media_id'
@@ -445,14 +445,14 @@ class Hentai(RequestHandler):
         """
         return Hentai.get_upload_date(self.json)
 
-    _tag = lambda json, type: [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type]
+    __tag = lambda json, type: [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type]
     
     @staticmethod
     def get_tag(json: dict) -> List[Tag]:
         """
         Return all tags of type tag of an raw nhentai response object.
         """
-        return Hentai._tag(json, 'tag')
+        return Hentai.__tag(json, 'tag')
 
     @property
     def tag(self) -> List[Tag]:
@@ -466,7 +466,7 @@ class Hentai(RequestHandler):
         """
         Return all tags of type language of an raw nhentai response object.
         """
-        return Hentai._tag(json, 'language')
+        return Hentai.__tag(json, 'language')
 
     @property
     def language(self) -> List[Tag]:
@@ -480,7 +480,7 @@ class Hentai(RequestHandler):
         """
         Return all tags of type artist of an raw nhentai response object.
         """
-        return Hentai._tag(json, 'artist')
+        return Hentai.__tag(json, 'artist')
 
     @property
     def artist(self) -> List[Tag]:
@@ -494,7 +494,7 @@ class Hentai(RequestHandler):
         """
         Return all tags of type category of an raw nhentai response object.
         """
-        return Hentai._tag(json, 'category')
+        return Hentai.__tag(json, 'category')
 
     @property
     def category(self) -> List[Tag]:
@@ -747,6 +747,8 @@ class Utils(object):
                     data['id'] = Hentai.get_id(doujin)
                 if Option.Title in options:
                     data['title'] = Hentai.get_title(doujin, format=Format.Pretty)
+                if Option.Scanlator in options:
+                    data['scanlator'] = Hentai.get_scanlator(doujin)
                 if Option.URL in options:
                     data['url'] = Hentai.get_url(doujin)
                 if Option.API in options:
