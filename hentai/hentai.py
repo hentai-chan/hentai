@@ -28,8 +28,9 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum, unique
+from importlib.resources import path as resource_path
 from pathlib import Path
-from typing import Iterator, List, Tuple
+from typing import List, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
@@ -599,11 +600,12 @@ class Hentai(RequestHandler):
             except HTTPError:
                 return False
         else:
-            with open("./data/ids.csv", mode='r', encoding='utf-8') as file_handler:
-                reader = csv.reader(file_handler)
-                for row in reader:
-                    if id == int(row[0]):
-                        return True
+            with resource_path('hentai.data', 'ids.csv') as data_path:
+                with open(data_path, mode='r', encoding='utf-8') as file_handler:
+                    reader = csv.reader(file_handler)
+                    for row in reader:
+                        if id == int(row[0]):
+                            return True
             return False
 
 
@@ -643,9 +645,10 @@ class Utils(object):
             response = handler.session.get(urljoin(Hentai.HOME, 'random'))
             return int(urlparse(response.url).path[3:-1])
         else:
-            with open("./data/ids.csv", mode='r', encoding='utf-8') as file_handler:
-                reader = csv.reader(file_handler)
-                return random.choice([int(row[0]) for row in reader])
+            with resource_path('hentai.data', 'ids.csv') as data_path:
+                with open(data_path, mode='r', encoding='utf-8') as file_handler:
+                    reader = csv.reader(file_handler)
+                    return random.choice([int(row[0]) for row in reader])
 
     @staticmethod
     def get_random_hentai(make_request: bool=True) -> Hentai:
