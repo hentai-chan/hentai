@@ -10,6 +10,7 @@
     <a href="https://github.com/hentai-chan/hentai/actions?query=workflow%3ACI">
         <img src="https://github.com/hentai-chan/hentai/workflows/CI/badge.svg">
     </a>
+    <img src="https://github.com/hentai-chan/hentai/workflows/CodeQL/badge.svg">
     <a href="https://pypi.org/project/hentai/">
         <img src="https://github.com/hentai-chan/hentai/workflows/PyPI/badge.svg">
     </a>
