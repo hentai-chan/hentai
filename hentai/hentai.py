@@ -285,7 +285,7 @@ class RequestHandler(object):
         })
         return session
     
-    def get(self, url: str, params: dict={}, **kwargs) -> Response:
+    def get(self, url: str, params: dict=None, **kwargs) -> Response:
         """
         Returns the GET request encoded in `utf-8`.
         """
@@ -306,11 +306,12 @@ class Hentai(RequestHandler):
     _API = urljoin(HOME, '/api/gallery/')
 
     def __init__(self, 
-                 id: int, 
+                 id: int=0, 
                  timeout: Tuple[float, float]=RequestHandler._timeout, 
                  total: int=RequestHandler._total, 
                  status_forcelist: List[int]=RequestHandler._status_forcelist, 
-                 backoff_factor: int=RequestHandler._backoff_factor):
+                 backoff_factor: int=RequestHandler._backoff_factor,
+                 json: dict=None):
         """
         Start a request session and parse meta data from `nhentai.net` for this `id`.
 
@@ -322,13 +323,21 @@ class Hentai(RequestHandler):
         '[ShindoLA] METAMORPHOSIS (Complete) [English]'
         ```
         """
-        self.id = id
-        super().__init__(timeout, total, status_forcelist, backoff_factor)
-        self.handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
-        self.url = urljoin(Hentai._URL, str(self.id))
-        self.api = urljoin(Hentai._API, str(self.id))
-        self.response = self.handler.get(self.api)
-        self.json = self.response.json()
+        if id and not json:
+            self.id = id
+            super().__init__(timeout, total, status_forcelist, backoff_factor)
+            self.handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
+            self.url = urljoin(Hentai._URL, str(self.id))
+            self.api = urljoin(Hentai._API, str(self.id))
+            self.response = self.handler.get(self.api)
+            self.json = self.response.json()
+        elif not id and json:
+            self.json = json
+            self.id = Hentai.get_id(self.json)
+            self.url = Hentai.get_url(self.json)
+            self.api = Hentai.get_api(self.json)
+        else:
+            raise TypeError('Define either id or json argument, but not both or none')
 
     def __str__(self) -> str:
         return self.title()
