@@ -537,7 +537,7 @@ class Utils(object):
     from hentai import Hentai, Sort, Format, Utils
     >>> # fetches 25 responses per query
     >>> for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
-    ...   print(Hentai.get_title(doujin))
+    ...   print(doujin)
     Ikenai Koto ja Nai kara
     Onigashima Keimusho e Youkoso
     Matayurushou to Hitori de Dekiru Himari-chan
@@ -575,7 +575,7 @@ class Utils(object):
         [Hentai(id).download(dest, delay) for id in ids]
 
     @staticmethod
-    def browse_homepage(start_page: int, end_page: int, handler=RequestHandler()) -> List[dict]:
+    def browse_homepage(start_page: int, end_page: int, handler=RequestHandler()) -> List[Hentai]:
         """
         Return an iterated list of raw nhentai response objects that are currently 
         featured on the homepage in range of `[start_page, end_page]`.
@@ -586,11 +586,11 @@ class Utils(object):
         for page in range(start_page, end_page + 1):
             payload = { 'page' : page }
             response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params=payload).json()
-            data.extend(response['result'])
+            data.extend([Hentai(json=raw_json) for raw_json in response['result']])
         return data
 
     @staticmethod
-    def get_homepage(page: int=1, handler=RequestHandler()) -> List[dict]:
+    def get_homepage(page: int=1, handler=RequestHandler()) -> List[Hentai]:
         """
         Return an iterated list of raw nhentai response objects that are currently 
         featured on the homepage.
@@ -598,17 +598,17 @@ class Utils(object):
         return Utils.browse_homepage(page, page, handler)
 
     @staticmethod
-    def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[dict]:
+    def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
         """
         Return a list of raw nhentai response objects on page=`page` matching this 
         search `query` sorted by `sort`.
         """
         payload = { 'query' : query, 'page' : page, 'sort' : sort.value }
         response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
-        return response['result']
+        return [Hentai(json=raw_json) for raw_json in response['result']]
 
     @staticmethod
-    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[dict]:
+    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
         """
         Return an iterated list of all raw nhentai response objects matching this 
         search `query` sorted by `sort`.
@@ -618,7 +618,7 @@ class Utils(object):
         >>> from hentai import Utils, Sort, Format
         >>> popular_3d = Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek)
         >>> for doujin in popular_3d:
-        ...   print(Hentai.get_title(doujin, format=Format.Pretty))
+        ...   print(doujin)
         A Rebel's Journey:  Chang'e
         COMIC KURiBERON 2019-06 Vol. 80
         Mixed Wrestling Japan 2019
