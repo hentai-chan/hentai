@@ -1,2 +1,2 @@
 -r common.txt
-Faker==4.0.3
+Faker==4.14.2
