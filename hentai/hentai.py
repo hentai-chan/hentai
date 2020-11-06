@@ -494,7 +494,7 @@ class Hentai(RequestHandler):
         """
         tmp = []
         tmp.append(self.json)
-        Utils.static_export(tmp, filename, options)
+        Utils.export(tmp, filename, options)
 
     @staticmethod
     def exists(id: int, make_request: bool=True) -> bool:
@@ -567,7 +567,7 @@ class Utils(object):
         return Hentai(Utils.get_random_id(make_request))
 
     @staticmethod
-    def download_queue(ids: List[int], dest: Path=Path.cwd(), delay: int=0) -> None:
+    def download(ids: List[int], dest: Path=Path.cwd(), delay: int=0) -> None:
         """
         Download all image URLs for multiple magic numbers to `dest` in newly 
         created folders. Set a `delay` between each image download in seconds.
@@ -632,7 +632,7 @@ class Utils(object):
         return data
 
     @staticmethod
-    def static_export(iterable, filename: Path, options: List[Option]=None) -> None:
+    def export(iterable, filename: Path, options: List[Option]=None) -> None:
         """
         Store user-customized data of raw nhentai response objects as a JSON file.
 
@@ -642,11 +642,11 @@ class Utils(object):
         >>> popular_loli = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
         >>> # filter file content using options
         >>> custom = [Option.ID, Option.Title, Option.UploadDate]
-        >>> Utils.static_export(popular_loli, 'popular_loli.json', options=custom)
+        >>> Utils.export(popular_loli, 'popular_loli.json', options=custom)
         ```
         """
         if options is None:
-            Utils.static_export(iterable, filename, options=[opt for opt in Option if opt.value != 'raw'])
+            Utils.export(iterable, filename, options=[opt for opt in Option if opt.value != 'raw'])
         elif Option.Raw in options:
             with open(filename, mode='w', encoding='utf-8') as file_handler:
                 json.dump(iterable, file_handler)
