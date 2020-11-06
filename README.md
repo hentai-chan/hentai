@@ -112,7 +112,13 @@ print(Utils.get_random_hentai())
 
 # advanced search with queries
 for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
-    print(Hentai.get_title(doujin))
+    print(f"{doujin} (Favorites={doujin.num_favorites})")
+
+from hentai import Option
+popular_loli = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
+# filter file content using options
+custom = [Option.ID, Option.Title, Option.UploadDate]
+Utils.static_export(popular_loli, 'popular_loli.json', options=custom)
 ```
 
 See also [https://nhentai.net/info/](https://nhentai.net/info/) for more information
