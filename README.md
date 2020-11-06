@@ -19,6 +19,9 @@
     <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">
         <img src="https://img.shields.io/badge/License-GPLv3-blue.svg">
     </a>
+    <a href="https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/hentai-chan/hentai.git">
+        <img src="https://archive.softwareheritage.org/badge/origin/https://github.com/hentai-chan/hentai.git/">
+    </a>
 </p>
 
 # Python Hentai API Wrapper
