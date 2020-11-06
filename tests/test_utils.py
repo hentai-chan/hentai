@@ -3,6 +3,7 @@ import random
 import shutil
 import unittest
 from pathlib import Path
+from unittest.case import doModuleCleanups
 from urllib.parse import urljoin
 
 import requests
@@ -44,28 +45,28 @@ class TestUtils(unittest.TestCase):
     def test_get_homepage(self):
         homepage = Utils.get_homepage()
         for doujin in homepage:
-            self.assertIsNotNone(doujin, msg="Result should not be 'None'.")
-            self.assertTrue(Hentai.get_id(doujin), msg="ValueError: ID")
-            self.assertTrue(Hentai.get_title(doujin), msg="ValueError: Title")
-            self.assertTrue(Hentai.get_media_id(doujin), msg="ValueError: MediaID")
-            self.assertTrue(Hentai.get_upload_date(doujin), msg="ValueError: UploadDate")
-            self.assertTrue(Hentai.get_cover(doujin), msg="ValueError: Cover")
-            self.assertTrue(Hentai.get_thumbnail(doujin), msg="ValueError: Thumbnail")
-            self.assertTrue(Hentai.get_image_urls(doujin), msg="ValueError: ImageURLs")
-            self.assertTrue(Hentai.get_num_pages(doujin), msg="ValueError: NumberOfPages")     
+            self.assertIsNotNone(doujin.json, msg="Result should not be 'None'.")
+            self.assertTrue(doujin.id, msg="ValueError: ID")
+            self.assertTrue(doujin.title(), msg="ValueError: Title")
+            self.assertTrue(doujin.media_id, msg="ValueError: MediaID")
+            self.assertTrue(doujin.upload_date, msg="ValueError: UploadDate")
+            self.assertTrue(doujin.cover, msg="ValueError: Cover")
+            self.assertTrue(doujin.thumbnail, msg="ValueError: Thumbnail")
+            self.assertTrue(doujin.image_urls, msg="ValueError: ImageURLs")
+            self.assertTrue(doujin.num_pages, msg="ValueError: NumberOfPages")     
 
     def test_search_all_by_query(self):
         popular_3d = Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek)
         for doujin in popular_3d:
-            self.assertIsNotNone(doujin, msg="Result should not be 'None'.")
-            self.assertTrue(Hentai.get_id(doujin), msg="ValueError: ID")
-            self.assertTrue(Hentai.get_title(doujin), msg="ValueError: Title")
-            self.assertTrue(Hentai.get_media_id(doujin), msg="ValueError: MediaID")
-            self.assertTrue(Hentai.get_upload_date(doujin), msg="ValueError: UploadDate")
-            self.assertTrue(Hentai.get_cover(doujin), msg="ValueError: Cover")
-            self.assertTrue(Hentai.get_thumbnail(doujin), msg="ValueError: Thumbnail")
-            self.assertTrue(Hentai.get_image_urls(doujin), msg="ValueError: ImageURLs")
-            self.assertTrue(Hentai.get_num_pages(doujin), msg="ValueError: NumberOfPages")           
+            self.assertIsNotNone(doujin.json, msg="Result should not be 'None'.")
+            self.assertTrue(doujin.id, msg="ValueError: ID")
+            self.assertTrue(doujin.title(), msg="ValueError: Title")
+            self.assertTrue(doujin.media_id, msg="ValueError: MediaID")
+            self.assertTrue(doujin.upload_date, msg="ValueError: UploadDate")
+            self.assertTrue(doujin.cover, msg="ValueError: Cover")
+            self.assertTrue(doujin.thumbnail, msg="ValueError: Thumbnail")
+            self.assertTrue(doujin.image_urls, msg="ValueError: ImageURLs")
+            self.assertTrue(doujin.num_pages, msg="ValueError: NumberOfPages")           
 
     def test_export(self):
         # case 1 selects three options at random for populating options in export
