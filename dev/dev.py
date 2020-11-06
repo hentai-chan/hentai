@@ -63,7 +63,7 @@ def speedtest(ctx, threads, ping_target, save, plot):
         df.plot(kind='line', x='epos', y='upload', color='blue', ax=ax, grid=True)    
 
         plt.margins(0,0)
-        plt.ylim(ymin=0, ymax=12)
+        plt.ylim(ymin=0, ymax=max(df.download)+10)
         plt.xticks(rotation=45)
         plt.legend(['Downstream', 'Upstream'])
         plt.show()

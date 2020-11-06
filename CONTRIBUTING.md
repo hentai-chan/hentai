@@ -45,5 +45,5 @@ they go on to `master` where they get build and deployed to PyPI.
 ## Additional Sources
 
 You may find it useful to browse through code of similar repositories.
-Documentation for this code base is also on my bucket list and will be added
-soon.
+[Documentation](http://hentaichan.pythonanywhere.com/projects/hentai) for this
+code base is a work in progress and will be continuously improved over time.

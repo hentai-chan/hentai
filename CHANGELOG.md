@@ -1,5 +1,14 @@
 # Changelog
 
+## Version 2.0.1 (06 Nov 2020)
+
+Fixes a bug that occurred every time the `make_request` parameter was used outside
+the library's root directory. Additionally, this patch also comes with a few new
+features:
+
+- Adds the `scanlator` property to the `Hentai` class
+- Overloads the constructor with the `json` option
+
 ## Version 2.0 (11 Oct 2020)
 
 Warning: This version breaks backwards compatibility. In particular, the methods
