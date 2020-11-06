@@ -43,8 +43,7 @@ class TestUtils(unittest.TestCase):
 
     def test_get_homepage(self):
         homepage = Utils.get_homepage()
-        for raw_json in homepage:
-            doujin = Hentai(json=raw_json)
+        for doujin in homepage:
             self.assertIsNotNone(doujin.json, msg="Result should not be 'None'.")
             self.assertTrue(doujin.id, msg="ValueError: ID")
             self.assertTrue(doujin.title(), msg="ValueError: Title")
@@ -57,8 +56,7 @@ class TestUtils(unittest.TestCase):
 
     def test_search_all_by_query(self):
         popular_3d = Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek)
-        for raw_json in popular_3d:
-            doujin = Hentai(json=raw_json)
+        for doujin in popular_3d:
             self.assertIsNotNone(doujin.json, msg="Result should not be 'None'.")
             self.assertTrue(doujin.id, msg="ValueError: ID")
             self.assertTrue(doujin.title(), msg="ValueError: Title")
