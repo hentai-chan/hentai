@@ -29,6 +29,9 @@ class TestHentai(unittest.TestCase):
     def test_title(self):
         self.assertEqual(self.test_reference.title(), self.test_response.title(), msg=str(self.test_response))
 
+    def test_scanlator(self):
+        self.assertEqual(self.test_reference.scanlator, self.test_response.scanlator, msg=str(self.test_response))
+
     def test_cover(self):
         self.assertEqual(self.test_reference.cover, self.test_response.cover, msg=str(self.test_response))
 
@@ -38,9 +41,17 @@ class TestHentai(unittest.TestCase):
     def test_upload_date(self):
         self.assertEqual(self.test_reference.upload_date, self.test_response.upload_date, msg=str(self.test_response))
 
-    def test_tags(self):
-        # out of sync error candidate
+    def test_tag(self):
         self.assertEqual(self.test_reference.tag, self.test_response.tag, msg=str(self.test_response))
+
+    def test_group(self):
+        self.assertEqual(self.test_reference.group, self.test_response.group, msg=str(self.test_response))
+
+    def test_parody(self):
+        self.assertEqual(self.test_reference.parody, self.test_response.parody, msg=str(self.test_response))
+
+    def test_character(self):
+        self.assertEqual(self.test_reference.character, self.test_response.character, msg=str(self.test_response))
 
     def test_language(self):
         self.assertEqual(self.test_reference.language, self.test_response.language, msg=str(self.test_response))
@@ -49,7 +60,6 @@ class TestHentai(unittest.TestCase):
         self.assertEqual(self.test_reference.artist, self.test_response.artist, msg=str(self.test_response))
 
     def test_category(self):
-        # out of sync error candidate
         self.assertEqual(self.test_reference.category, self.test_response.category, msg=str(self.test_response))
 
     def test_num_pages(self):
