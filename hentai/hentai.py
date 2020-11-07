@@ -52,7 +52,8 @@ except AssertionError:
 @dataclass
 class Tag:
     """
-    A data class that bundles related `Tag` properties and useful helper methods.
+    A data class that bundles related `Tag` properties and useful helper methods
+    for interacting with tags.
     """
     id: int
     type: str
@@ -184,7 +185,7 @@ class Sort(Enum):
 @unique
 class Option(Enum):
     """
-    Defines export options for the `Hentai` class.
+    Defines export options for the `Hentai` and `Utils` class.
     """
     Raw = 'raw'
     ID = 'id'
@@ -211,8 +212,8 @@ class Option(Enum):
 @unique
 class Format(Enum):
     """
-    Title format. In some instances, `Format.Japanese` or `Format.Pretty` return
-    `None`.
+    The title format. In some instances, `Format.Japanese` or `Format.Pretty` 
+    return an empty string.
     """
     English = 'english'
     Japanese = 'japanese'
@@ -373,7 +374,7 @@ class Hentai(RequestHandler):
     @property
     def media_id(self) -> int:
         """
-        Return the media id of this `Hentai` object.
+        Return the media ID of this `Hentai` object.
         """
         return int(self.json['media_id'])        
 
@@ -518,6 +519,7 @@ class Hentai(RequestHandler):
     def export(self, filename: Path, options: List[Option]=None) -> None:
         """
         Store user-customized data about this `Hentai` object as a JSON file.
+        Includes all available options by default.
         """
         tmp = []
         tmp.append(self.json)
@@ -526,8 +528,8 @@ class Hentai(RequestHandler):
     @staticmethod
     def exists(id: int, make_request: bool=True) -> bool:
         """
-        Check whether or not the magic number exists on `nhentai.net`, or set 
-        `make_request` to `False` to search for validated IDs in an internal file.
+        Check whether or not the ID exists on `nhentai.net`. Set `make_request` 
+        to `False` to search for validated IDs in an internal file.
         """
         if make_request:
             try:
@@ -548,14 +550,13 @@ class Utils(object):
     """
     # Hentai Utility Library
 
-    This class provides a handful of miscellaneous static methods: 
+    This class provides a handful of miscellaneous static methods that extend the 
+    functionality of the `Hentai` class.
 
     ### Example 1
     ```python
     >>> from hentai import Utils
-    >>> random_id = Utils.get_random_id()
-    >>> # the id changes after each invocation
-    >>> print(random_id)
+    >>> print(Utils.get_random_id())
     177013
     ```
 
@@ -564,17 +565,14 @@ class Utils(object):
     from hentai import Hentai, Sort, Format, Utils
     >>> # fetches 25 responses per query
     >>> for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
-    ...   print(doujin)
-    Ikenai Koto ja Nai kara
-    Onigashima Keimusho e Youkoso
-    Matayurushou to Hitori de Dekiru Himari-chan
+    ...   print(doujin.title(Format.Pretty))
     ```
     """
     @staticmethod
     def get_random_id(make_request: bool=True, handler=RequestHandler()) -> int:
         """
-        Return a random magic number. Set `make_request` to `False` to use 
-        already validated IDs in an internal file.
+        Return a random ID. Set `make_request` to `False` to randomly select an 
+        already validated ID in an internal file.
         """
         if make_request:
             response = handler.session.get(urljoin(Hentai.HOME, 'random'))
@@ -586,12 +584,12 @@ class Utils(object):
                     return random.choice([int(row[0]) for row in reader])
 
     @staticmethod
-    def get_random_hentai(make_request: bool=True) -> Hentai:
+    def get_random_hentai(make_request: bool=True, handler=RequestHandler()) -> Hentai:
         """
-        Return a random `Hentai` object. Set `make_request` to `False` to use 
-        already validated IDs in an internal file.
+        Return a random `Hentai` object. Set `make_request` to `False` to randomly 
+        select an already validated ID in an internal file.
         """
-        return Hentai(Utils.get_random_id(make_request))
+        return Hentai(Utils.get_random_id(make_request, handler))
 
     @staticmethod
     def download(ids: List[int], dest: Path=Path.cwd(), delay: int=0) -> None:
@@ -604,8 +602,8 @@ class Utils(object):
     @staticmethod
     def browse_homepage(start_page: int, end_page: int, handler=RequestHandler()) -> List[Hentai]:
         """
-        Return an iterated list of raw nhentai response objects that are currently 
-        featured on the homepage in range of `[start_page, end_page]`.
+        Return a list of `Hentai` objects that are currently featured on the homepage 
+        in range of `[start_page, end_page]`. Each page contains as much as 25 results.
         """
         if start_page > end_page:
             raise ValueError("Invalid argument passed to function (requires start_page <= end_page).")
@@ -619,16 +617,16 @@ class Utils(object):
     @staticmethod
     def get_homepage(page: int=1, handler=RequestHandler()) -> List[Hentai]:
         """
-        Return an iterated list of raw nhentai response objects that are currently 
-        featured on the homepage.
+        Return a list of `Hentai` objects that are currently featured on the homepage.
+        Each page contains as much as 25 results.
         """
         return Utils.browse_homepage(page, page, handler)
 
     @staticmethod
     def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
         """
-        Return a list of raw nhentai response objects on page=`page` matching this 
-        search `query` sorted by `sort`.
+        Return a list of `Hentai` objects on page `page` that match this search 
+        `query` sorted by `sort`.
         """
         payload = { 'query' : query, 'page' : page, 'sort' : sort.value }
         response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
@@ -637,14 +635,14 @@ class Utils(object):
     @staticmethod
     def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
         """
-        Return an iterated list of all raw nhentai response objects matching this 
-        search `query` sorted by `sort`.
+        Return a list of all `Hentai` objects that match this search `query` 
+        sorted by `sort`.
 
         ### Example:
         ```python
         >>> from hentai import Utils, Sort, Format
-        >>> popular_3d = Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek)
-        >>> for doujin in popular_3d:
+        >>> # fetches all responses that match this query
+        >>> for doujin in Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek):
         ...   print(doujin)
         A Rebel's Journey:  Chang'e
         COMIC KURiBERON 2019-06 Vol. 80
@@ -661,7 +659,7 @@ class Utils(object):
     @staticmethod
     def export(iterable: List[Hentai], filename: Path, options: List[Option]=None) -> None:
         """
-        Store user-customized data of raw nhentai response objects as a JSON file.
+        Store user-customized data of `Hentai` objects as a JSON file.
         Includes all available options by default.
 
         ### Example:
@@ -670,7 +668,7 @@ class Utils(object):
         >>> popular_loli = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
         >>> # filter file content using options
         >>> custom = [Option.ID, Option.Title, Option.UploadDate]
-        >>> Utils.export(popular_loli, 'popular_loli.json', options=custom)
+        >>> Utils.export(popular_loli, Path('popular_loli.json'), options=custom)
         ```
         """
         if options is None:
