@@ -196,6 +196,9 @@ class Option(Enum):
     UploadDate = 'upload_date'
     Favorites = 'favorites'
     Tag = 'tag'
+    Group = 'group'
+    Parody = 'parody'
+    Character = 'character'
     Language = 'language'
     Artist = 'artist'
     Category = 'category'
@@ -344,7 +347,7 @@ class Hentai(RequestHandler):
         return self.title()
 
     def __repr__(self) -> str:
-        return f"ID({self.id})"
+        return f"{self.__class__.__name__}(ID={self.id})"
     
     @staticmethod
     def __get_id(json: dict) -> int:
@@ -422,6 +425,30 @@ class Hentai(RequestHandler):
         return Hentai.__tag(self.json, 'tag')
 
     @property
+    def group(self) -> List[Tag]:
+        """
+        Return all tags of type group of this `Hentai` object. This tag is sometimes 
+        not specified by the provider.
+        """
+        return Hentai.__tag(self.json, 'group')
+
+    @property
+    def parody(self) -> List[Tag]:
+        """
+        Return all tags of type parody of this `Hentai` object. This tag is sometimes 
+        not specified by the provider.
+        """
+        return Hentai.__tag(self.json, 'parody')
+
+    @property
+    def character(self) -> List[Tag]:
+        """
+        Return all tags of type character of this `Hentai` object. This tag is sometimes 
+        not specified by the provider.
+        """
+        return Hentai.__tag(self.json, 'character')
+
+    @property
     def language(self) -> List[Tag]:
         """
         Return all tags of type language of this `Hentai` object.
@@ -457,7 +484,7 @@ class Hentai(RequestHandler):
     @property
     def pages(self) -> List[Page]:
         """
-        Return a collection of pages detailing URL, file extension, width an 
+        Return a collection of pages detailing URL, file extension, width and 
         height of this `Hentai` object.
         """
         pages = self.json['images']['pages']
@@ -632,9 +659,10 @@ class Utils(object):
         return data
 
     @staticmethod
-    def export(iterable, filename: Path, options: List[Option]=None) -> None:
+    def export(iterable: List[Hentai], filename: Path, options: List[Option]=None) -> None:
         """
         Store user-customized data of raw nhentai response objects as a JSON file.
+        Includes all available options by default.
 
         ### Example:
         ```python
@@ -674,6 +702,12 @@ class Utils(object):
                     data['favorites'] = doujin.num_favorites
                 if Option.Tag in options:
                     data['tag'] = Tag.get_names(doujin.tag)
+                if Option.Group in options:
+                    data['group'] = Tag.get_names(doujin.group)
+                if Option.Parody in options:
+                    data['parody'] = Tag.get_names(doujin.parody)
+                if Option.Character in options:
+                    data['character'] = Tag.get_names(doujin.character)
                 if Option.Language in options:
                     data['language'] = Tag.get_names(doujin.language)
                 if Option.Artist in options:
@@ -691,4 +725,3 @@ class Utils(object):
                 content['result'].insert(index, data)
             with open(filename, mode='w', encoding='utf-8') as file_handler:
                 json.dump(content, file_handler)
-
