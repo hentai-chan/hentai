@@ -174,11 +174,11 @@ class Sort(Enum):
     """
     Exposed endpoints used to sort queries. Defaults to `Popular`.
     """
+    Popular = 'popular'
     PopularYear = 'popular-year'
     PopularMonth = 'popular-month'
     PopularWeek = 'popular-week'
     PopularToday = 'popular-today'
-    Popular = 'popular'
     Date = 'date'
 
 
@@ -246,12 +246,12 @@ class Extension(Enum):
 
 class RequestHandler(object):
     """
-    Defines a synchronous request handler class.
+    Defines a synchronous request handler class that provides methods and 
+    properties for working with REST APIs.
     """
     _timeout = (3.05, 1)
     _total = 5
     _status_forcelist = [413, 429, 500, 502, 503, 504]
-    # sleep between fails = backoff_factor * (2 ** (total - 1))
     _backoff_factor = 1
     _fake = Faker()
 
@@ -261,8 +261,7 @@ class RequestHandler(object):
                  status_forcelist: List[int]=_status_forcelist, 
                  backoff_factor: int=_backoff_factor):
         """
-        Instantiates a new session and uses sane default params that can be modified
-        later on to change the way `Hentai` object make their requests.
+        Instantiates a new request handler object.
         """
         self.timeout = timeout
         self.total = total        
@@ -272,14 +271,20 @@ class RequestHandler(object):
     @property
     def retry_strategy(self) -> Retry:
         """
-        Return a retry strategy for this session. 
+        The retry strategy returns the retry configuration made up of the
+        number of total retries, the status forcelist as well as the backoff
+        factor. It is used in the session property where these values are 
+        passed to the HTTPAdapter. 
         """
         return Retry(self.total, self.status_forcelist, self.backoff_factor)
 
     @property
     def session(self) -> Session:
         """
-        Return this session object used for making GET and POST requests.
+        Creates a custom session object. A request session provides cookie
+        persistence, connection-pooling, and further configuration options
+        that are exposed in the RequestHandler methods in form of parameters 
+        and keyword arguments.
         """
         assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
         session = requests.Session()
@@ -292,7 +297,8 @@ class RequestHandler(object):
     
     def get(self, url: str, params: dict=None, **kwargs) -> Response:
         """
-        Returns the GET request encoded in `utf-8`.
+        Returns the GET request encoded in `utf-8`. Adds proxies to this session 
+        on the fly if urllib is able to pick up the system's proxy settings.
         """
         response = self.session.get(url, timeout = self.timeout, params = params, proxies=getproxies(), **kwargs)
         response.encoding = 'utf-8'
@@ -500,7 +506,7 @@ class Hentai(RequestHandler):
         """
         return [image.url for image in self.pages]
 
-    def download(self, dest: Path=Path.cwd(), delay: int=0) -> None:
+    def download(self, dest: Path=Path.cwd(), delay: float=0) -> None:
         """
         Download all image URLs of this `Hentai` object to `dest` in a new folder,
         excluding cover and thumbnail. Set a `delay` between each image download 
@@ -592,7 +598,7 @@ class Utils(object):
         return Hentai(Utils.get_random_id(make_request, handler))
 
     @staticmethod
-    def download(ids: List[int], dest: Path=Path.cwd(), delay: int=0) -> None:
+    def download(ids: List[int], dest: Path=Path.cwd(), delay: float=0) -> None:
         """
         Download all image URLs for multiple magic numbers to `dest` in newly 
         created folders. Set a `delay` between each image download in seconds.
@@ -629,7 +635,7 @@ class Utils(object):
         `query` sorted by `sort`.
         """
         payload = { 'query' : query, 'page' : page, 'sort' : sort.value }
-        response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
+        response = handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload).json()
         return [Hentai(json=raw_json) for raw_json in response['result']]
 
     @staticmethod
