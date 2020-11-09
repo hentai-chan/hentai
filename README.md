@@ -63,7 +63,7 @@ release candidate.
 
 ## Documentation
 
-You can find the [documentation](http://hentaichan.pythonanywhere.com/projects/hentai)
+You can find the [documentation](https://hentaichan.pythonanywhere.com/projects/hentai)
 online, or use the [wiki](https://github.com/hentai-chan/hentai/wiki) to learn more
 about this module.
 
@@ -103,7 +103,8 @@ Apart from that, `hentai.Utils` also provides a handful of miscellaneous helper
 methods:
 
 ```python
-from hentai import Utils, Sort
+from hentai import Utils, Sort, Option
+from pathlib import Path
 
 print(Utils.get_random_id())
 
@@ -112,7 +113,12 @@ print(Utils.get_random_hentai())
 
 # advanced search with queries
 for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
-    print(Hentai.get_title(doujin))
+    print(doujin.title(Format.Pretty))
+
+# store custom meta data as JSON file to disk
+popular_loli = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
+custom = [Option.ID, Option.Title, Option.UploadDate]
+Utils.export(popular_loli, filename=Path('popular_loli.json'), options=custom)
 ```
 
 See also [https://nhentai.net/info/](https://nhentai.net/info/) for more information

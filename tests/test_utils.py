@@ -38,34 +38,34 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(response.ok, msg=f"Failing ID: {random_hentai.id}. Failing URL: {response.url}")
 
     def test_download_queue(self):
-        Utils.download_queue([self.tiny_evil.id])
+        Utils.download([self.tiny_evil.id])
         self.assertTrue(self.tiny_evil_dir.is_dir())
 
     def test_get_homepage(self):
         homepage = Utils.get_homepage()
         for doujin in homepage:
-            self.assertIsNotNone(doujin, msg="Result should not be 'None'.")
-            self.assertTrue(Hentai.get_id(doujin), msg="ValueError: ID")
-            self.assertTrue(Hentai.get_title(doujin), msg="ValueError: Title")
-            self.assertTrue(Hentai.get_media_id(doujin), msg="ValueError: MediaID")
-            self.assertTrue(Hentai.get_upload_date(doujin), msg="ValueError: UploadDate")
-            self.assertTrue(Hentai.get_cover(doujin), msg="ValueError: Cover")
-            self.assertTrue(Hentai.get_thumbnail(doujin), msg="ValueError: Thumbnail")
-            self.assertTrue(Hentai.get_image_urls(doujin), msg="ValueError: ImageURLs")
-            self.assertTrue(Hentai.get_num_pages(doujin), msg="ValueError: NumberOfPages")     
+            self.assertIsNotNone(doujin.json, msg="Result should not be 'None'.")
+            self.assertTrue(doujin.id, msg="ValueError: ID")
+            self.assertTrue(doujin.title(), msg="ValueError: Title")
+            self.assertTrue(doujin.media_id, msg="ValueError: MediaID")
+            self.assertTrue(doujin.upload_date, msg="ValueError: UploadDate")
+            self.assertTrue(doujin.cover, msg="ValueError: Cover")
+            self.assertTrue(doujin.thumbnail, msg="ValueError: Thumbnail")
+            self.assertTrue(doujin.image_urls, msg="ValueError: ImageURLs")
+            self.assertTrue(doujin.num_pages, msg="ValueError: NumberOfPages")     
 
     def test_search_all_by_query(self):
         popular_3d = Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek)
         for doujin in popular_3d:
-            self.assertIsNotNone(doujin, msg="Result should not be 'None'.")
-            self.assertTrue(Hentai.get_id(doujin), msg="ValueError: ID")
-            self.assertTrue(Hentai.get_title(doujin), msg="ValueError: Title")
-            self.assertTrue(Hentai.get_media_id(doujin), msg="ValueError: MediaID")
-            self.assertTrue(Hentai.get_upload_date(doujin), msg="ValueError: UploadDate")
-            self.assertTrue(Hentai.get_cover(doujin), msg="ValueError: Cover")
-            self.assertTrue(Hentai.get_thumbnail(doujin), msg="ValueError: Thumbnail")
-            self.assertTrue(Hentai.get_image_urls(doujin), msg="ValueError: ImageURLs")
-            self.assertTrue(Hentai.get_num_pages(doujin), msg="ValueError: NumberOfPages")           
+            self.assertIsNotNone(doujin.json, msg="Result should not be 'None'.")
+            self.assertTrue(doujin.id, msg="ValueError: ID")
+            self.assertTrue(doujin.title(), msg="ValueError: Title")
+            self.assertTrue(doujin.media_id, msg="ValueError: MediaID")
+            self.assertTrue(doujin.upload_date, msg="ValueError: UploadDate")
+            self.assertTrue(doujin.cover, msg="ValueError: Cover")
+            self.assertTrue(doujin.thumbnail, msg="ValueError: Thumbnail")
+            self.assertTrue(doujin.image_urls, msg="ValueError: ImageURLs")
+            self.assertTrue(doujin.num_pages, msg="ValueError: NumberOfPages")               
 
     def test_export(self):
         # case 1 selects three options at random for populating options in export
@@ -87,7 +87,7 @@ class TestUtils(unittest.TestCase):
 
         with open(self.tiny_evil_file, mode='r', encoding='utf-8') as file_handler:
             test_data = json.load(file_handler)['result'][0]
-            self.assertEqual(16, len(test_data.keys()), msg="Keys don't match up (expected 15)")
+            self.assertEqual(19, len(test_data.keys()), msg="Keys don't match up (expected 15)")
             self.assertIn(random_options[0].value, test_data, msg=f"KeyError {random_options[0].name} (Option 1)")
             self.assertIn(random_options[1].value, test_data, msg=f"KeyError {random_options[1].name} (Option 2)")
             self.assertIn(random_options[2].value, test_data, msg=f"KeyError {random_options[2].name} (Option 3)")
