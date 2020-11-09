@@ -104,6 +104,7 @@ methods:
 
 ```python
 from hentai import Utils, Sort, Option
+from pathlib import Path
 
 print(Utils.get_random_id())
 
@@ -117,7 +118,7 @@ for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
 # store custom meta data as JSON file to disk
 popular_loli = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
 custom = [Option.ID, Option.Title, Option.UploadDate]
-Utils.export(popular_loli, 'popular_loli.json', options=custom)
+Utils.export(popular_loli, filename=Path('popular_loli.json'), options=custom)
 ```
 
 See also [https://nhentai.net/info/](https://nhentai.net/info/) for more information
