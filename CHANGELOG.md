@@ -1,5 +1,25 @@
 # Changelog
 
+## Version 3.0.0 (09 November 2020)
+
+This will be the last major update to this library as work on this project slowly
+comes to an end. In this version,
+
+- Virtually all static methods in the `Hentai` have been removed - use their
+  corresponding properties instead. This change drastically reduces the number of
+  lines of code in the main class
+- The following functions have been renamed:
+  - `Utils.static_export` now is `Utils.export`
+  - `Utils.download_queue` now is `Utils.download`
+- Adds `List[Hentai]` as type hint to `Utils.export`
+- Additionally, three more properties have been added to the `Hentai` object:
+  - `self.group`
+  - `self.parody`
+  - `self.character`
+- Adds export of all new options mentioned above
+- The magic method `__repr__` changes its output to `Hentai(ID={self.id})`
+- Updates & improves doc strings
+
 ## Version 2.0.1 (06 Nov 2020)
 
 Fixes a bug that occurred every time the `make_request` parameter was used outside

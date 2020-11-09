@@ -51,7 +51,8 @@ except AssertionError:
 @dataclass
 class Tag:
     """
-    A data class that bundles related `Tag` properties and useful helper methods.
+    A data class that bundles related `Tag` properties and useful helper methods
+    for interacting with tags.
     """
     id: int
     type: str
@@ -172,18 +173,18 @@ class Sort(Enum):
     """
     Exposed endpoints used to sort queries. Defaults to `Popular`.
     """
+    Popular = 'popular'
     PopularYear = 'popular-year'
     PopularMonth = 'popular-month'
     PopularWeek = 'popular-week'
     PopularToday = 'popular-today'
-    Popular = 'popular'
     Date = 'date'
 
 
 @unique
 class Option(Enum):
     """
-    Defines export options for the `Hentai` class.
+    Defines export options for the `Hentai` and `Utils` class.
     """
     Raw = 'raw'
     ID = 'id'
@@ -195,6 +196,9 @@ class Option(Enum):
     UploadDate = 'upload_date'
     Favorites = 'favorites'
     Tag = 'tag'
+    Group = 'group'
+    Parody = 'parody'
+    Character = 'character'
     Language = 'language'
     Artist = 'artist'
     Category = 'category'
@@ -207,8 +211,8 @@ class Option(Enum):
 @unique
 class Format(Enum):
     """
-    Title format. In some instances, `Format.Japanese` or `Format.Pretty` return
-    `None`.
+    The title format. In some instances, `Format.Japanese` or `Format.Pretty` 
+    return an empty string.
     """
     English = 'english'
     Japanese = 'japanese'
@@ -241,12 +245,12 @@ class Extension(Enum):
 
 class RequestHandler(object):
     """
-    Defines a synchronous request handler class.
+    Defines a synchronous request handler class that provides methods and 
+    properties for working with REST APIs.
     """
     _timeout = (3.05, 1)
     _total = 5
     _status_forcelist = [413, 429, 500, 502, 503, 504]
-    # sleep between fails = backoff_factor * (2 ** (total - 1))
     _backoff_factor = 1
     _fake = Faker()
 
@@ -256,8 +260,7 @@ class RequestHandler(object):
                  status_forcelist: List[int]=_status_forcelist, 
                  backoff_factor: int=_backoff_factor):
         """
-        Instantiates a new session and uses sane default params that can be modified
-        later on to change the way `Hentai` object make their requests.
+        Instantiates a new request handler object.
         """
         self.timeout = timeout
         self.total = total        
@@ -267,14 +270,20 @@ class RequestHandler(object):
     @property
     def retry_strategy(self) -> Retry:
         """
-        Return a retry strategy for this session. 
+        The retry strategy returns the retry configuration made up of the
+        number of total retries, the status forcelist as well as the backoff
+        factor. It is used in the session property where these values are 
+        passed to the HTTPAdapter. 
         """
         return Retry(self.total, self.status_forcelist, self.backoff_factor)
 
     @property
     def session(self) -> Session:
         """
-        Return this session object used for making GET and POST requests.
+        Creates a custom session object. A request session provides cookie
+        persistence, connection-pooling, and further configuration options
+        that are exposed in the RequestHandler methods in form of parameters 
+        and keyword arguments.
         """
         assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
         session = requests.Session()
@@ -287,7 +296,8 @@ class RequestHandler(object):
     
     def get(self, url: str, params: dict=None, **kwargs) -> Response:
         """
-        Returns the GET request encoded in `utf-8`.
+        Returns the GET request encoded in `utf-8`. Adds proxies to this session 
+        on the fly if urllib is able to pick up the system's proxy settings.
         """
         response = self.session.get(url, timeout = self.timeout, params = params, proxies=getproxies(), **kwargs)
         response.encoding = 'utf-8'
@@ -333,9 +343,9 @@ class Hentai(RequestHandler):
             self.json = self.response.json()
         elif not id and json:
             self.json = json
-            self.id = Hentai.get_id(self.json)
-            self.url = Hentai.get_url(self.json)
-            self.api = Hentai.get_api(self.json)
+            self.id = Hentai.__get_id(self.json)
+            self.url = Hentai.__get_url(self.json)
+            self.api = Hentai.__get_api(self.json)
         else:
             raise TypeError('Define either id or json argument, but not both or none')
 
@@ -343,65 +353,42 @@ class Hentai(RequestHandler):
         return self.title()
 
     def __repr__(self) -> str:
-        return f"ID({self.id})"
+        return f"{self.__class__.__name__}(ID={self.id})"
     
     @staticmethod
-    def get_id(json: dict) -> int:
+    def __get_id(json: dict) -> int:
         """
         Return the ID of an raw nhentai response object.
         """
         return int(json['id'])
 
     @staticmethod
-    def get_url(json: dict) -> str:
+    def __get_url(json: dict) -> str:
         """
         Return the URL of an raw nhentai response object.
         """
-        return urljoin(Hentai._URL, str(Hentai.get_id(json)))
+        return urljoin(Hentai._URL, str(Hentai.__get_id(json)))
 
     @staticmethod
-    def get_api(json: dict) -> str:
+    def __get_api(json: dict) -> str:
         """
         Return the API access point of an raw nhentai response object.
         """
-        return urljoin(Hentai._API, str(Hentai.get_id(json)))
-
-    @staticmethod
-    def get_media_id(json: dict) -> int:
-        """
-        Return the media ID of an raw nhentai response object.
-        """
-        return int(json['media_id'])
+        return urljoin(Hentai._API, str(Hentai.__get_id(json)))        
 
     @property
     def media_id(self) -> int:
         """
-        Return the media id of this `Hentai` object.
+        Return the media ID of this `Hentai` object.
         """
-        return Hentai.get_media_id(self.json)   
-
-    @staticmethod
-    def get_title(json: dict, format: Format=Format.English) -> str:
-        """
-        Return the title of an raw nhentai response object. The format of the title
-        defaults to `English`, which is the verbose counterpart to `Pretty`.
-        """
-        return json['title'].get(format.value)
+        return int(self.json['media_id'])        
 
     def title(self, format: Format=Format.English) -> str:
         """
         Return the title of this `Hentai` object. The format of the title
         defaults to `English`, which is the verbose counterpart to `Pretty`.
         """
-        return Hentai.get_title(self.json, format)
-
-    @staticmethod
-    def get_scanlator(json: dict) -> str:
-        """
-        Return the scanlator of an raw nhentai response object. This information
-        is often not specified by the provider.
-        """
-        return json['scanlator']
+        return self.json['title'].get(format.value)
 
     @property
     def scanlator(self) -> str:
@@ -409,171 +396,116 @@ class Hentai(RequestHandler):
         Return the scanlator of this `Hentai` object. This information is often 
         not specified by the provider.
         """
-        return Hentai.get_scanlator(self.json)
-
-    @staticmethod
-    def get_cover(json: dict) -> str:
-        """
-        Return the cover URL of an raw nhentai response object.
-        """
-        cover_ext = Extension.convert(json['images']['cover']['t'])
-        return f"https://t.nhentai.net/galleries/{Hentai.get_media_id(json)}/cover{cover_ext}"
+        return self.json['scanlator']
 
     @property
     def cover(self) -> str:
         """
         Return the cover URL of this `Hentai` object.
         """
-        return Hentai.get_cover(self.json)
-
-    @staticmethod
-    def get_thumbnail(json: dict) -> str:
-        """
-        Return the thumbnail URL of an raw nhentai response object.
-        """
-        thumb_ext = Extension.convert(json['images']['thumbnail']['t'])
-        return f"https://t.nhentai.net/galleries/{Hentai.get_media_id(json)}/thumb{thumb_ext}"
+        cover_ext = Extension.convert(self.json['images']['cover']['t'])
+        return f"https://t.nhentai.net/galleries/{self.media_id}/cover{cover_ext}"
 
     @property
     def thumbnail(self):
         """
         Return the thumbnail URL of this `Hentai` object.
         """
-        return Hentai.get_thumbnail(self.json)
-
-    @staticmethod
-    def get_upload_date(json: dict) -> datetime:
-        """
-        Return the upload date of an raw nhentai response object.
-        """
-        return datetime.fromtimestamp(json['upload_date'])
+        thumb_ext = Extension.convert(self.json['images']['thumbnail']['t'])
+        return f"https://t.nhentai.net/galleries/{self.media_id}/thumb{thumb_ext}"
 
     @property
     def upload_date(self) -> datetime:
         """
         Return the upload date of this `Hentai` object.
         """
-        return Hentai.get_upload_date(self.json)
+        return datetime.fromtimestamp(self.json['upload_date'])
 
     __tag = lambda json, type: [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type]
-    
-    @staticmethod
-    def get_tag(json: dict) -> List[Tag]:
-        """
-        Return all tags of type tag of an raw nhentai response object.
-        """
-        return Hentai.__tag(json, 'tag')
 
     @property
     def tag(self) -> List[Tag]:
         """
         Return all tags of type tag of this `Hentai` object.
         """
-        return Hentai.get_tag(self.json)
+        return Hentai.__tag(self.json, 'tag')
 
-    @staticmethod
-    def get_language(json: dict) -> List[Tag]:
+    @property
+    def group(self) -> List[Tag]:
         """
-        Return all tags of type language of an raw nhentai response object.
+        Return all tags of type group of this `Hentai` object. This tag is sometimes 
+        not specified by the provider.
         """
-        return Hentai.__tag(json, 'language')
+        return Hentai.__tag(self.json, 'group')
+
+    @property
+    def parody(self) -> List[Tag]:
+        """
+        Return all tags of type parody of this `Hentai` object. This tag is sometimes 
+        not specified by the provider.
+        """
+        return Hentai.__tag(self.json, 'parody')
+
+    @property
+    def character(self) -> List[Tag]:
+        """
+        Return all tags of type character of this `Hentai` object. This tag is sometimes 
+        not specified by the provider.
+        """
+        return Hentai.__tag(self.json, 'character')
 
     @property
     def language(self) -> List[Tag]:
         """
         Return all tags of type language of this `Hentai` object.
         """
-        return Hentai.get_language(self.json)
-
-    @staticmethod
-    def get_artist(json: dict) -> List[Tag]:
-        """
-        Return all tags of type artist of an raw nhentai response object.
-        """
-        return Hentai.__tag(json, 'artist')
+        return Hentai.__tag(self.json, 'language')
 
     @property
     def artist(self) -> List[Tag]:
         """
         Return all tags of type artist of this `Hentai` object.
         """
-        return Hentai.get_artist(self.json)
-
-    @staticmethod
-    def get_category(json: dict) -> List[Tag]:
-        """
-        Return all tags of type category of an raw nhentai response object.
-        """
-        return Hentai.__tag(json, 'category')
+        return Hentai.__tag(self.json, 'artist')
 
     @property
     def category(self) -> List[Tag]:
         """
         Return all tags of type category of this `Hentai` object.
         """
-        return Hentai.get_category(self.json)
-
-    @staticmethod
-    def get_num_pages(json: dict) -> int:
-        """
-        Return the total number of pages of an raw nhentai response object.
-        """
-        return int(json['num_pages'])
+        return Hentai.__tag(self.json, 'category')        
 
     @property
     def num_pages(self) -> int:
         """
         Return the total number of pages of this `Hentai` object.
         """
-        return Hentai.get_num_pages(self.json)
-
-    @staticmethod
-    def get_num_favorites(json: dict) -> int:
-        """
-        Return the number of times the raw nhentai response object has been favorited.
-        """
-        return int(json['num_favorites'])
+        return int(self.json['num_pages'])
 
     @property
     def num_favorites(self) -> int:
         """Return the number of times this `Hentai` object has been favorited."""
-        return Hentai.get_num_favorites(self.json)
-
-    @staticmethod
-    def get_pages(json: dict) -> List[Page]:
-        """
-        Return a collection of pages detailing URL, file extension, width an 
-        height of an raw nhentai response object.
-        """
-        pages = json['images']['pages']
-        extension = lambda num: Extension.convert(pages[num]['t'])
-        image_url = lambda num: f"https://i.nhentai.net/galleries/{Hentai.get_media_id(json)}/{num}{extension(num - 1)}"
-        return [Page(image_url(num + 1), Extension.convert(_['t']), _['w'], _['h']) for num, _ in enumerate(pages)]
+        return int(self.json['num_favorites'])
 
     @property
     def pages(self) -> List[Page]:
         """
-        Return a collection of pages detailing URL, file extension, width an 
+        Return a collection of pages detailing URL, file extension, width and 
         height of this `Hentai` object.
         """
-        return Hentai.get_pages(self.json)
-
-    @staticmethod
-    def get_image_urls(json: dict) -> List[str]:
-        """
-        Return all image URLs of an raw nhentai response object, excluding cover and
-        thumbnail.
-        """
-        return [image.url for image in Hentai.get_pages(json)]
+        pages = self.json['images']['pages']
+        extension = lambda num: Extension.convert(pages[num]['t'])
+        image_url = lambda num: f"https://i.nhentai.net/galleries/{self.media_id}/{num}{extension(num - 1)}"
+        return [Page(image_url(num + 1), Extension.convert(_['t']), _['w'], _['h']) for num, _ in enumerate(pages)]
 
     @property
     def image_urls(self) -> List[str]:
         """
         Return all image URLs of this `Hentai` object, excluding cover and thumbnail.
         """
-        return Hentai.get_image_urls(self.json)
+        return [image.url for image in self.pages]
 
-    def download(self, dest: Path=Path.cwd(), delay: int=0) -> None:
+    def download(self, dest: Path=Path.cwd(), delay: float=0) -> None:
         """
         Download all image URLs of this `Hentai` object to `dest` in a new folder,
         excluding cover and thumbnail. Set a `delay` between each image download 
@@ -592,16 +524,17 @@ class Hentai(RequestHandler):
     def export(self, filename: Path, options: List[Option]=None) -> None:
         """
         Store user-customized data about this `Hentai` object as a JSON file.
+        Includes all available options by default.
         """
         tmp = []
         tmp.append(self.json)
-        Utils.static_export(tmp, filename, options)
+        Utils.export(tmp, filename, options)
 
     @staticmethod
     def exists(id: int, make_request: bool=True) -> bool:
         """
-        Check whether or not the magic number exists on `nhentai.net`, or set 
-        `make_request` to `False` to search for validated IDs in an internal file.
+        Check whether or not the ID exists on `nhentai.net`. Set `make_request` 
+        to `False` to search for validated IDs in an internal file.
         """
         if make_request:
             try:
@@ -622,14 +555,13 @@ class Utils(object):
     """
     # Hentai Utility Library
 
-    This class provides a handful of miscellaneous static methods: 
+    This class provides a handful of miscellaneous static methods that extend the 
+    functionality of the `Hentai` class.
 
     ### Example 1
     ```python
     >>> from hentai import Utils
-    >>> random_id = Utils.get_random_id()
-    >>> # the id changes after each invocation
-    >>> print(random_id)
+    >>> print(Utils.get_random_id())
     177013
     ```
 
@@ -638,17 +570,14 @@ class Utils(object):
     from hentai import Hentai, Sort, Format, Utils
     >>> # fetches 25 responses per query
     >>> for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
-    ...   print(Hentai.get_title(doujin))
-    Ikenai Koto ja Nai kara
-    Onigashima Keimusho e Youkoso
-    Matayurushou to Hitori de Dekiru Himari-chan
+    ...   print(doujin.title(Format.Pretty))
     ```
     """
     @staticmethod
     def get_random_id(make_request: bool=True, handler=RequestHandler()) -> int:
         """
-        Return a random magic number. Set `make_request` to `False` to use 
-        already validated IDs in an internal file.
+        Return a random ID. Set `make_request` to `False` to randomly select an 
+        already validated ID in an internal file.
         """
         if make_request:
             response = handler.session.get(urljoin(Hentai.HOME, 'random'))
@@ -660,15 +589,15 @@ class Utils(object):
                     return random.choice([int(row[0]) for row in reader])
 
     @staticmethod
-    def get_random_hentai(make_request: bool=True) -> Hentai:
+    def get_random_hentai(make_request: bool=True, handler=RequestHandler()) -> Hentai:
         """
-        Return a random `Hentai` object. Set `make_request` to `False` to use 
-        already validated IDs in an internal file.
+        Return a random `Hentai` object. Set `make_request` to `False` to randomly 
+        select an already validated ID in an internal file.
         """
-        return Hentai(Utils.get_random_id(make_request))
+        return Hentai(Utils.get_random_id(make_request, handler))
 
     @staticmethod
-    def download_queue(ids: List[int], dest: Path=Path.cwd(), delay: int=0) -> None:
+    def download(ids: List[int], dest: Path=Path.cwd(), delay: float=0) -> None:
         """
         Download all image URLs for multiple magic numbers to `dest` in newly 
         created folders. Set a `delay` between each image download in seconds.
@@ -676,10 +605,10 @@ class Utils(object):
         [Hentai(id).download(dest, delay) for id in ids]
 
     @staticmethod
-    def browse_homepage(start_page: int, end_page: int, handler=RequestHandler()) -> List[dict]:
+    def browse_homepage(start_page: int, end_page: int, handler=RequestHandler()) -> List[Hentai]:
         """
-        Return an iterated list of raw nhentai response objects that are currently 
-        featured on the homepage in range of `[start_page, end_page]`.
+        Return a list of `Hentai` objects that are currently featured on the homepage 
+        in range of `[start_page, end_page]`. Each page contains as much as 25 results.
         """
         if start_page > end_page:
             raise ValueError("Invalid argument passed to function (requires start_page <= end_page).")
@@ -687,39 +616,39 @@ class Utils(object):
         for page in range(start_page, end_page + 1):
             payload = { 'page' : page }
             response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params=payload).json()
-            data.extend(response['result'])
+            data.extend([Hentai(json=raw_json) for raw_json in response['result']])
         return data
 
     @staticmethod
-    def get_homepage(page: int=1, handler=RequestHandler()) -> List[dict]:
+    def get_homepage(page: int=1, handler=RequestHandler()) -> List[Hentai]:
         """
-        Return an iterated list of raw nhentai response objects that are currently 
-        featured on the homepage.
+        Return a list of `Hentai` objects that are currently featured on the homepage.
+        Each page contains as much as 25 results.
         """
         return Utils.browse_homepage(page, page, handler)
 
     @staticmethod
-    def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[dict]:
+    def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
         """
-        Return a list of raw nhentai response objects on page=`page` matching this 
-        search `query` sorted by `sort`.
+        Return a list of `Hentai` objects on page `page` that match this search 
+        `query` sorted by `sort`.
         """
         payload = { 'query' : query, 'page' : page, 'sort' : sort.value }
-        response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
-        return response['result']
+        response = handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload).json()
+        return [Hentai(json=raw_json) for raw_json in response['result']]
 
     @staticmethod
-    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[dict]:
+    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
         """
-        Return an iterated list of all raw nhentai response objects matching this 
-        search `query` sorted by `sort`.
+        Return a list of all `Hentai` objects that match this search `query` 
+        sorted by `sort`.
 
         ### Example:
         ```python
         >>> from hentai import Utils, Sort, Format
-        >>> popular_3d = Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek)
-        >>> for doujin in popular_3d:
-        ...   print(Hentai.get_title(doujin, format=Format.Pretty))
+        >>> # fetches all responses that match this query
+        >>> for doujin in Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek):
+        ...   print(doujin)
         A Rebel's Journey:  Chang'e
         COMIC KURiBERON 2019-06 Vol. 80
         Mixed Wrestling Japan 2019
@@ -733,9 +662,10 @@ class Utils(object):
         return data
 
     @staticmethod
-    def static_export(iterable, filename: Path, options: List[Option]=None) -> None:
+    def export(iterable: List[Hentai], filename: Path, options: List[Option]=None) -> None:
         """
-        Store user-customized data of raw nhentai response objects as a JSON file.
+        Store user-customized data of `Hentai` objects as a JSON file.
+        Includes all available options by default.
 
         ### Example:
         ```python
@@ -743,52 +673,58 @@ class Utils(object):
         >>> popular_loli = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
         >>> # filter file content using options
         >>> custom = [Option.ID, Option.Title, Option.UploadDate]
-        >>> Utils.static_export(popular_loli, 'popular_loli.json', options=custom)
+        >>> Utils.export(popular_loli, Path('popular_loli.json'), options=custom)
         ```
         """
         if options is None:
-            Utils.static_export(iterable, filename, options=[opt for opt in Option if opt.value != 'raw'])
+            Utils.export(iterable, filename, options=[opt for opt in Option if opt.value != 'raw'])
         elif Option.Raw in options:
             with open(filename, mode='w', encoding='utf-8') as file_handler:
                 json.dump(iterable, file_handler)
         else:
             content = { 'result' : [] }
-            for index, doujin in enumerate(iterable):
+            for index, raw_json in enumerate(iterable):
                 data = {}
+                doujin = Hentai(json=raw_json)
                 if Option.ID in options:
-                    data['id'] = Hentai.get_id(doujin)
+                    data['id'] = doujin.id
                 if Option.Title in options:
-                    data['title'] = Hentai.get_title(doujin, format=Format.Pretty)
+                    data['title'] = doujin.title(format=Format.Pretty)
                 if Option.Scanlator in options:
-                    data['scanlator'] = Hentai.get_scanlator(doujin)
+                    data['scanlator'] = doujin.scanlator
                 if Option.URL in options:
-                    data['url'] = Hentai.get_url(doujin)
+                    data['url'] = doujin.url
                 if Option.API in options:
-                    data['api'] = Hentai.get_api(doujin)
+                    data['api'] = doujin.api
                 if Option.MediaID in options:
-                    data['media_id'] = Hentai.get_media_id(doujin)
+                    data['media_id'] = doujin.media_id
                 if Option.UploadDate in options:
-                    epos = Hentai.get_upload_date(doujin).replace(tzinfo=timezone.utc).timestamp()
+                    epos = doujin.upload_date.replace(tzinfo=timezone.utc).timestamp()
                     data['upload_date'] = round(epos)
                 if Option.Favorites in options:
-                    data['favorites'] = Hentai.get_num_favorites(doujin)
+                    data['favorites'] = doujin.num_favorites
                 if Option.Tag in options:
-                    data['tag'] = Tag.get_names(Hentai.get_tag(doujin))
+                    data['tag'] = Tag.get_names(doujin.tag)
+                if Option.Group in options:
+                    data['group'] = Tag.get_names(doujin.group)
+                if Option.Parody in options:
+                    data['parody'] = Tag.get_names(doujin.parody)
+                if Option.Character in options:
+                    data['character'] = Tag.get_names(doujin.character)
                 if Option.Language in options:
-                    data['language'] = Tag.get_names(Hentai.get_language(doujin))
+                    data['language'] = Tag.get_names(doujin.language)
                 if Option.Artist in options:
-                    data['artist'] = Tag.get_names(Hentai.get_artist(doujin))
+                    data['artist'] = Tag.get_names(doujin.artist)
                 if Option.Category in options:
-                    data['category'] = Tag.get_names(Hentai.get_category(doujin))
+                    data['category'] = Tag.get_names(doujin.category)
                 if Option.Cover in options:
-                    data['cover'] = Hentai.get_cover(doujin)
+                    data['cover'] = doujin.cover
                 if Option.Thumbnail in options:
-                    data['thumbnail'] = Hentai.get_thumbnail(doujin)
+                    data['thumbnail'] = doujin.thumbnail
                 if Option.Images in options:
-                    data['images'] = Hentai.get_image_urls(doujin)
+                    data['images'] = doujin.image_urls
                 if Option.PageCount in options:
-                    data['pages'] = Hentai.get_num_pages(doujin)
+                    data['pages'] = doujin.num_pages
                 content['result'].insert(index, data)
             with open(filename, mode='w', encoding='utf-8') as file_handler:
                 json.dump(content, file_handler)
-
