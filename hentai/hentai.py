@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import csv
 import json
-from json.decoder import JSONDecoder
 import random
 import sys
 import time
