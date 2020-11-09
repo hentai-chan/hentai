@@ -63,7 +63,7 @@ release candidate.
 
 ## Documentation
 
-You can find the [documentation](http://hentaichan.pythonanywhere.com/projects/hentai)
+You can find the [documentation](https://hentaichan.pythonanywhere.com/projects/hentai)
 online, or use the [wiki](https://github.com/hentai-chan/hentai/wiki) to learn more
 about this module.
 
