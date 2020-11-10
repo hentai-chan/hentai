@@ -578,8 +578,8 @@ class Utils(object):
         already validated ID in an internal file.
         """
         if make_request:
-            response = handler.session.get(urljoin(Hentai.HOME, 'random'))
-            return int(urlparse(response.url).path[3:-1])
+            response = handler.get(urljoin(Hentai.HOME, 'random'))
+            return int(urlparse(response.url).path.split('/')[-2])
         else:
             with resource_path('hentai.data', 'ids.csv') as data_path:
                 with open(data_path, mode='r', encoding='utf-8') as file_handler:
