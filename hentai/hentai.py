@@ -248,7 +248,7 @@ class RequestHandler(object):
     Defines a synchronous request handler class that provides methods and 
     properties for working with REST APIs.
     """
-    _timeout = (3.05, 1)
+    _timeout = (5, 5)
     _total = 5
     _status_forcelist = [413, 429, 500, 502, 503, 504]
     _backoff_factor = 1
@@ -526,15 +526,13 @@ class Hentai(RequestHandler):
         Store user-customized data about this `Hentai` object as a JSON file.
         Includes all available options by default.
         """
-        tmp = []
-        tmp.append(self.json)
-        Utils.export(tmp, filename, options)
+        Utils.export([self], filename, options)
 
     @staticmethod
     def exists(id: int, make_request: bool=True) -> bool:
         """
         Check whether or not the ID exists on `nhentai.net`. Set `make_request` 
-        to `False` to search for validated IDs in an internal file.
+        to `False` to search for already validated IDs in an internal file.
         """
         if make_request:
             try:
@@ -679,13 +677,13 @@ class Utils(object):
         if options is None:
             Utils.export(iterable, filename, options=[opt for opt in Option if opt.value != 'raw'])
         elif Option.Raw in options:
+            data = [doujin.json for doujin in iterable]
             with open(filename, mode='w', encoding='utf-8') as file_handler:
-                json.dump(iterable, file_handler)
+                json.dump(data, file_handler)
         else:
             content = { 'result' : [] }
-            for index, raw_json in enumerate(iterable):
+            for index, doujin in enumerate(iterable):
                 data = {}
-                doujin = Hentai(json=raw_json)
                 if Option.ID in options:
                     data['id'] = doujin.id
                 if Option.Title in options:
@@ -699,24 +697,23 @@ class Utils(object):
                 if Option.MediaID in options:
                     data['media_id'] = doujin.media_id
                 if Option.UploadDate in options:
-                    epos = doujin.upload_date.replace(tzinfo=timezone.utc).timestamp()
-                    data['upload_date'] = round(epos)
+                    data['upload_date'] = doujin.json['upload_date']
                 if Option.Favorites in options:
                     data['favorites'] = doujin.num_favorites
                 if Option.Tag in options:
-                    data['tag'] = Tag.get_names(doujin.tag)
+                    data['tag'] = [tag.name for tag in doujin.tag]
                 if Option.Group in options:
-                    data['group'] = Tag.get_names(doujin.group)
+                    data['group'] = [tag.name for tag in doujin.group]
                 if Option.Parody in options:
-                    data['parody'] = Tag.get_names(doujin.parody)
+                    data['parody'] = [tag.name for tag in doujin.parody]
                 if Option.Character in options:
-                    data['character'] = Tag.get_names(doujin.character)
+                    data['character'] = [tag.name for tag in doujin.character]
                 if Option.Language in options:
-                    data['language'] = Tag.get_names(doujin.language)
+                    data['language'] = [tag.name for tag in doujin.language]
                 if Option.Artist in options:
-                    data['artist'] = Tag.get_names(doujin.artist)
+                    data['artist'] = [tag.name for tag in doujin.artist]
                 if Option.Category in options:
-                    data['category'] = Tag.get_names(doujin.category)
+                    data['category'] = [tag.name for tag in doujin.category]
                 if Option.Cover in options:
                     data['cover'] = doujin.cover
                 if Option.Thumbnail in options:
