@@ -26,7 +26,7 @@ import random
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum, unique
 from importlib.resources import path as resource_path
 from pathlib import Path
@@ -334,18 +334,18 @@ class Hentai(RequestHandler):
         ```
         """
         if id and not json:
-            self.id = id
+            self.__id = id
             super().__init__(timeout, total, status_forcelist, backoff_factor)
-            self.handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
-            self.url = urljoin(Hentai._URL, str(self.id))
-            self.api = urljoin(Hentai._API, str(self.id))
-            self.response = self.handler.get(self.api)
-            self.json = self.response.json()
+            self.__handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
+            self.__url = urljoin(Hentai._URL, str(self.id))
+            self.__api = urljoin(Hentai._API, str(self.id))
+            self.__response = self.handler.get(self.api)
+            self.__json = self.response.json()
         elif not id and json:
-            self.json = json
-            self.id = Hentai.__get_id(self.json)
-            self.url = Hentai.__get_url(self.json)
-            self.api = Hentai.__get_api(self.json)
+            self.__json = json
+            self.__id = Hentai.__get_id(self.json)
+            self.__url = Hentai.__get_url(self.json)
+            self.__api = Hentai.__get_api(self.json)
         else:
             raise TypeError('Define either id or json argument, but not both or none')
 
@@ -354,6 +354,28 @@ class Hentai(RequestHandler):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(ID={self.id})"
+
+    #region operators
+
+    def __gt__(self, other) -> bool:
+        return self.id > other.id
+
+    def __ge__(self, other) -> bool:
+        return self.id >= other.id
+
+    def __eq__(self, other) -> bool:
+        return self.id == other.id
+
+    def __le__(self, other) -> bool:
+        return self.id <= other.id
+
+    def __lt__(self, other) -> bool:
+        return self.id < other.id
+
+    def __ne__(self, other) -> bool:
+        return self.id != other.id
+
+    #endregion
     
     @staticmethod
     def __get_id(json: dict) -> int:
@@ -375,6 +397,48 @@ class Hentai(RequestHandler):
         Return the API access point of an raw nhentai response object.
         """
         return urljoin(Hentai._API, str(Hentai.__get_id(json)))        
+
+    @property
+    def id(self):
+        """
+        Return the ID of this `Hentai` object.
+        """
+        return self.__id
+
+    @property
+    def url(self):
+        """
+        Return the URL of this `Hentai` object.
+        """
+        return self.__url
+
+    @property
+    def api(self):
+        """
+        Return the API access point of this `Hentai` object.
+        """
+        return self.__api
+
+    @property
+    def json(self):
+        """
+        Return the JSON content of this `Hentai` object.
+        """
+        return self.__json
+
+    @property
+    def handler(self):
+        """
+        Return the `RequestHandler` of this `Hentai` object.
+        """
+        return self.__handler
+
+    @property
+    def response(self):
+        """
+        Return the GET request response of this `Hentai` object.
+        """
+        return self.__response
 
     @property
     def media_id(self) -> int:
@@ -415,11 +479,18 @@ class Hentai(RequestHandler):
         return f"https://t.nhentai.net/galleries/{self.media_id}/thumb{thumb_ext}"
 
     @property
+    def epos(self) -> int:
+        """
+        Return the epos of this `Hentai` object.
+        """
+        return self.json['upload_date']
+
+    @property
     def upload_date(self) -> datetime:
         """
         Return the upload date of this `Hentai` object.
         """
-        return datetime.fromtimestamp(self.json['upload_date'])
+        return datetime.fromtimestamp(self.epos)
 
     __tag = lambda json, type: [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type]
 
@@ -513,9 +584,9 @@ class Hentai(RequestHandler):
         """
         dest = dest.joinpath(self.title(Format.Pretty))
         dest.mkdir(parents=True, exist_ok=True)
-        for image_url in self.image_urls:
-            response = self.handler.get(image_url, stream=True)
-            filename = dest.joinpath(dest.joinpath(image_url).name)
+        for page in self.pages:
+            response = self.handler.get(page.url, stream=True)
+            filename = dest.joinpath(page.filename)
             with open(filename, mode='wb') as file_handler:
                 for chunk in response.iter_content(1024):
                     file_handler.write(chunk)
@@ -612,9 +683,8 @@ class Utils(object):
             raise ValueError("Invalid argument passed to function (requires start_page <= end_page).")
         data = []
         for page in range(start_page, end_page + 1):
-            payload = { 'page' : page }
-            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params=payload).json()
-            data.extend([Hentai(json=raw_json) for raw_json in response['result']])
+            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={ 'page' : page })
+            data.extend([Hentai(json=raw_json) for raw_json in response.json()['result']])
         return data
 
     @staticmethod
@@ -677,9 +747,8 @@ class Utils(object):
         if options is None:
             Utils.export(iterable, filename, options=[opt for opt in Option if opt.value != 'raw'])
         elif Option.Raw in options:
-            data = [doujin.json for doujin in iterable]
             with open(filename, mode='w', encoding='utf-8') as file_handler:
-                json.dump(data, file_handler)
+                json.dump([doujin.json for doujin in iterable], file_handler)
         else:
             content = { 'result' : [] }
             for index, doujin in enumerate(iterable):
