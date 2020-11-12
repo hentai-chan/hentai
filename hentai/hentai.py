@@ -35,10 +35,12 @@ from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
 import requests
+from colorama import Fore
 from faker import Faker
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
 from requests.models import Response
+from tqdm import tqdm
 from urllib3.util.retry import Retry
 
 try:
@@ -47,6 +49,19 @@ try:
 except AssertionError:
     raise RuntimeError("Hentai requires Python 3.7+!") 
 
+def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', disable=False): 
+    """
+    Return options arguments for tqdm progressbars.
+    """
+    return {
+        'iterable': iterable,
+        'bar_format': "{l_bar}%s{bar}%s{r_bar}" % (color, Fore.RESET),
+        'ascii': char.rjust(9, ' '), 
+        'desc': desc, 
+        'unit': f" {unit}", 
+        'total': len(iterable), 
+        'disable': not disable
+    }
 
 @dataclass
 class Tag:
@@ -576,7 +591,7 @@ class Hentai(RequestHandler):
         """
         return [image.url for image in self.pages]
 
-    def download(self, dest: Path=Path.cwd(), delay: float=0) -> None:
+    def download(self, dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
         """
         Download all image URLs of this `Hentai` object to `dest` in a new folder,
         excluding cover and thumbnail. Set a `delay` between each image download 
@@ -584,10 +599,9 @@ class Hentai(RequestHandler):
         """
         dest = dest.joinpath(self.title(Format.Pretty))
         dest.mkdir(parents=True, exist_ok=True)
-        for page in self.pages:
+        for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
             response = self.handler.get(page.url, stream=True)
-            filename = dest.joinpath(page.filename)
-            with open(filename, mode='wb') as file_handler:
+            with open(dest.joinpath(page.filename), mode='wb') as file_handler:
                 for chunk in response.iter_content(1024):
                     file_handler.write(chunk)
                 time.sleep(delay)
@@ -666,15 +680,15 @@ class Utils(object):
         return Hentai(Utils.get_random_id(make_request, handler))
 
     @staticmethod
-    def download(ids: List[int], dest: Path=Path.cwd(), delay: float=0) -> None:
+    def download(ids: List[int], dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
         """
         Download all image URLs for multiple magic numbers to `dest` in newly 
         created folders. Set a `delay` between each image download in seconds.
         """
-        [Hentai(id).download(dest, delay) for id in ids]
+        [Hentai(id).download(dest, delay, progressbar) for id in ids]
 
     @staticmethod
-    def browse_homepage(start_page: int, end_page: int, handler=RequestHandler()) -> List[Hentai]:
+    def browse_homepage(start_page: int, end_page: int, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
         """
         Return a list of `Hentai` objects that are currently featured on the homepage 
         in range of `[start_page, end_page]`. Each page contains as much as 25 results.
@@ -682,7 +696,7 @@ class Utils(object):
         if start_page > end_page:
             raise ValueError("Invalid argument passed to function (requires start_page <= end_page).")
         data = []
-        for page in range(start_page, end_page + 1):
+        for page in tqdm(**_progressbar_options(range(start_page, end_page + 1), 'Browse', 'page', disable=progressbar)):
             response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={ 'page' : page })
             data.extend([Hentai(json=raw_json) for raw_json in response.json()['result']])
         return data
@@ -706,7 +720,7 @@ class Utils(object):
         return [Hentai(json=raw_json) for raw_json in response['result']]
 
     @staticmethod
-    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
+    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
         """
         Return a list of all `Hentai` objects that match this search `query` 
         sorted by `sort`.
@@ -725,7 +739,7 @@ class Utils(object):
         data = []
         payload = { 'query' : query, 'page' : 1, 'sort' : sort.value }
         response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
-        for page in range(1, int(response['num_pages']) + 1):
+        for page in tqdm(**_progressbar_options(range(1, int(response['num_pages']) + 1), 'Search', 'page', disable=progressbar)):
             data.extend(Utils.search_by_query(query, page, sort, handler))
         return data
 
