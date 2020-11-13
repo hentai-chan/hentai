@@ -22,7 +22,11 @@
     <a href="https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/hentai-chan/hentai.git">
         <img src="https://archive.softwareheritage.org/badge/origin/https://github.com/hentai-chan/hentai.git/">
     </a>
+<a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fhentai-chan%2Fhentai?ref=badge_shield" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhentai-chan%2Fhentai.svg?type=shield"/></a>
 </p>
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhentai-chan%2Fhentai.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhentai-chan%2Fhentai?ref=badge_large)
 
 # Python Hentai API Wrapper
 
