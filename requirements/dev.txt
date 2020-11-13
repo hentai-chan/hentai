@@ -1,5 +1,5 @@
 -r common.txt
 click==7.1.2
-pythonping==1.0.14
+pythonping==1.0.15
 matplotlib==3.3.3
 pandas==1.1.4
