@@ -26,7 +26,7 @@ import random
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum, unique
 from importlib.resources import path as resource_path
 from pathlib import Path
@@ -35,10 +35,12 @@ from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
 import requests
+from colorama import Fore
 from faker import Faker
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
 from requests.models import Response
+from tqdm import tqdm
 from urllib3.util.retry import Retry
 
 try:
@@ -47,6 +49,19 @@ try:
 except AssertionError:
     raise RuntimeError("Hentai requires Python 3.7+!") 
 
+def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', disable=False): 
+    """
+    Return options arguments for tqdm progressbars.
+    """
+    return {
+        'iterable': iterable,
+        'bar_format': "{l_bar}%s{bar}%s{r_bar}" % (color, Fore.RESET),
+        'ascii': char.rjust(9, ' '), 
+        'desc': desc, 
+        'unit': unit.rjust(1, ' '), 
+        'total': len(iterable), 
+        'disable': not disable
+    }
 
 @dataclass
 class Tag:
@@ -248,7 +263,7 @@ class RequestHandler(object):
     Defines a synchronous request handler class that provides methods and 
     properties for working with REST APIs.
     """
-    _timeout = (3.05, 1)
+    _timeout = (5, 5)
     _total = 5
     _status_forcelist = [413, 429, 500, 502, 503, 504]
     _backoff_factor = 1
@@ -334,18 +349,18 @@ class Hentai(RequestHandler):
         ```
         """
         if id and not json:
-            self.id = id
+            self.__id = id
             super().__init__(timeout, total, status_forcelist, backoff_factor)
-            self.handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
-            self.url = urljoin(Hentai._URL, str(self.id))
-            self.api = urljoin(Hentai._API, str(self.id))
-            self.response = self.handler.get(self.api)
-            self.json = self.response.json()
+            self.__handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
+            self.__url = urljoin(Hentai._URL, str(self.id))
+            self.__api = urljoin(Hentai._API, str(self.id))
+            self.__response = self.handler.get(self.api)
+            self.__json = self.response.json()
         elif not id and json:
-            self.json = json
-            self.id = Hentai.__get_id(self.json)
-            self.url = Hentai.__get_url(self.json)
-            self.api = Hentai.__get_api(self.json)
+            self.__json = json
+            self.__id = Hentai.__get_id(self.json)
+            self.__url = Hentai.__get_url(self.json)
+            self.__api = Hentai.__get_api(self.json)
         else:
             raise TypeError('Define either id or json argument, but not both or none')
 
@@ -354,6 +369,28 @@ class Hentai(RequestHandler):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(ID={self.id})"
+
+    #region operators
+
+    def __gt__(self, other) -> bool:
+        return self.id > other.id
+
+    def __ge__(self, other) -> bool:
+        return self.id >= other.id
+
+    def __eq__(self, other) -> bool:
+        return self.id == other.id
+
+    def __le__(self, other) -> bool:
+        return self.id <= other.id
+
+    def __lt__(self, other) -> bool:
+        return self.id < other.id
+
+    def __ne__(self, other) -> bool:
+        return self.id != other.id
+
+    #endregion
     
     @staticmethod
     def __get_id(json: dict) -> int:
@@ -375,6 +412,48 @@ class Hentai(RequestHandler):
         Return the API access point of an raw nhentai response object.
         """
         return urljoin(Hentai._API, str(Hentai.__get_id(json)))        
+
+    @property
+    def id(self):
+        """
+        Return the ID of this `Hentai` object.
+        """
+        return self.__id
+
+    @property
+    def url(self):
+        """
+        Return the URL of this `Hentai` object.
+        """
+        return self.__url
+
+    @property
+    def api(self):
+        """
+        Return the API access point of this `Hentai` object.
+        """
+        return self.__api
+
+    @property
+    def json(self):
+        """
+        Return the JSON content of this `Hentai` object.
+        """
+        return self.__json
+
+    @property
+    def handler(self):
+        """
+        Return the `RequestHandler` of this `Hentai` object.
+        """
+        return self.__handler
+
+    @property
+    def response(self):
+        """
+        Return the GET request response of this `Hentai` object.
+        """
+        return self.__response
 
     @property
     def media_id(self) -> int:
@@ -415,11 +494,18 @@ class Hentai(RequestHandler):
         return f"https://t.nhentai.net/galleries/{self.media_id}/thumb{thumb_ext}"
 
     @property
+    def epos(self) -> int:
+        """
+        Return the epos of this `Hentai` object.
+        """
+        return self.json['upload_date']
+
+    @property
     def upload_date(self) -> datetime:
         """
         Return the upload date of this `Hentai` object.
         """
-        return datetime.fromtimestamp(self.json['upload_date'])
+        return datetime.fromtimestamp(self.epos)
 
     __tag = lambda json, type: [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type]
 
@@ -505,7 +591,7 @@ class Hentai(RequestHandler):
         """
         return [image.url for image in self.pages]
 
-    def download(self, dest: Path=Path.cwd(), delay: float=0) -> None:
+    def download(self, dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
         """
         Download all image URLs of this `Hentai` object to `dest` in a new folder,
         excluding cover and thumbnail. Set a `delay` between each image download 
@@ -513,10 +599,9 @@ class Hentai(RequestHandler):
         """
         dest = dest.joinpath(self.title(Format.Pretty))
         dest.mkdir(parents=True, exist_ok=True)
-        for image_url in self.image_urls:
-            response = self.handler.get(image_url, stream=True)
-            filename = dest.joinpath(dest.joinpath(image_url).name)
-            with open(filename, mode='wb') as file_handler:
+        for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
+            response = self.handler.get(page.url, stream=True)
+            with open(dest.joinpath(page.filename), mode='wb') as file_handler:
                 for chunk in response.iter_content(1024):
                     file_handler.write(chunk)
                 time.sleep(delay)
@@ -526,15 +611,13 @@ class Hentai(RequestHandler):
         Store user-customized data about this `Hentai` object as a JSON file.
         Includes all available options by default.
         """
-        tmp = []
-        tmp.append(self.json)
-        Utils.export(tmp, filename, options)
+        Utils.export([self], filename, options)
 
     @staticmethod
     def exists(id: int, make_request: bool=True) -> bool:
         """
         Check whether or not the ID exists on `nhentai.net`. Set `make_request` 
-        to `False` to search for validated IDs in an internal file.
+        to `False` to search for already validated IDs in an internal file.
         """
         if make_request:
             try:
@@ -580,8 +663,8 @@ class Utils(object):
         already validated ID in an internal file.
         """
         if make_request:
-            response = handler.session.get(urljoin(Hentai.HOME, 'random'))
-            return int(urlparse(response.url).path[3:-1])
+            response = handler.get(urljoin(Hentai.HOME, 'random'))
+            return int(urlparse(response.url).path.split('/')[-2])
         else:
             with resource_path('hentai.data', 'ids.csv') as data_path:
                 with open(data_path, mode='r', encoding='utf-8') as file_handler:
@@ -597,15 +680,15 @@ class Utils(object):
         return Hentai(Utils.get_random_id(make_request, handler))
 
     @staticmethod
-    def download(ids: List[int], dest: Path=Path.cwd(), delay: float=0) -> None:
+    def download(ids: List[int], dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
         """
         Download all image URLs for multiple magic numbers to `dest` in newly 
         created folders. Set a `delay` between each image download in seconds.
         """
-        [Hentai(id).download(dest, delay) for id in ids]
+        [Hentai(id).download(dest, delay, progressbar) for id in ids]
 
     @staticmethod
-    def browse_homepage(start_page: int, end_page: int, handler=RequestHandler()) -> List[Hentai]:
+    def browse_homepage(start_page: int, end_page: int, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
         """
         Return a list of `Hentai` objects that are currently featured on the homepage 
         in range of `[start_page, end_page]`. Each page contains as much as 25 results.
@@ -613,10 +696,9 @@ class Utils(object):
         if start_page > end_page:
             raise ValueError("Invalid argument passed to function (requires start_page <= end_page).")
         data = []
-        for page in range(start_page, end_page + 1):
-            payload = { 'page' : page }
-            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params=payload).json()
-            data.extend([Hentai(json=raw_json) for raw_json in response['result']])
+        for page in tqdm(**_progressbar_options(range(start_page, end_page + 1), 'Browse', 'page', disable=progressbar)):
+            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={ 'page' : page })
+            data.extend([Hentai(json=raw_json) for raw_json in response.json()['result']])
         return data
 
     @staticmethod
@@ -638,7 +720,7 @@ class Utils(object):
         return [Hentai(json=raw_json) for raw_json in response['result']]
 
     @staticmethod
-    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
+    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
         """
         Return a list of all `Hentai` objects that match this search `query` 
         sorted by `sort`.
@@ -657,7 +739,7 @@ class Utils(object):
         data = []
         payload = { 'query' : query, 'page' : 1, 'sort' : sort.value }
         response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
-        for page in range(1, int(response['num_pages']) + 1):
+        for page in tqdm(**_progressbar_options(range(1, int(response['num_pages']) + 1), 'Search', 'page', disable=progressbar)):
             data.extend(Utils.search_by_query(query, page, sort, handler))
         return data
 
@@ -680,12 +762,11 @@ class Utils(object):
             Utils.export(iterable, filename, options=[opt for opt in Option if opt.value != 'raw'])
         elif Option.Raw in options:
             with open(filename, mode='w', encoding='utf-8') as file_handler:
-                json.dump(iterable, file_handler)
+                json.dump([doujin.json for doujin in iterable], file_handler)
         else:
             content = { 'result' : [] }
-            for index, raw_json in enumerate(iterable):
+            for index, doujin in enumerate(iterable):
                 data = {}
-                doujin = Hentai(json=raw_json)
                 if Option.ID in options:
                     data['id'] = doujin.id
                 if Option.Title in options:
@@ -699,24 +780,23 @@ class Utils(object):
                 if Option.MediaID in options:
                     data['media_id'] = doujin.media_id
                 if Option.UploadDate in options:
-                    epos = doujin.upload_date.replace(tzinfo=timezone.utc).timestamp()
-                    data['upload_date'] = round(epos)
+                    data['upload_date'] = doujin.json['upload_date']
                 if Option.Favorites in options:
                     data['favorites'] = doujin.num_favorites
                 if Option.Tag in options:
-                    data['tag'] = Tag.get_names(doujin.tag)
+                    data['tag'] = [tag.name for tag in doujin.tag]
                 if Option.Group in options:
-                    data['group'] = Tag.get_names(doujin.group)
+                    data['group'] = [tag.name for tag in doujin.group]
                 if Option.Parody in options:
-                    data['parody'] = Tag.get_names(doujin.parody)
+                    data['parody'] = [tag.name for tag in doujin.parody]
                 if Option.Character in options:
-                    data['character'] = Tag.get_names(doujin.character)
+                    data['character'] = [tag.name for tag in doujin.character]
                 if Option.Language in options:
-                    data['language'] = Tag.get_names(doujin.language)
+                    data['language'] = [tag.name for tag in doujin.language]
                 if Option.Artist in options:
-                    data['artist'] = Tag.get_names(doujin.artist)
+                    data['artist'] = [tag.name for tag in doujin.artist]
                 if Option.Category in options:
-                    data['category'] = Tag.get_names(doujin.category)
+                    data['category'] = [tag.name for tag in doujin.category]
                 if Option.Cover in options:
                     data['cover'] = doujin.cover
                 if Option.Thumbnail in options:
