@@ -97,9 +97,7 @@ class TestUtils(unittest.TestCase):
         self.tiny_evil.export(self.tiny_evil_file, options=[Option.Raw])
 
         with open(self.tiny_evil_file, mode='r', encoding='utf-8') as file_handler:
-            test_data = json.load(file_handler)[0]
-            from_file = Hentai(json=test_data)
-            self.assertEqual(self.tiny_evil, from_file, msg=f"AssumptionError: Build from file should match request")
+            self.assertEqual(self.tiny_evil, Hentai(json=json.load(file_handler)[0]), msg=f"AssumptionError: Build from file should match request")
 
 
 if __name__ == '__main__':
