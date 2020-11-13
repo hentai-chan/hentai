@@ -58,7 +58,7 @@ def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', 
         'bar_format': "{l_bar}%s{bar}%s{r_bar}" % (color, Fore.RESET),
         'ascii': char.rjust(9, ' '), 
         'desc': desc, 
-        'unit': f" {unit}", 
+        'unit': unit.rjust(1, ' '), 
         'total': len(iterable), 
         'disable': not disable
     }
