@@ -76,7 +76,6 @@ class TestHentai(unittest.TestCase):
 
     def test_exists(self):
         self.assertTrue(Hentai.exists(self.test_response.id), msg=str(self.test_response))
-        self.assertTrue(Hentai.exists(self.test_response.id, make_request=False), msg=f"{str(self.test_response)}: make_request=False")
         self.assertFalse(Hentai.exists(sys.maxsize), msg=f"Should have failed:{sys.maxsize}")
         self.assertFalse(Hentai.exists(-69), msg=f"Should have failed:{-69}")    
 

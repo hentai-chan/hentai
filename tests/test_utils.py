@@ -26,14 +26,12 @@ class TestUtils(unittest.TestCase):
         remove_dir(cls.tiny_evil_dir)
     
     def test_random_id(self):
-        print("Setting make_request flag to 'False'")
-        random_id = Utils.get_random_id(make_request=False)
+        random_id = Utils.get_random_id()
         response = requests.get(urljoin(Hentai._URL, str(random_id)))
         self.assertTrue(response.ok, msg=f"Failing ID: {random_id}. Failing URL: {response.url}")
 
     def test_random_hentai(self):
-        print("Setting make_request flag to 'False'")
-        random_hentai = Utils.get_random_hentai(make_request=False)
+        random_hentai = Utils.get_random_hentai()
         response = requests.get(random_hentai.url)
         self.assertTrue(response.ok, msg=f"Failing ID: {random_hentai.id}. Failing URL: {response.url}")
 
