@@ -20,22 +20,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
-import csv
 import json
-import random
 import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
-from importlib.resources import path as resource_path
 from pathlib import Path
 from typing import List, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
 import requests
-from colorama import Fore
+from colorama import init, Fore
 from faker import Faker
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
@@ -48,6 +45,8 @@ try:
     assert sys.version_info.minor >= 7
 except AssertionError:
     raise RuntimeError("Hentai requires Python 3.7+!") 
+
+init(autoreset=True)
 
 def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', disable=False): 
     """
@@ -368,7 +367,7 @@ class Hentai(RequestHandler):
         return self.title()
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(ID={self.id})"
+        return f"{self.__class__.__name__}(ID={str(self.id).zfill(6)})"
 
     #region operators
 
@@ -597,14 +596,7 @@ class Hentai(RequestHandler):
         excluding cover and thumbnail. Set a `delay` between each image download 
         in seconds.
         """
-        dest = dest.joinpath(self.title(Format.Pretty))
-        dest.mkdir(parents=True, exist_ok=True)
-        for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
-            response = self.handler.get(page.url, stream=True)
-            with open(dest.joinpath(page.filename), mode='wb') as file_handler:
-                for chunk in response.iter_content(1024):
-                    file_handler.write(chunk)
-                time.sleep(delay)
+        Utils.download([self.id], dest, delay, progressbar)
 
     def export(self, filename: Path, options: List[Option]=None) -> None:
         """
@@ -614,24 +606,14 @@ class Hentai(RequestHandler):
         Utils.export([self], filename, options)
 
     @staticmethod
-    def exists(id: int, make_request: bool=True) -> bool:
+    def exists(id: int) -> bool:
         """
-        Check whether or not the ID exists on `nhentai.net`. Set `make_request` 
-        to `False` to search for already validated IDs in an internal file.
+        Check whether or not the ID exists on `nhentai.net`.
         """
-        if make_request:
-            try:
-                return RequestHandler().get(urljoin(Hentai._URL, str(id))).ok        
-            except HTTPError:
-                return False
-        else:
-            with resource_path('hentai.data', 'ids.csv') as data_path:
-                with open(data_path, mode='r', encoding='utf-8') as file_handler:
-                    for row in csv.reader(file_handler):
-                        if id == int(row[0]):
-                            return True
+        try:
+            return RequestHandler().get(urljoin(Hentai._URL, str(id))).ok        
+        except HTTPError:
             return False
-
 
 class Utils(object):
     """
@@ -656,26 +638,19 @@ class Utils(object):
     ```
     """
     @staticmethod
-    def get_random_id(make_request: bool=True, handler=RequestHandler()) -> int:
+    def get_random_id(handler=RequestHandler()) -> int:
         """
-        Return a random ID. Set `make_request` to `False` to randomly select an 
-        already validated ID in an internal file.
+        Return a random ID.
         """
-        if make_request:
-            response = handler.get(urljoin(Hentai.HOME, 'random'))
-            return int(urlparse(response.url).path.split('/')[-2])
-        else:
-            with resource_path('hentai.data', 'ids.csv') as data_path:
-                with open(data_path, mode='r', encoding='utf-8') as file_handler:
-                    return random.choice([int(row[0]) for row in csv.reader(file_handler)])
+        response = handler.get(urljoin(Hentai.HOME, 'random'))
+        return int(urlparse(response.url).path.split('/')[-2])
 
     @staticmethod
-    def get_random_hentai(make_request: bool=True, handler=RequestHandler()) -> Hentai:
+    def get_random_hentai(handler=RequestHandler()) -> Hentai:
         """
-        Return a random `Hentai` object. Set `make_request` to `False` to randomly 
-        select an already validated ID in an internal file.
+        Return a random `Hentai` object.
         """
-        return Hentai(Utils.get_random_id(make_request, handler))
+        return Hentai(Utils.get_random_id(handler))
 
     @staticmethod
     def download(ids: List[int], dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
@@ -683,7 +658,20 @@ class Utils(object):
         Download all image URLs for multiple magic numbers to `dest` in newly 
         created folders. Set a `delay` between each image download in seconds.
         """
-        [Hentai(id).download(dest, delay, progressbar) for id in ids]
+        for id in ids:
+            try:
+                doujin = Hentai(id)
+                dest = dest.joinpath(doujin.title(Format.Pretty))
+                dest.mkdir(parents=True, exist_ok=True)
+                for page in tqdm(**_progressbar_options(doujin.pages, f"Download #{str(doujin.id).zfill(6)}", 'page', disable=progressbar)):
+                    response = doujin.handler.get(page.url, stream=True)
+                    with open(dest.joinpath(page.filename), mode='wb') as file_handler:
+                        for chunk in response.iter_content(1024):
+                            file_handler.write(chunk)
+                        time.sleep(delay)
+            except HTTPError as error:
+                if progressbar:
+                    print(f"{Fore.RED}#{str(id).zfill(6)}: {error}")
 
     @staticmethod
     def browse_homepage(start_page: int, end_page: int, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
