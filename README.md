@@ -51,13 +51,16 @@ fork this repository and run
 
 ```bash
 python -m venv venv/
-venv/Scripts/Activate.ps1
+source venv/bin/activate
 python -m pip install --upgrade pip
-pip install -r requirements/dev.txt
+pip install -r requirements.txt
+# additionally install the following dependencies
+pip install flake8 pytest
 ```
 
 Make sure to checkout `rec-hentai` so that your work is up-to-date with the next
-release candidate.
+release candidate. Be sure to take care and not use any features that are incompatible
+with version 3.7 of python.
 
 </details>
 
