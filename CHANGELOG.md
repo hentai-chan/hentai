@@ -1,5 +1,40 @@
 # Changelog
 
+## Version 3.1.0 (12 November 2020)
+
+This version adds a `progressbar` option (disabled by default) to the following
+functions:
+
+- `self.download` in `Hentai`
+- `Utils.download`
+- `Utils.browse_homepage`
+- `Utils.search_all_by_query`
+
+Another new feature allows a direct comparison between `Hentai` objects based on
+their ID:
+
+- `__gt__` (`>`)
+- `__ge__` (`>=`)
+- `__eq__` (`==`)
+- `__le__` (`<`)
+- `__lt__` (`<=`)
+- `__ne__` (`!=`)
+
+Additionally, you can now also access the `epos` value directly in `Hentai`
+by property instead of going back and forth between conversions. Lastly, the
+following fields are now readonly:
+
+- `self.id`
+- `self.json`
+- `self.url`
+- `self.api`
+- `self.handler`
+- `self.response`
+
+This upgrade also fixes an error that previously occurred when you used the `Option.Raw`
+option in `Utils.export`. Last but not least, the `RequestHandler._timeout` value
+has been relaxed to `(5,5)`.
+
 ## Version 3.0.0 (09 November 2020)
 
 This will be the last major update to this library as work on this project slowly

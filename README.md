@@ -96,7 +96,7 @@ print(doujin.upload_date)
 print(doujin.image_urls)
 
 # get the source
-doujin.download()
+doujin.download(progressbar=True)
 ```
 
 Apart from that, `hentai.Utils` also provides a handful of miscellaneous helper

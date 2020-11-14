@@ -92,6 +92,13 @@ class TestUtils(unittest.TestCase):
             self.assertIn(random_options[1].value, test_data, msg=f"KeyError {random_options[1].name} (Option 2)")
             self.assertIn(random_options[2].value, test_data, msg=f"KeyError {random_options[2].name} (Option 3)")
 
+        # case 3 checks the raw export option
+        print(f"CASE 3: Passing Option.Raw")
+        self.tiny_evil.export(self.tiny_evil_file, options=[Option.Raw])
+
+        with open(self.tiny_evil_file, mode='r', encoding='utf-8') as file_handler:
+            self.assertEqual(self.tiny_evil, Hentai(json=json.load(file_handler)[0]), msg=f"AssumptionError: Build from file should match request")
+
 
 if __name__ == '__main__':
     unittest.main()
