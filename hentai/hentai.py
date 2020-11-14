@@ -20,22 +20,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
-import csv
 import json
-import random
 import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
-from importlib.resources import path as resource_path
 from pathlib import Path
 from typing import List, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
 import requests
-from colorama import Fore
+from colorama import init, Fore
 from faker import Faker
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
@@ -48,6 +45,8 @@ try:
     assert sys.version_info.minor >= 7
 except AssertionError:
     raise RuntimeError("Hentai requires Python 3.7+!") 
+
+init(autoreset=True)
 
 def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', disable=False): 
     """
@@ -368,7 +367,7 @@ class Hentai(RequestHandler):
         return self.title()
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(ID={self.id})"
+        return f"{self.__class__.__name__}(ID={str(self.id).zfill(6)})"
 
     #region operators
 
@@ -597,14 +596,7 @@ class Hentai(RequestHandler):
         excluding cover and thumbnail. Set a `delay` between each image download 
         in seconds.
         """
-        dest = dest.joinpath(self.title(Format.Pretty))
-        dest.mkdir(parents=True, exist_ok=True)
-        for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
-            response = self.handler.get(page.url, stream=True)
-            with open(dest.joinpath(page.filename), mode='wb') as file_handler:
-                for chunk in response.iter_content(1024):
-                    file_handler.write(chunk)
-                time.sleep(delay)
+        Utils.download([self.id], dest, delay, progressbar)
 
     def export(self, filename: Path, options: List[Option]=None) -> None:
         """
@@ -666,7 +658,20 @@ class Utils(object):
         Download all image URLs for multiple magic numbers to `dest` in newly 
         created folders. Set a `delay` between each image download in seconds.
         """
-        [Hentai(id).download(dest, delay, progressbar) for id in ids]
+        for id in ids:
+            try:
+                doujin = Hentai(id)
+                dest = dest.joinpath(doujin.title(Format.Pretty))
+                dest.mkdir(parents=True, exist_ok=True)
+                for page in tqdm(**_progressbar_options(doujin.pages, f"Download #{str(doujin.id).zfill(6)}", 'page', disable=progressbar)):
+                    response = doujin.handler.get(page.url, stream=True)
+                    with open(dest.joinpath(page.filename), mode='wb') as file_handler:
+                        for chunk in response.iter_content(1024):
+                            file_handler.write(chunk)
+                        time.sleep(delay)
+            except HTTPError as error:
+                if progressbar:
+                    print(f"{Fore.RED}#{str(id).zfill(6)}: {error}")
 
     @staticmethod
     def browse_homepage(start_page: int, end_page: int, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
