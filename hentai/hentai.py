@@ -302,7 +302,7 @@ class RequestHandler(object):
         """
         assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
         session = requests.Session()
-        session.mount("https://", HTTPAdapter(max_retries = self.retry_strategy))
+        session.mount("https://", HTTPAdapter(max_retries=self.retry_strategy))
         session.hooks['response'] = [assert_status_hook]
         session.headers.update({
             "User-Agent" : RequestHandler._fake.chrome(version_from=80, version_to=86, build_from=4100, build_to=4200)
@@ -314,7 +314,7 @@ class RequestHandler(object):
         Returns the GET request encoded in `utf-8`. Adds proxies to this session 
         on the fly if urllib is able to pick up the system's proxy settings.
         """
-        response = self.session.get(url, timeout = self.timeout, params = params, proxies=getproxies(), **kwargs)
+        response = self.session.get(url, timeout=self.timeout, params=params, proxies=getproxies(), **kwargs)
         response.encoding = 'utf-8'
         return response
 
@@ -627,8 +627,7 @@ class Hentai(RequestHandler):
         else:
             with resource_path('hentai.data', 'ids.csv') as data_path:
                 with open(data_path, mode='r', encoding='utf-8') as file_handler:
-                    reader = csv.reader(file_handler)
-                    for row in reader:
+                    for row in csv.reader(file_handler):
                         if id == int(row[0]):
                             return True
             return False
@@ -668,8 +667,7 @@ class Utils(object):
         else:
             with resource_path('hentai.data', 'ids.csv') as data_path:
                 with open(data_path, mode='r', encoding='utf-8') as file_handler:
-                    reader = csv.reader(file_handler)
-                    return random.choice([int(row[0]) for row in reader])
+                    return random.choice([int(row[0]) for row in csv.reader(file_handler)])
 
     @staticmethod
     def get_random_hentai(make_request: bool=True, handler=RequestHandler()) -> Hentai:
