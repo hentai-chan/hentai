@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 3.1.1 (14 November 2020)
+
+Deprecates the `make_request` parameter everywhere and adds proper error handling
+to both download functions.
+
 ## Version 3.1.0 (12 November 2020)
 
 This version adds a `progressbar` option (disabled by default) to the following
