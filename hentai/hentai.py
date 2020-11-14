@@ -614,24 +614,14 @@ class Hentai(RequestHandler):
         Utils.export([self], filename, options)
 
     @staticmethod
-    def exists(id: int, make_request: bool=True) -> bool:
+    def exists(id: int) -> bool:
         """
-        Check whether or not the ID exists on `nhentai.net`. Set `make_request` 
-        to `False` to search for already validated IDs in an internal file.
+        Check whether or not the ID exists on `nhentai.net`.
         """
-        if make_request:
-            try:
-                return RequestHandler().get(urljoin(Hentai._URL, str(id))).ok        
-            except HTTPError:
-                return False
-        else:
-            with resource_path('hentai.data', 'ids.csv') as data_path:
-                with open(data_path, mode='r', encoding='utf-8') as file_handler:
-                    for row in csv.reader(file_handler):
-                        if id == int(row[0]):
-                            return True
+        try:
+            return RequestHandler().get(urljoin(Hentai._URL, str(id))).ok        
+        except HTTPError:
             return False
-
 
 class Utils(object):
     """
@@ -656,26 +646,19 @@ class Utils(object):
     ```
     """
     @staticmethod
-    def get_random_id(make_request: bool=True, handler=RequestHandler()) -> int:
+    def get_random_id(handler=RequestHandler()) -> int:
         """
-        Return a random ID. Set `make_request` to `False` to randomly select an 
-        already validated ID in an internal file.
+        Return a random ID.
         """
-        if make_request:
-            response = handler.get(urljoin(Hentai.HOME, 'random'))
-            return int(urlparse(response.url).path.split('/')[-2])
-        else:
-            with resource_path('hentai.data', 'ids.csv') as data_path:
-                with open(data_path, mode='r', encoding='utf-8') as file_handler:
-                    return random.choice([int(row[0]) for row in csv.reader(file_handler)])
+        response = handler.get(urljoin(Hentai.HOME, 'random'))
+        return int(urlparse(response.url).path.split('/')[-2])
 
     @staticmethod
-    def get_random_hentai(make_request: bool=True, handler=RequestHandler()) -> Hentai:
+    def get_random_hentai(handler=RequestHandler()) -> Hentai:
         """
-        Return a random `Hentai` object. Set `make_request` to `False` to randomly 
-        select an already validated ID in an internal file.
+        Return a random `Hentai` object.
         """
-        return Hentai(Utils.get_random_id(make_request, handler))
+        return Hentai(Utils.get_random_id(handler))
 
     @staticmethod
     def download(ids: List[int], dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
