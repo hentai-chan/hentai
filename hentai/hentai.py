@@ -50,7 +50,7 @@ init(autoreset=True)
 
 def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', disable=False): 
     """
-    Return options arguments for tqdm progressbars.
+    Return options arguments for `tqdm` progressbars.
     """
     return {
         'iterable': iterable,
@@ -79,13 +79,13 @@ class Tag:
         """
         Return a list of IDs corresponding to the passed Tag objects.
         
-        ### Example:
-        ```python
-        >>> from hentai import Hentai, Tag
-        >>> doujin = Hentai(177013)
-        >>> Tag.get_ids(doujin.artist)
-        3981
-        ```
+        Example
+        -------
+            >>> from hentai import Hentai, Tag
+            >>> doujin = Hentai(177013)
+            >>> Tag.get_ids(doujin.artist)
+            3981
+        
         """
         ids = [tag.id for tag in tags]
         return ids[0] if len(ids) == 1 else ids
@@ -95,13 +95,12 @@ class Tag:
         """
         Return a list of types corresponding to the passed Tag objects.
 
-        ### Example:
-        ```python
-        >>> from hentai import Hentai, Tag
-        >>> doujin = Hentai(177013)
-        >>> Tag.get_types(doujin.artist)
-        'artist'
-        ```
+        Example
+        -------
+            >>> from hentai import Hentai, Tag
+            >>> doujin = Hentai(177013)
+            >>> Tag.get_types(doujin.artist)
+            'artist'
         """
         types = [tag.type for tag in tags]
         return types[0] if len(types) == 1 else types 
@@ -111,13 +110,12 @@ class Tag:
         """
         Return a list of capitalized names corresponding to the passed Tag objects.
 
-        ### Example:
-        ```python
-        >>> from hentai import Hentai, Tag
-        >>> doujin = Hentai(177013)
-        >>> Tag.get_names(doujin.artist)
-        'Shindol'
-        ```
+        Example
+        -------
+            >>> from hentai import Hentai, Tag
+            >>> doujin = Hentai(177013)
+            >>> Tag.get_names(doujin.artist)
+            'Shindol'
         """
         capitalize_all = lambda sequence: ' '.join([word.capitalize() for word in sequence.split(' ')])
         artists = [capitalize_all(tag.name) for tag in tags]
@@ -128,13 +126,12 @@ class Tag:
         """
         Return a list of URLs corresponding to the passed Tag objects.
         
-        ### Example:
-        ```python
-        >>> from hentai import Hentai, Tag
-        >>> doujin = Hentai(177013)
-        >>> Tag.get_urls(doujin.artist)
-        '/artist/shindol/'
-        ```
+        Example
+        -------
+            >>> from hentai import Hentai, Tag
+            >>> doujin = Hentai(177013)
+            >>> Tag.get_urls(doujin.artist)
+            '/artist/shindol/'
         """
         urls = [tag.url for tag in tags]
         return urls[0] if len(urls) == 1 else urls
@@ -144,13 +141,12 @@ class Tag:
         """
         Return a list of counts (of occurrences) corresponding to the passed Tag objects.
 
-        ### Example:
-        ```python
-        >>> from hentai import Hentai, Tag
-        >>> doujin = Hentai(177013)
-        >>> Tag.get_counts(doujin.artist)
-        279
-        ```
+        Example
+        -------
+            >>> from hentai import Hentai, Tag
+            >>> doujin = Hentai(177013)
+            >>> Tag.get_counts(doujin.artist)
+            279
         """
         counts = [tag.count for tag in tags]
         return counts[0] if len(counts) == 1 else counts
@@ -171,12 +167,12 @@ class Page:
         """
         Return the file name for this `Page` as Path object.
 
-        ### Example:
-        ```python
-        >>> from hentai import Hentai
-        >>> doujin = Hentai(177013)
-        >>> [page.filename for page in doujin.pages]
-        [WindowsPath('1.jpg'), WindowsPath('2.jpg'), ...]
+        Example
+        -------
+            >>> from hentai import Hentai
+            >>> doujin = Hentai(177013)
+            >>> [page.filename for page in doujin.pages]
+            [WindowsPath('1.jpg'), WindowsPath('2.jpg'), ...]
         """
         num = Path(urlparse(self.url).path).name
         return Path(num).with_suffix(self.ext)
@@ -185,7 +181,7 @@ class Page:
 @unique
 class Sort(Enum):
     """
-    Exposed endpoints used to sort queries. Defaults to `Popular`.
+    Expose endpoints used to sort queries. Defaults to `Popular`.
     """
     Popular = 'popular'
     PopularYear = 'popular-year'
@@ -198,7 +194,7 @@ class Sort(Enum):
 @unique
 class Option(Enum):
     """
-    Defines export options for the `Hentai` and `Utils` class.
+    Define export options for the `Hentai` and `Utils` class.
     """
     Raw = 'raw'
     ID = 'id'
@@ -247,12 +243,11 @@ class Extension(Enum):
         """
         Convert Extension enum to its string representation.
 
-        ### Example:
-        ```python
-        >>> from hentai import Extension
-        >>> Extension.convert('j')
-        '.jpg'
-        ```
+        Example
+        -------
+            >>> from hentai import Extension
+            >>> Extension.convert('j')
+            '.jpg'
         """
         return f".{cls(key).name.lower()}"
 
@@ -320,10 +315,22 @@ class RequestHandler(object):
 
 class Hentai(RequestHandler):
     """
-    # Python Hentai API Wrapper
+    Python Hentai API Wrapper
+    =========================
     Implements a wrapper class around `nhentai`'s RESTful API that inherits from
     `RequestHandler`. Note that the content of this module is generally considered 
     NSFW.
+
+    Basic Usage
+    ------------
+        >>> from hentai import Hentai
+        >>> doujin = Hentai(177013)
+        >>> print(doujin)
+        '[ShindoLA] METAMORPHOSIS (Complete) [English]'
+
+    Docs
+    ----
+    See full documentation is at <http://localhost:8080/projects/hentai>.
     """
     HOME = "https://nhentai.net/" 
     _URL = urljoin(HOME, '/g/')
@@ -338,14 +345,6 @@ class Hentai(RequestHandler):
                  json: dict=None):
         """
         Start a request session and parse meta data from `nhentai.net` for this `id`.
-
-        ## Basic Usage:
-        ```python
-        >>> from hentai import Hentai
-        >>> doujin = Hentai(177013)
-        >>> print(doujin)
-        '[ShindoLA] METAMORPHOSIS (Complete) [English]'
-        ```
         """
         if id and not json:
             self.__id = id
@@ -608,7 +607,7 @@ class Hentai(RequestHandler):
     @staticmethod
     def exists(id: int) -> bool:
         """
-        Check whether or not the ID exists on `nhentai.net`.
+        Check whether or not an ID exists on `nhentai.net`.
         """
         try:
             return RequestHandler().get(urljoin(Hentai._URL, str(id))).ok        
@@ -617,25 +616,22 @@ class Hentai(RequestHandler):
 
 class Utils(object):
     """
-    # Hentai Utility Library
+    Hentai Utility Library
+    ======================
 
     This class provides a handful of miscellaneous static methods that extend the 
     functionality of the `Hentai` class.
 
-    ### Example 1
-    ```python
-    >>> from hentai import Utils
-    >>> print(Utils.get_random_id())
-    177013
-    ```
+    Example 1
+    ---------
+        >>> from hentai import Utils
+        >>> print(Utils.get_random_id())
+        177013
 
-    ### Example 2
-    ```python
-    from hentai import Hentai, Sort, Format, Utils
-    >>> # fetches 25 responses per query
-    >>> for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
-    ...   print(doujin.title(Format.Pretty))
-    ```
+    Example 2
+    ---------
+        >>> from hentai import Hentai, Sort, Format, Utils
+        >>> lolis = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
     """
     @staticmethod
     def get_random_id(handler=RequestHandler()) -> int:
@@ -655,8 +651,9 @@ class Utils(object):
     @staticmethod
     def download(ids: List[int], dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
         """
-        Download all image URLs for multiple magic numbers to `dest` in newly 
-        created folders. Set a `delay` between each image download in seconds.
+        Download all image URLs for multiple IDs to `dest` in separate folders. 
+        Set a `delay` between each image download in seconds. Enable `progressbar` 
+        for status feedback in terminal applications.
         """
         for id in ids:
             try:
@@ -678,6 +675,7 @@ class Utils(object):
         """
         Return a list of `Hentai` objects that are currently featured on the homepage 
         in range of `[start_page, end_page]`. Each page contains as much as 25 results.
+        Enable `progressbar` for status feedback in terminal applications.
         """
         if start_page > end_page:
             raise ValueError("Invalid argument passed to function (requires start_page <= end_page).")
@@ -709,18 +707,12 @@ class Utils(object):
     def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
         """
         Return a list of all `Hentai` objects that match this search `query` 
-        sorted by `sort`.
+        sorted by `sort`. Enable `progressbar` for status feedback in terminal applications.
 
-        ### Example:
-        ```python
-        >>> from hentai import Utils, Sort, Format
-        >>> # fetches all responses that match this query
-        >>> for doujin in Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek):
-        ...   print(doujin)
-        A Rebel's Journey:  Chang'e
-        COMIC KURiBERON 2019-06 Vol. 80
-        Mixed Wrestling Japan 2019
-        ```
+        Example
+        -------
+            >>> from hentai import Utils, Sort, Format
+            >>> lolis = Utils.search_all_by_query('tag:loli', sort=Sort.PopularToday)
         """
         data = []
         payload = { 'query' : query, 'page' : 1, 'sort' : sort.value }
@@ -735,14 +727,11 @@ class Utils(object):
         Store user-customized data of `Hentai` objects as a JSON file.
         Includes all available options by default.
 
-        ### Example:
-        ```python
-        >>> from hentai import Utils, Sort, Option
-        >>> popular_loli = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
-        >>> # filter file content using options
-        >>> custom = [Option.ID, Option.Title, Option.UploadDate]
-        >>> Utils.export(popular_loli, Path('popular_loli.json'), options=custom)
-        ```
+        Example
+        -------
+            >>> from hentai import Utils, Sort, Option
+            >>> lolis = Utils.search_by_query('tag:loli', sort=Sort.PopularToday)
+            >>> Utils.export(popular_loli, Path('lolis.json'), options=[Option.ID, Option.Title])
         """
         if options is None:
             Utils.export(iterable, filename, options=[opt for opt in Option if opt.value != 'raw'])
