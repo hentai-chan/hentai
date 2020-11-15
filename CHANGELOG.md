@@ -3,7 +3,9 @@
 ## Version 3.1.1 (14 November 2020)
 
 Deprecates the `make_request` parameter everywhere and adds proper error handling
-to both download functions.
+to both download functions. Changes doc strings to the restructured text format
+because of the better linting support. Lastly, this patch removes old artifacts
+which considerably reduces the file size of this module.
 
 ## Version 3.1.0 (12 November 2020)
 
