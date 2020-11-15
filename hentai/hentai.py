@@ -330,7 +330,7 @@ class Hentai(RequestHandler):
 
     Docs
     ----
-    See full documentation is at <http://localhost:8080/projects/hentai>.
+    See full documentation is at <https://hentaichan.pythonanywhere.com/projects/hentai>.
     """
     HOME = "https://nhentai.net/" 
     _URL = urljoin(HOME, '/g/')
