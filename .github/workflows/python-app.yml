@@ -10,11 +10,11 @@ on:
       - rec-*
       - dev-*
   pull_request:
-    types: closed
     branches: 
       - master
       - rec-*
       - dev-*
+      - dependabot/*
 
 jobs:
   build:
