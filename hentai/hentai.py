@@ -284,7 +284,10 @@ class RequestHandler(object):
         factor. It is used in the session property where these values are 
         passed to the HTTPAdapter. 
         """
-        return Retry(self.total, self.status_forcelist, self.backoff_factor)
+        return Retry(total=self.total,
+            status_forcelist=self.status_forcelist,
+            backoff_factor=self.backoff_factor
+        )
 
     @property
     def session(self) -> Session:
