@@ -1,5 +1,14 @@
 # Changelog
 
+## Version 3.1.2 (16 November 2020)
+
+Fixes an error in `RequestHandler` where `retry_strategy` passed its arguments
+in the wrong order to `Retry` which caused the session to halt at times, courtesy
+of @kiranajij <kiranajij216@gmail.com>.
+
+On top of that, this patch also adds an `exists` decorator to the `Utils` class
+for better error handling.
+
 ## Version 3.1.1 (14 November 2020)
 
 Deprecates the `make_request` parameter everywhere and adds proper error handling
