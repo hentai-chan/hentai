@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
+import functools
 import json
 import sys
 import time
@@ -32,7 +33,7 @@ from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
 import requests
-from colorama import init, Fore
+from colorama import Fore, init
 from faker import Faker
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
@@ -284,7 +285,10 @@ class RequestHandler(object):
         factor. It is used in the session property where these values are 
         passed to the HTTPAdapter. 
         """
-        return Retry(self.total, self.status_forcelist, self.backoff_factor)
+        return Retry(total=self.total,
+            status_forcelist=self.status_forcelist,
+            backoff_factor=self.backoff_factor
+        )
 
     @property
     def session(self) -> Session:
@@ -322,7 +326,7 @@ class Hentai(RequestHandler):
     NSFW.
 
     Basic Usage
-    ------------
+    -----------
         >>> from hentai import Hentai
         >>> doujin = Hentai(177013)
         >>> print(doujin)
@@ -607,7 +611,7 @@ class Hentai(RequestHandler):
     @staticmethod
     def exists(id: int) -> bool:
         """
-        Check whether or not an ID exists on `nhentai.net`.
+        Check whether or not an ID exists on <https://nhentai.net>.
         """
         try:
             return RequestHandler().get(urljoin(Hentai._URL, str(id))).ok        
@@ -633,6 +637,18 @@ class Utils(object):
         >>> from hentai import Hentai, Sort, Format, Utils
         >>> lolis = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
     """
+    def exists(error_msg: bool=False):
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                try:
+                    return func(*args, **kwargs)
+                except HTTPError as error:
+                    if error_msg:
+                        print(f"{Fore.RED}{error}")
+            return wrapper
+        return decorator
+
     @staticmethod
     def get_random_id(handler=RequestHandler()) -> int:
         """
@@ -700,8 +716,8 @@ class Utils(object):
         `query` sorted by `sort`.
         """
         payload = { 'query' : query, 'page' : page, 'sort' : sort.value }
-        response = handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload).json()
-        return [Hentai(json=raw_json) for raw_json in response['result']]
+        response = handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload)
+        return [Hentai(json=raw_json) for raw_json in response.json()['result']]
 
     @staticmethod
     def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
