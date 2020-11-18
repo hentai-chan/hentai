@@ -38,6 +38,7 @@ from faker import Faker
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
 from requests.models import Response
+from requests_html import HTMLSession
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
@@ -62,6 +63,11 @@ def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', 
         'total': len(iterable), 
         'disable': not disable
     }
+
+@dataclass
+class Homepage:
+    popular_now: List[Hentai]
+    new_uploads: List[Hentai]
 
 @dataclass
 class Tag:
@@ -702,12 +708,29 @@ class Utils(object):
         return data
 
     @staticmethod
-    def get_homepage(page: int=1, handler=RequestHandler()) -> List[Hentai]:
+    def get_homepage(page: int=1, handler=RequestHandler()) -> Homepage:
         """
-        Return a list of `Hentai` objects that are currently featured on the homepage.
-        Each page contains as much as 25 results.
+        Return a `Homepage` object which contains two properties, `popular_now`
+        and `new_uploads`. There are always 5 doujins featured in the popular
+        now section, while `new_uploads` returns the last 25 doujins added to the
+        DB online.
+        
+        Example
+        -------
+            >>> from hentai import Utils
+            >>> popular_now = Utils.get_homepage().popular_now
         """
-        return Utils.browse_homepage(page, page, handler)
+        try:
+            response = HTMLSession().get(Hentai.HOME)
+        except HTTPError as error:
+            print(f"{Fore.RED}{error}")
+        else:
+            titles = response.html.find("div.index-popular", first=True).text
+
+            return Homepage(
+                popular_now=[doujin for doujin in Utils.search_by_query(query='*', sort=Sort.PopularToday) if str(doujin) in titles],
+                new_uploads=Utils.browse_homepage(1, 1, handler)
+            )
 
     @staticmethod
     def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
