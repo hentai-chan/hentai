@@ -40,7 +40,7 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(self.tiny_evil_dir.is_dir())
 
     def test_get_homepage(self):
-        homepage = Utils.get_homepage()
+        homepage = Utils.get_homepage().popular_now
         for doujin in homepage:
             self.assertIsNotNone(doujin.json, msg="Result should not be 'None'.")
             self.assertTrue(doujin.id, msg="ValueError: ID")
