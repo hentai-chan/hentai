@@ -210,7 +210,7 @@ class Option(Enum):
     URL = 'url'
     API = 'api'
     MediaID = 'media_id'
-    UploadDate = 'upload_date'
+    Epos = 'epos'
     Favorites = 'favorites'
     Tag = 'tag'
     Group = 'group'
@@ -515,7 +515,8 @@ class Hentai(RequestHandler):
         """
         return datetime.fromtimestamp(self.epos)
 
-    __tag = lambda json, type: [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type]
+    def __tag(json: dict, type: str) -> List[Tag]:
+        return [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type]
 
     @property
     def tag(self) -> List[Tag]:
@@ -589,7 +590,7 @@ class Hentai(RequestHandler):
         """
         pages = self.json['images']['pages']
         extension = lambda num: Extension.convert(pages[num]['t'])
-        image_url = lambda num: f"https://i.nhentai.net/galleries/{self.media_id}/{num}{extension(num - 1)}"
+        image_url = lambda num: f"https://i.nhentai.net/galleries/{self.media_id}/{num}{extension(num-1)}"
         return [Page(image_url(num + 1), Extension.convert(_['t']), _['w'], _['h']) for num, _ in enumerate(pages)]
 
     @property
@@ -701,7 +702,7 @@ class Utils(object):
         if start_page > end_page:
             raise ValueError("Invalid argument passed to function (requires start_page <= end_page).")
         data = []
-        for page in tqdm(**_progressbar_options(range(start_page, end_page + 1), 'Browse', 'page', disable=progressbar)):
+        for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
             response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={ 'page' : page })
             data.extend([Hentai(json=raw_json) for raw_json in response.json()['result']])
         return data
@@ -727,7 +728,7 @@ class Utils(object):
             titles = response.html.find("div.index-popular", first=True).text
 
             return Homepage(
-                popular_now=[doujin for doujin in Utils.search_by_query(query='*', sort=Sort.PopularToday) if str(doujin) in titles],
+                popular_now=[doujin for doujin in Utils.search_by_query(query='*', sort=Sort.PopularToday, handler=handler) if str(doujin) in titles],
                 new_uploads=Utils.browse_homepage(1, 1, handler)
             )
 
@@ -737,7 +738,7 @@ class Utils(object):
         Return a list of `Hentai` objects on page `page` that match this search 
         `query` sorted by `sort`.
         """
-        payload = { 'query' : query, 'page' : page, 'sort' : sort.value }
+        payload = {'query': query, 'page': page, 'sort': sort.value}
         response = handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload)
         return [Hentai(json=raw_json) for raw_json in response.json()['result']]
 
@@ -753,10 +754,23 @@ class Utils(object):
             >>> lolis = Utils.search_all_by_query('tag:loli', sort=Sort.PopularToday)
         """
         data = []
-        payload = { 'query' : query, 'page' : 1, 'sort' : sort.value }
+        payload = {'query': query, 'page': 1, 'sort': sort.value}
         response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
-        for page in tqdm(**_progressbar_options(range(1, int(response['num_pages']) + 1), 'Search', 'page', disable=progressbar)):
+        for page in tqdm(**_progressbar_options(range(1, int(response['num_pages'])+1), 'Search', 'page', disable=progressbar)):
             data.extend(Utils.search_by_query(query, page, sort, handler))
+        return data
+
+    @staticmethod
+    def __dictionary(doujin: Hentai, options: List[Option]) -> dict:
+        data = {}
+        for option in options:
+            property = getattr(doujin, option.value)
+            if isinstance(property[0], Tag):
+                data[option.value] = [tag.name for tag in property]
+            elif property == str(doujin):
+                data[option.value] = doujin.title(Format.Pretty)
+            else:
+                data[option.value] = property
         return data
 
     @staticmethod
@@ -777,47 +791,6 @@ class Utils(object):
             with open(filename, mode='w', encoding='utf-8') as file_handler:
                 json.dump([doujin.json for doujin in iterable], file_handler)
         else:
-            content = { 'result' : [] }
-            for index, doujin in enumerate(iterable):
-                data = {}
-                if Option.ID in options:
-                    data['id'] = doujin.id
-                if Option.Title in options:
-                    data['title'] = doujin.title(format=Format.Pretty)
-                if Option.Scanlator in options:
-                    data['scanlator'] = doujin.scanlator
-                if Option.URL in options:
-                    data['url'] = doujin.url
-                if Option.API in options:
-                    data['api'] = doujin.api
-                if Option.MediaID in options:
-                    data['media_id'] = doujin.media_id
-                if Option.UploadDate in options:
-                    data['upload_date'] = doujin.json['upload_date']
-                if Option.Favorites in options:
-                    data['favorites'] = doujin.num_favorites
-                if Option.Tag in options:
-                    data['tag'] = [tag.name for tag in doujin.tag]
-                if Option.Group in options:
-                    data['group'] = [tag.name for tag in doujin.group]
-                if Option.Parody in options:
-                    data['parody'] = [tag.name for tag in doujin.parody]
-                if Option.Character in options:
-                    data['character'] = [tag.name for tag in doujin.character]
-                if Option.Language in options:
-                    data['language'] = [tag.name for tag in doujin.language]
-                if Option.Artist in options:
-                    data['artist'] = [tag.name for tag in doujin.artist]
-                if Option.Category in options:
-                    data['category'] = [tag.name for tag in doujin.category]
-                if Option.Cover in options:
-                    data['cover'] = doujin.cover
-                if Option.Thumbnail in options:
-                    data['thumbnail'] = doujin.thumbnail
-                if Option.Images in options:
-                    data['images'] = doujin.image_urls
-                if Option.PageCount in options:
-                    data['pages'] = doujin.num_pages
-                content['result'].insert(index, data)
+            content = {'result': [Utils.__dictionary(doujin, options) for doujin in iterable]}
             with open(filename, mode='w', encoding='utf-8') as file_handler:
                 json.dump(content, file_handler)
