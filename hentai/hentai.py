@@ -24,6 +24,7 @@ import functools
 import json
 import sys
 import time
+import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
@@ -94,6 +95,7 @@ class Tag:
             3981
         
         """
+        warnings.warn("This method will be deprecated in version 3.1.4")
         ids = [tag.id for tag in tags]
         return ids[0] if len(ids) == 1 else ids
 
@@ -109,6 +111,7 @@ class Tag:
             >>> Tag.get_types(doujin.artist)
             'artist'
         """
+        warnings.warn("This method will be deprecated in version 3.1.4")
         types = [tag.type for tag in tags]
         return types[0] if len(types) == 1 else types 
 
@@ -124,6 +127,7 @@ class Tag:
             >>> Tag.get_names(doujin.artist)
             'Shindol'
         """
+        warnings.warn("This method will be deprecated in version 3.1.4")
         capitalize_all = lambda sequence: ' '.join([word.capitalize() for word in sequence.split(' ')])
         artists = [capitalize_all(tag.name) for tag in tags]
         return artists[0] if len(artists) == 1 else artists
@@ -140,6 +144,7 @@ class Tag:
             >>> Tag.get_urls(doujin.artist)
             '/artist/shindol/'
         """
+        warnings.warn("This method will be deprecated in version 3.1.4")
         urls = [tag.url for tag in tags]
         return urls[0] if len(urls) == 1 else urls
 
@@ -155,6 +160,7 @@ class Tag:
             >>> Tag.get_counts(doujin.artist)
             279
         """
+        warnings.warn("This method will be deprecated in version 3.1.4")
         counts = [tag.count for tag in tags]
         return counts[0] if len(counts) == 1 else counts
 
@@ -767,8 +773,6 @@ class Utils(object):
             property = getattr(doujin, option.value)
             if isinstance(property, list) and len(property) != 0 and isinstance(property[0], Tag):
                 data[option.value] = [tag.name for tag in property]
-            elif isinstance(property, list):
-                data[option.value] = property
             elif option.value == 'title':
                 data[option.value] = doujin.title(Format.Pretty)
             else:
