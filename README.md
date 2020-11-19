@@ -16,7 +16,7 @@
     </a>
     <img src="https://img.shields.io/pypi/v/hentai?color=blue&label=Release">
     <a href="https://www.codefactor.io/repository/github/hentai-chan/hentai">
-        <img src="https://www.codefactor.io/repository/github/hentai-chan/hentai/badge" alt="CodeFactor" />
+        <img src="https://www.codefactor.io/repository/github/hentai-chan/hentai/badge">
     </a>
     <img src="https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9-blue">
     <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">
