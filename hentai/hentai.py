@@ -605,7 +605,7 @@ class Hentai(RequestHandler):
         excluding cover and thumbnail. Set a `delay` between each image download 
         in seconds.
         """
-        Utils.download([self.id], dest, delay, progressbar)
+        Utils.download([self], dest, delay, progressbar)
 
     def export(self, filename: Path, options: List[Option]=None) -> None:
         """
@@ -671,15 +671,14 @@ class Utils(object):
         return Hentai(Utils.get_random_id(handler))
 
     @staticmethod
-    def download(ids: List[int], dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
+    def download(doujins: List[Hentai], dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
         """
         Download all image URLs for multiple IDs to `dest` in separate folders. 
         Set a `delay` between each image download in seconds. Enable `progressbar` 
         for status feedback in terminal applications.
         """
-        for id in ids:
+        for doujin in doujins:
             try:
-                doujin = Hentai(id)
                 dest = dest.joinpath(doujin.title(Format.Pretty))
                 dest.mkdir(parents=True, exist_ok=True)
                 for page in tqdm(**_progressbar_options(doujin.pages, f"Download #{str(doujin.id).zfill(6)}", 'page', disable=progressbar)):
