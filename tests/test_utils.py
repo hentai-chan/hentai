@@ -85,7 +85,8 @@ class TestUtils(unittest.TestCase):
 
         with open(self.tiny_evil_file, mode='r', encoding='utf-8') as file_handler:
             test_data = json.load(file_handler)['result'][0]
-            self.assertEqual(19, len(test_data.keys()), msg="Keys don't match up (expected 15)")
+            all_options = len([opt for opt in Option if opt.value != 'raw'])
+            self.assertEqual(all_options, len(test_data.keys()), msg=f"Keys don't match up (expected {all_options} keys)")
             self.assertIn(random_options[0].value, test_data, msg=f"KeyError {random_options[0].name} (Option 1)")
             self.assertIn(random_options[1].value, test_data, msg=f"KeyError {random_options[1].name} (Option 2)")
             self.assertIn(random_options[2].value, test_data, msg=f"KeyError {random_options[2].name} (Option 3)")
