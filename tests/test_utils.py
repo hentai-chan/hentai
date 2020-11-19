@@ -36,7 +36,7 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(response.ok, msg=f"Failing ID: {random_hentai.id}. Failing URL: {response.url}")
 
     def test_download_queue(self):
-        Utils.download([self.tiny_evil.id])
+        Utils.download([self.tiny_evil])
         self.assertTrue(self.tiny_evil_dir.is_dir())
 
     def test_get_homepage(self):
