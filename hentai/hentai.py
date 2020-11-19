@@ -211,7 +211,7 @@ class Option(Enum):
     API = 'api'
     MediaID = 'media_id'
     Epos = 'epos'
-    Favorites = 'favorites'
+    NumFavorites = 'num_favorites'
     Tag = 'tag'
     Group = 'group'
     Parody = 'parody'
@@ -221,8 +221,8 @@ class Option(Enum):
     Category = 'category'
     Cover = 'cover'
     Thumbnail = 'thumbnail'
-    Images = 'images'
-    PageCount = 'pages'
+    Images = 'image_urls'
+    NumPages = 'num_pages'
 
 
 @unique
@@ -765,9 +765,11 @@ class Utils(object):
         data = {}
         for option in options:
             property = getattr(doujin, option.value)
-            if isinstance(property[0], Tag):
+            if isinstance(property, list) and len(property) != 0 and isinstance(property[0], Tag):
                 data[option.value] = [tag.name for tag in property]
-            elif property == str(doujin):
+            elif isinstance(property, list):
+                data[option.value] = property
+            elif option.value == 'title':
                 data[option.value] = doujin.title(Format.Pretty)
             else:
                 data[option.value] = property
