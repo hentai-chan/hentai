@@ -230,6 +230,7 @@ class Option(Enum):
     Images = 'image_urls'
     NumPages = 'num_pages'
 
+    all: List[Option] = lambda: [option for option in Option if option.value != 'raw']
 
 @unique
 class Format(Enum):
@@ -267,8 +268,17 @@ class Extension(Enum):
 
 class RequestHandler(object):
     """
+    RequestHandler
+    ==============
     Defines a synchronous request handler class that provides methods and 
-    properties for working with REST APIs.
+    properties for working with REST APIs that is backed by the `requests`
+    library.
+
+    Example
+    -------
+        >>> from hentai import Hentai, RequestHandler
+        >>> response = RequestHandler().get(url=Hentai.HOME)
+        >>> print(response.ok)
     """
     _timeout = (5, 5)
     _total = 5
@@ -709,7 +719,7 @@ class Utils(object):
             raise ValueError("Invalid argument passed to function (requires start_page <= end_page).")
         data = []
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
-            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={ 'page' : page })
+            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page' : page})
             data.extend([Hentai(json=raw_json) for raw_json in response.json()['result']])
         return data
 
@@ -792,11 +802,10 @@ class Utils(object):
             >>> Utils.export(popular_loli, Path('lolis.json'), options=[Option.ID, Option.Title])
         """
         if options is None:
-            Utils.export(iterable, filename, options=[opt for opt in Option if opt.value != 'raw'])
+            Utils.export(iterable, filename, options=Option.all())
         elif Option.Raw in options:
             with open(filename, mode='w', encoding='utf-8') as file_handler:
                 json.dump([doujin.json for doujin in iterable], file_handler)
         else:
-            content = {'result': [Utils.__dictionary(doujin, options) for doujin in iterable]}
             with open(filename, mode='w', encoding='utf-8') as file_handler:
-                json.dump(content, file_handler)
+                json.dump([Utils.__dictionary(doujin, options) for doujin in iterable], file_handler)
