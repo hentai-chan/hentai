@@ -36,11 +36,11 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(response.ok, msg=f"Failing ID: {random_hentai.id}. Failing URL: {response.url}")
 
     def test_download_queue(self):
-        Utils.download([self.tiny_evil.id])
+        Utils.download([self.tiny_evil])
         self.assertTrue(self.tiny_evil_dir.is_dir())
 
     def test_get_homepage(self):
-        homepage = Utils.get_homepage()
+        homepage = Utils.get_homepage().popular_now
         for doujin in homepage:
             self.assertIsNotNone(doujin.json, msg="Result should not be 'None'.")
             self.assertTrue(doujin.id, msg="ValueError: ID")
@@ -68,12 +68,12 @@ class TestUtils(unittest.TestCase):
     def test_export(self):
         # case 1 selects three options at random for populating options in export
         print(f"CASE 1: Exports '{self.tiny_evil.title(Format.Pretty)}' as {self.tiny_evil_file} to '{Path().cwd()}'")
-        random_options = random.sample([opt for opt in Option if opt.value != 'raw'], k=3)
+        random_options = random.sample(Option.all(), k=3)
         print(f"CASE 1: Passing {','.join([opt.name for opt in random_options])} as options")
         self.tiny_evil.export(self.tiny_evil_file, options=random_options)
 
         with open(self.tiny_evil_file, mode='r', encoding='utf-8') as file_handler:
-            test_data = json.load(file_handler)['result'][0]
+            test_data = json.load(file_handler)[0]
             self.assertEqual(3, len(test_data.keys()), msg="Keys don't match up (expected 3)")
             self.assertIn(random_options[0].value, test_data, msg=f"KeyError: {random_options[0].name} (Option 1)")
             self.assertIn(random_options[1].value, test_data, msg=f"KeyError: {random_options[1].name} (Option 2)")
@@ -84,8 +84,8 @@ class TestUtils(unittest.TestCase):
         self.tiny_evil.export(self.tiny_evil_file)    
 
         with open(self.tiny_evil_file, mode='r', encoding='utf-8') as file_handler:
-            test_data = json.load(file_handler)['result'][0]
-            self.assertEqual(19, len(test_data.keys()), msg="Keys don't match up (expected 15)")
+            test_data = json.load(file_handler)[0]
+            self.assertEqual(len(Option.all()), len(test_data.keys()), msg=f"Keys don't match up (expected {len(Option.all())} keys)")
             self.assertIn(random_options[0].value, test_data, msg=f"KeyError {random_options[0].name} (Option 1)")
             self.assertIn(random_options[1].value, test_data, msg=f"KeyError {random_options[1].name} (Option 2)")
             self.assertIn(random_options[2].value, test_data, msg=f"KeyError {random_options[2].name} (Option 3)")

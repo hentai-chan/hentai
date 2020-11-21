@@ -131,5 +131,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# untracked dev notes
+# untracked dev file
 hentai/exp.py
+# interactive script
+hentai/iexp.py

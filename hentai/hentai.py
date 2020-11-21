@@ -24,6 +24,7 @@ import functools
 import json
 import sys
 import time
+import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
@@ -38,6 +39,7 @@ from faker import Faker
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
 from requests.models import Response
+from requests_html import HTMLSession
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
@@ -64,6 +66,11 @@ def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', 
     }
 
 @dataclass
+class Homepage:
+    popular_now: List[Hentai]
+    new_uploads: List[Hentai]
+
+@dataclass
 class Tag:
     """
     A data class that bundles related `Tag` properties and useful helper methods
@@ -88,6 +95,7 @@ class Tag:
             3981
         
         """
+        warnings.warn("This method will be deprecated in version 3.1.4")
         ids = [tag.id for tag in tags]
         return ids[0] if len(ids) == 1 else ids
 
@@ -103,6 +111,7 @@ class Tag:
             >>> Tag.get_types(doujin.artist)
             'artist'
         """
+        warnings.warn("This method will be deprecated in version 3.1.4")
         types = [tag.type for tag in tags]
         return types[0] if len(types) == 1 else types 
 
@@ -118,6 +127,7 @@ class Tag:
             >>> Tag.get_names(doujin.artist)
             'Shindol'
         """
+        warnings.warn("This method will be deprecated in version 3.1.4")
         capitalize_all = lambda sequence: ' '.join([word.capitalize() for word in sequence.split(' ')])
         artists = [capitalize_all(tag.name) for tag in tags]
         return artists[0] if len(artists) == 1 else artists
@@ -134,6 +144,7 @@ class Tag:
             >>> Tag.get_urls(doujin.artist)
             '/artist/shindol/'
         """
+        warnings.warn("This method will be deprecated in version 3.1.4")
         urls = [tag.url for tag in tags]
         return urls[0] if len(urls) == 1 else urls
 
@@ -149,6 +160,7 @@ class Tag:
             >>> Tag.get_counts(doujin.artist)
             279
         """
+        warnings.warn("This method will be deprecated in version 3.1.4")
         counts = [tag.count for tag in tags]
         return counts[0] if len(counts) == 1 else counts
 
@@ -204,8 +216,8 @@ class Option(Enum):
     URL = 'url'
     API = 'api'
     MediaID = 'media_id'
-    UploadDate = 'upload_date'
-    Favorites = 'favorites'
+    Epos = 'epos'
+    NumFavorites = 'num_favorites'
     Tag = 'tag'
     Group = 'group'
     Parody = 'parody'
@@ -215,9 +227,10 @@ class Option(Enum):
     Category = 'category'
     Cover = 'cover'
     Thumbnail = 'thumbnail'
-    Images = 'images'
-    PageCount = 'pages'
+    Images = 'image_urls'
+    NumPages = 'num_pages'
 
+    all: List[Option] = lambda: [option for option in Option if option.value != 'raw']
 
 @unique
 class Format(Enum):
@@ -255,8 +268,17 @@ class Extension(Enum):
 
 class RequestHandler(object):
     """
+    RequestHandler
+    ==============
     Defines a synchronous request handler class that provides methods and 
-    properties for working with REST APIs.
+    properties for working with REST APIs that is backed by the `requests`
+    library.
+
+    Example
+    -------
+        >>> from hentai import Hentai, RequestHandler
+        >>> response = RequestHandler().get(url=Hentai.HOME)
+        >>> print(response.ok)
     """
     _timeout = (5, 5)
     _total = 5
@@ -509,7 +531,8 @@ class Hentai(RequestHandler):
         """
         return datetime.fromtimestamp(self.epos)
 
-    __tag = lambda json, type: [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type]
+    def __tag(json: dict, type: str) -> List[Tag]:
+        return [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type]
 
     @property
     def tag(self) -> List[Tag]:
@@ -583,7 +606,7 @@ class Hentai(RequestHandler):
         """
         pages = self.json['images']['pages']
         extension = lambda num: Extension.convert(pages[num]['t'])
-        image_url = lambda num: f"https://i.nhentai.net/galleries/{self.media_id}/{num}{extension(num - 1)}"
+        image_url = lambda num: f"https://i.nhentai.net/galleries/{self.media_id}/{num}{extension(num-1)}"
         return [Page(image_url(num + 1), Extension.convert(_['t']), _['w'], _['h']) for num, _ in enumerate(pages)]
 
     @property
@@ -599,7 +622,7 @@ class Hentai(RequestHandler):
         excluding cover and thumbnail. Set a `delay` between each image download 
         in seconds.
         """
-        Utils.download([self.id], dest, delay, progressbar)
+        Utils.download([self], dest, delay, progressbar)
 
     def export(self, filename: Path, options: List[Option]=None) -> None:
         """
@@ -665,15 +688,14 @@ class Utils(object):
         return Hentai(Utils.get_random_id(handler))
 
     @staticmethod
-    def download(ids: List[int], dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
+    def download(doujins: List[Hentai], dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
         """
         Download all image URLs for multiple IDs to `dest` in separate folders. 
         Set a `delay` between each image download in seconds. Enable `progressbar` 
         for status feedback in terminal applications.
         """
-        for id in ids:
+        for doujin in doujins:
             try:
-                doujin = Hentai(id)
                 dest = dest.joinpath(doujin.title(Format.Pretty))
                 dest.mkdir(parents=True, exist_ok=True)
                 for page in tqdm(**_progressbar_options(doujin.pages, f"Download #{str(doujin.id).zfill(6)}", 'page', disable=progressbar)):
@@ -696,18 +718,35 @@ class Utils(object):
         if start_page > end_page:
             raise ValueError("Invalid argument passed to function (requires start_page <= end_page).")
         data = []
-        for page in tqdm(**_progressbar_options(range(start_page, end_page + 1), 'Browse', 'page', disable=progressbar)):
-            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={ 'page' : page })
+        for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
+            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page' : page})
             data.extend([Hentai(json=raw_json) for raw_json in response.json()['result']])
         return data
 
     @staticmethod
-    def get_homepage(page: int=1, handler=RequestHandler()) -> List[Hentai]:
+    def get_homepage(page: int=1, handler=RequestHandler()) -> Homepage:
         """
-        Return a list of `Hentai` objects that are currently featured on the homepage.
-        Each page contains as much as 25 results.
+        Return a `Homepage` object which contains two properties, `popular_now`
+        and `new_uploads`. There are always 5 doujins featured in the popular
+        now section, while `new_uploads` returns the last 25 doujins added to the
+        DB online.
+        
+        Example
+        -------
+            >>> from hentai import Utils
+            >>> popular_now = Utils.get_homepage().popular_now
         """
-        return Utils.browse_homepage(page, page, handler)
+        try:
+            response = HTMLSession().get(Hentai.HOME)
+        except HTTPError as error:
+            print(f"{Fore.RED}{error}")
+        else:
+            titles = response.html.find("div.index-popular", first=True).text
+
+            return Homepage(
+                popular_now=[doujin for doujin in Utils.search_by_query(query='*', sort=Sort.PopularToday, handler=handler) if str(doujin) in titles],
+                new_uploads=Utils.browse_homepage(1, 1, handler)
+            )
 
     @staticmethod
     def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
@@ -715,7 +754,7 @@ class Utils(object):
         Return a list of `Hentai` objects on page `page` that match this search 
         `query` sorted by `sort`.
         """
-        payload = { 'query' : query, 'page' : page, 'sort' : sort.value }
+        payload = {'query': query, 'page': page, 'sort': sort.value}
         response = handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload)
         return [Hentai(json=raw_json) for raw_json in response.json()['result']]
 
@@ -731,10 +770,23 @@ class Utils(object):
             >>> lolis = Utils.search_all_by_query('tag:loli', sort=Sort.PopularToday)
         """
         data = []
-        payload = { 'query' : query, 'page' : 1, 'sort' : sort.value }
+        payload = {'query': query, 'page': 1, 'sort': sort.value}
         response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
-        for page in tqdm(**_progressbar_options(range(1, int(response['num_pages']) + 1), 'Search', 'page', disable=progressbar)):
+        for page in tqdm(**_progressbar_options(range(1, int(response['num_pages'])+1), 'Search', 'page', disable=progressbar)):
             data.extend(Utils.search_by_query(query, page, sort, handler))
+        return data
+
+    @staticmethod
+    def __dictionary(doujin: Hentai, options: List[Option]) -> dict:
+        data = {}
+        for option in options:
+            property = getattr(doujin, option.value)
+            if isinstance(property, list) and len(property) != 0 and isinstance(property[0], Tag):
+                data[option.value] = [tag.name for tag in property]
+            elif option.value == 'title':
+                data[option.value] = doujin.title(Format.Pretty)
+            else:
+                data[option.value] = property
         return data
 
     @staticmethod
@@ -750,52 +802,10 @@ class Utils(object):
             >>> Utils.export(popular_loli, Path('lolis.json'), options=[Option.ID, Option.Title])
         """
         if options is None:
-            Utils.export(iterable, filename, options=[opt for opt in Option if opt.value != 'raw'])
+            Utils.export(iterable, filename, options=Option.all())
         elif Option.Raw in options:
             with open(filename, mode='w', encoding='utf-8') as file_handler:
                 json.dump([doujin.json for doujin in iterable], file_handler)
         else:
-            content = { 'result' : [] }
-            for index, doujin in enumerate(iterable):
-                data = {}
-                if Option.ID in options:
-                    data['id'] = doujin.id
-                if Option.Title in options:
-                    data['title'] = doujin.title(format=Format.Pretty)
-                if Option.Scanlator in options:
-                    data['scanlator'] = doujin.scanlator
-                if Option.URL in options:
-                    data['url'] = doujin.url
-                if Option.API in options:
-                    data['api'] = doujin.api
-                if Option.MediaID in options:
-                    data['media_id'] = doujin.media_id
-                if Option.UploadDate in options:
-                    data['upload_date'] = doujin.json['upload_date']
-                if Option.Favorites in options:
-                    data['favorites'] = doujin.num_favorites
-                if Option.Tag in options:
-                    data['tag'] = [tag.name for tag in doujin.tag]
-                if Option.Group in options:
-                    data['group'] = [tag.name for tag in doujin.group]
-                if Option.Parody in options:
-                    data['parody'] = [tag.name for tag in doujin.parody]
-                if Option.Character in options:
-                    data['character'] = [tag.name for tag in doujin.character]
-                if Option.Language in options:
-                    data['language'] = [tag.name for tag in doujin.language]
-                if Option.Artist in options:
-                    data['artist'] = [tag.name for tag in doujin.artist]
-                if Option.Category in options:
-                    data['category'] = [tag.name for tag in doujin.category]
-                if Option.Cover in options:
-                    data['cover'] = doujin.cover
-                if Option.Thumbnail in options:
-                    data['thumbnail'] = doujin.thumbnail
-                if Option.Images in options:
-                    data['images'] = doujin.image_urls
-                if Option.PageCount in options:
-                    data['pages'] = doujin.num_pages
-                content['result'].insert(index, data)
             with open(filename, mode='w', encoding='utf-8') as file_handler:
-                json.dump(content, file_handler)
+                json.dump([Utils.__dictionary(doujin, options) for doujin in iterable], file_handler)
