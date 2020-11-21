@@ -1,5 +1,22 @@
 # Changelog
 
+## Version 3.1.3 (21 November 2020)
+
+This version improves the general quality of the code and adds a missing feature
+to the `get_homepage` function. It now returns an object that gives access to the
+`popular_now` and `new_uploads` section as a list of hentai objects. In previous
+versions, `new_uploads` was returned implicitly.
+
+Furthermore, the `Utils.download` function now takes `doujins: List[Hentai]` instead
+of `ids: List[int]` as main parameter to reduce the total number of calls made to
+the API.
+
+Also notice that the following export options have been renamed:
+
+- `Option.Favorites` now is `Option.NumFavorites`
+- `Option.UploadDate` now is `Option.Epos`
+- `Option.PageCount` now is `Option.NumPages`
+
 ## Version 3.1.2 (16 November 2020)
 
 Fixes an error in `RequestHandler` where `retry_strategy` passed its arguments
