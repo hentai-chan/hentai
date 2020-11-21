@@ -18,6 +18,9 @@
     <a href="https://www.codefactor.io/repository/github/hentai-chan/hentai">
         <img src="https://www.codefactor.io/repository/github/hentai-chan/hentai/badge">
     </a>
+    <a href="https://codecov.io/gh/hentai-chan/hentai">
+    <img src="https://codecov.io/gh/hentai-chan/hentai/branch/master/graph/badge.svg?token=HOE2YZO4V6"/>
+    </a>
     <img src="https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9-blue">
     <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">
         <img src="https://img.shields.io/badge/License-GPLv3-blue.svg">
