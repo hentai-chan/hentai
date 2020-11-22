@@ -126,7 +126,7 @@ for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
 
 # store custom meta data as JSON file to disk
 popular_loli = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
-custom = [Option.ID, Option.Title, Option.UploadDate]
+custom = [Option.ID, Option.Title, Option.Epos]
 Utils.export(popular_loli, filename=Path('popular_loli.json'), options=custom)
 ```
 
