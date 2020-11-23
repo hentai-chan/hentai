@@ -1,5 +1,7 @@
 <p align="center">
-  <img height="150" style="margin-top:15px" src="https://raw.githubusercontent.com/hentai-chan/hentai/master/docs/hentai.svg">
+  <a href="https://hentaichan.pythonanywhere.com/projects/hentai" title="Project Logo">
+    <img height="150" style="margin-top:15px" src="https://raw.githubusercontent.com/hentai-chan/hentai/master/docs/hentai.svg">
+  </a>
 </p>
 
 <p align="center">
@@ -7,25 +9,34 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/hentai-chan/hentai/actions?query=workflow%3ACI">
+    <a href="https://github.com/hentai-chan/hentai/actions?query=workflow%3ACI" title="Continuous Integration">
         <img src="https://github.com/hentai-chan/hentai/workflows/CI/badge.svg">
     </a>
-    <img src="https://github.com/hentai-chan/hentai/workflows/CodeQL/badge.svg">
-    <a href="https://pypi.org/project/hentai/">
+    <a href="https://github.com/hentai-chan/hentai/actions?query=workflow%3ACodeQL" title="Code QL Analysis">
+        <img src="https://github.com/hentai-chan/hentai/workflows/CodeQL/badge.svg">
+    </a>
+    <a href="https://github.com/hentai-chan/hentai/actions?query=workflow%3APyPI" title="PyPI Build">
         <img src="https://github.com/hentai-chan/hentai/workflows/PyPI/badge.svg">
     </a>
-    <img src="https://img.shields.io/pypi/v/hentai?color=blue&label=Release">
-    <a href="https://www.codefactor.io/repository/github/hentai-chan/hentai">
+    <a href="https://pypi.org/project/hentai/" title="Release Version">
+        <img src="https://img.shields.io/pypi/v/hentai?color=blue&label=Release">
+    </a>
+    <a href="https://www.codefactor.io/repository/github/hentai-chan/hentai" title="Code Factor">
         <img src="https://www.codefactor.io/repository/github/hentai-chan/hentai/badge">
     </a>
-    <a href="https://codecov.io/gh/hentai-chan/hentai">
-    <img src="https://codecov.io/gh/hentai-chan/hentai/branch/master/graph/badge.svg?token=HOE2YZO4V6"/>
+    <a href="https://codecov.io/gh/hentai-chan/hentai" title="Code Coverage">
+        <img src="https://codecov.io/gh/hentai-chan/hentai/branch/master/graph/badge.svg?token=HOE2YZO4V6"/>
     </a>
-    <img src="https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9-blue">
-    <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">
+    <a title="Supported Python Versions">
+        <img src="https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9-blue">
+    </a>
+    <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" title="License Information">
         <img src="https://img.shields.io/badge/License-GPLv3-blue.svg">
     </a>
-    <a href="https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/hentai-chan/hentai.git">
+    <a title="Downloads per Month">
+        <img src="https://img.shields.io/pypi/dm/hentai">
+    </a>
+    <a href="https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/hentai-chan/hentai.git" title="Software Heritage Archive">
         <img src="https://archive.softwareheritage.org/badge/origin/https://github.com/hentai-chan/hentai.git/">
     </a>
 </p>
