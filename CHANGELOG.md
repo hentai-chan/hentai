@@ -15,11 +15,11 @@ internal method is also now exposed in the pubic interface:
 - `self.dictionary(options: List[Option]=None) -> dict`
 
 This method returns a flattened dictionary whose key-value pairs are determined
-by the list of options passed as argument to this method. Also note that the 
+by the list of options passed as argument to this method. Also note that the
 
 - `Utils.get_homepage(handler=RequestHandler()) -> Homepage`
 
-method lots its `page: int=1` keyword argument.
+method lost its `page: int=1` keyword argument.
 
 ## Version 3.1.3 (21 November 2020)
 
