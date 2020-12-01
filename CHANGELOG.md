@@ -1,5 +1,26 @@
 # Changelog
 
+## Version 3.1.4 (01 December 2020)
+
+Improves error message feedback for raised exceptions and deprecates all static
+`Tag` methods in favor of
+
+- `Tag.get(cls, tags: List[Tag], property: str) -> str:`
+
+Besides, the `self.download` method in `Hentai` replaces the `dest` keyword argument
+with `folder`, i.e. the name of the folder where the images are to be stored. The
+new default name for this folder corresponds to the `id` of this doujin. A previous
+internal method is also now exposed in the pubic interface:
+
+- `self.dictionary(options: List[Option]=None) -> dict`
+
+This method returns a flattened dictionary whose key-value pairs are determined
+by the list of options passed as argument to this method. Also note that the 
+
+- `Utils.get_homepage(handler=RequestHandler()) -> Homepage`
+
+method lots its `page: int=1` keyword argument.
+
 ## Version 3.1.3 (21 November 2020)
 
 This version improves the general quality of the code and adds a missing feature
