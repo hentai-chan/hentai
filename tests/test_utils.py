@@ -14,7 +14,7 @@ class TestUtils(unittest.TestCase):
     def setUpClass(cls):
         cls.tiny_evil = Hentai(269582)
         cls.tiny_evil_file = Path(f"{cls.tiny_evil.title(Format.Pretty)}.json")
-        cls.tiny_evil_dir = Path(cls.tiny_evil.title(Format.Pretty))
+        cls.tiny_evil_dir = Path(str(cls.tiny_evil.id))
     
     @classmethod
     def tearDownClass(cls):

@@ -20,8 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
+import errno
 import functools
 import json
+import os
 import sys
 import time
 import warnings
@@ -43,13 +45,13 @@ from requests_html import HTMLSession
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
+init(autoreset=True)
+
 try:
     assert sys.version_info.major == 3
     assert sys.version_info.minor >= 7
 except AssertionError:
-    raise RuntimeError("Hentai requires Python 3.7+!") 
-
-init(autoreset=True)
+    raise RuntimeError(f"{Fore.RED}The Hentai module requires Python 3.7+") 
 
 def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', disable=False): 
     """
@@ -67,6 +69,12 @@ def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', 
 
 @dataclass
 class Homepage:
+    """
+    The `Homepage` dataclass contains all doujins from the frontpage of 
+    <https://nhentai.net>, which is divided into two sub-sections: the
+    `popular_now` section features 5 trending doujins, while `new_uploads`
+    returns the 25 most recent additions to the DB.
+    """
     popular_now: List[Hentai]
     new_uploads: List[Hentai]
 
@@ -82,88 +90,21 @@ class Tag:
     url: str
     count: int
 
-    @staticmethod
-    def get_ids(tags: List[Tag]) -> int or List[int]:
+    @classmethod
+    def get(cls, tags: List[Tag], property: str) -> str:
         """
-        Return a list of IDs corresponding to the passed Tag objects.
-        
-        Example
-        -------
-            >>> from hentai import Hentai, Tag
-            >>> doujin = Hentai(177013)
-            >>> Tag.get_ids(doujin.artist)
-            3981
-        
-        """
-        warnings.warn("This method will be deprecated in version 3.1.4")
-        ids = [tag.id for tag in tags]
-        return ids[0] if len(ids) == 1 else ids
-
-    @staticmethod
-    def get_types(tags: List[Tag]) -> str or List[str]:
-        """
-        Return a list of types corresponding to the passed Tag objects.
+        Return a list of tags as comma-separated string.
 
         Example
         -------
             >>> from hentai import Hentai, Tag
             >>> doujin = Hentai(177013)
-            >>> Tag.get_types(doujin.artist)
-            'artist'
+            >>> print(Tag.get(doujin.language, property='name'))
+            english, translated
         """
-        warnings.warn("This method will be deprecated in version 3.1.4")
-        types = [tag.type for tag in tags]
-        return types[0] if len(types) == 1 else types 
-
-    @staticmethod
-    def get_names(tags: List[Tag]) -> str or List[str]:
-        """
-        Return a list of capitalized names corresponding to the passed Tag objects.
-
-        Example
-        -------
-            >>> from hentai import Hentai, Tag
-            >>> doujin = Hentai(177013)
-            >>> Tag.get_names(doujin.artist)
-            'Shindol'
-        """
-        warnings.warn("This method will be deprecated in version 3.1.4")
-        capitalize_all = lambda sequence: ' '.join([word.capitalize() for word in sequence.split(' ')])
-        artists = [capitalize_all(tag.name) for tag in tags]
-        return artists[0] if len(artists) == 1 else artists
-
-    @staticmethod
-    def get_urls(tags: List[Tag]) -> str or List[str]:
-        """
-        Return a list of URLs corresponding to the passed Tag objects.
-        
-        Example
-        -------
-            >>> from hentai import Hentai, Tag
-            >>> doujin = Hentai(177013)
-            >>> Tag.get_urls(doujin.artist)
-            '/artist/shindol/'
-        """
-        warnings.warn("This method will be deprecated in version 3.1.4")
-        urls = [tag.url for tag in tags]
-        return urls[0] if len(urls) == 1 else urls
-
-    @staticmethod
-    def get_counts(tags: List[Tag]) -> int or List[int]:
-        """
-        Return a list of counts (of occurrences) corresponding to the passed Tag objects.
-
-        Example
-        -------
-            >>> from hentai import Hentai, Tag
-            >>> doujin = Hentai(177013)
-            >>> Tag.get_counts(doujin.artist)
-            279
-        """
-        warnings.warn("This method will be deprecated in version 3.1.4")
-        counts = [tag.count for tag in tags]
-        return counts[0] if len(counts) == 1 else counts
-
+        if property not in Tag.__dict__.get('__dataclass_fields__').keys():
+            raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: {property} not recognized as a property in {cls.__name__}")
+        return ', '.join([getattr(tag, property) for tag in tags])
 
 @dataclass
 class Page:
@@ -370,7 +311,7 @@ class Hentai(RequestHandler):
                  backoff_factor: int=RequestHandler._backoff_factor,
                  json: dict=None):
         """
-        Start a request session and parse meta data from `nhentai.net` for this `id`.
+        Start a request session and parse meta data from <https://nhentai.net> for this `id`.
         """
         if id and not json:
             self.__id = id
@@ -386,7 +327,7 @@ class Hentai(RequestHandler):
             self.__url = Hentai.__get_url(self.json)
             self.__api = Hentai.__get_api(self.json)
         else:
-            raise TypeError('Define either id or json argument, but not both or none')
+            raise TypeError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: Define either id or json as argument, but not both or none")
 
     def __str__(self) -> str:
         return self.title()
@@ -616,13 +557,25 @@ class Hentai(RequestHandler):
         """
         return [image.url for image in self.pages]
 
-    def download(self, dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
+    def download(self, folder: Path=None, delay: float=0, progressbar: bool=False) -> None:
         """
-        Download all image URLs of this `Hentai` object to `dest` in a new folder,
-        excluding cover and thumbnail. Set a `delay` between each image download 
-        in seconds.
+        Download all image URLs of this `Hentai` object to `folder`, excluding cover 
+        and thumbnail. By default, `directory` will be located in the CWD named after 
+        the doujin's `id`. Set a `delay` between each image download in seconds. 
+        Enable `progressbar` for status feedback in terminal applications.
         """
-        Utils.download([self], dest, delay, progressbar)
+        try:
+            if folder is None:
+                folder = Path(str(self.id))
+            folder.mkdir(parents=True, exist_ok=True)
+            for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
+                with open(folder.joinpath(page.filename), mode='wb') as file_handler:
+                    for chunk in self.handler.get(page.url, stream=True).iter_content(1024):
+                        file_handler.write(chunk)
+                    time.sleep(delay)
+        except HTTPError as error:
+            if progressbar:
+                print(f"{Fore.RED}#{str(id).zfill(6)}: {error}")
 
     def export(self, filename: Path, options: List[Option]=None) -> None:
         """
@@ -640,6 +593,25 @@ class Hentai(RequestHandler):
             return RequestHandler().get(urljoin(Hentai._URL, str(id))).ok        
         except HTTPError:
             return False
+
+    def dictionary(self, options: List[Option]) -> dict:
+        """
+        Return a dictionary for this `Hentai` object whose key-value pairs
+        are determined by the `options` list.
+        """
+        data = {}
+
+        for option in options:
+            property = getattr(self, option.value)
+            if option is Option.Raw:
+                raise NotImplementedError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: Use self.json for this option")
+            elif isinstance(property, list) and len(property) != 0 and isinstance(property[0], Tag):
+                data[option.value] = [tag.name for tag in property]
+            elif option.value == 'title':
+                data[option.value] = self.title(Format.Pretty)
+            else:
+                data[option.value] = property
+        return data
 
 class Utils(object):
     """
@@ -688,25 +660,13 @@ class Utils(object):
         return Hentai(Utils.get_random_id(handler))
 
     @staticmethod
-    def download(doujins: List[Hentai], dest: Path=Path.cwd(), delay: float=0, progressbar: bool=False) -> None:
+    def download(doujins: List[Hentai], delay: float=0, progressbar: bool=False) -> None:
         """
-        Download all image URLs for multiple IDs to `dest` in separate folders. 
-        Set a `delay` between each image download in seconds. Enable `progressbar` 
-        for status feedback in terminal applications.
+        Download all image URLs for a sequence of `Hentai` object to the CWD,
+        excluding cover and thumbnail. Set a `delay` between each image download 
+        in seconds. Enable `progressbar` for status feedback in terminal applications.
         """
-        for doujin in doujins:
-            try:
-                dest = dest.joinpath(doujin.title(Format.Pretty))
-                dest.mkdir(parents=True, exist_ok=True)
-                for page in tqdm(**_progressbar_options(doujin.pages, f"Download #{str(doujin.id).zfill(6)}", 'page', disable=progressbar)):
-                    response = doujin.handler.get(page.url, stream=True)
-                    with open(dest.joinpath(page.filename), mode='wb') as file_handler:
-                        for chunk in response.iter_content(1024):
-                            file_handler.write(chunk)
-                        time.sleep(delay)
-            except HTTPError as error:
-                if progressbar:
-                    print(f"{Fore.RED}#{str(id).zfill(6)}: {error}")
+        [doujin.download(None, delay, progressbar) for doujin in doujins]
 
     @staticmethod
     def browse_homepage(start_page: int, end_page: int, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
@@ -716,7 +676,7 @@ class Utils(object):
         Enable `progressbar` for status feedback in terminal applications.
         """
         if start_page > end_page:
-            raise ValueError("Invalid argument passed to function (requires start_page <= end_page).")
+            raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False.")
         data = []
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
             response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page' : page})
@@ -724,17 +684,17 @@ class Utils(object):
         return data
 
     @staticmethod
-    def get_homepage(page: int=1, handler=RequestHandler()) -> Homepage:
+    def get_homepage(handler=RequestHandler()) -> Homepage:
         """
-        Return a `Homepage` object which contains two properties, `popular_now`
-        and `new_uploads`. There are always 5 doujins featured in the popular
-        now section, while `new_uploads` returns the last 25 doujins added to the
-        DB online.
+        Return an `Homepage` object, i.e. all doujins from the first page of the 
+        homepage.
         
         Example
         -------
             >>> from hentai import Utils
-            >>> popular_now = Utils.get_homepage().popular_now
+            >>> homepage = Utils.get_homepage()
+            >>> popular_now = homepage.popular_now
+            >>> new_uploads = homepage.new_uploads
         """
         try:
             response = HTMLSession().get(Hentai.HOME)
@@ -777,19 +737,6 @@ class Utils(object):
         return data
 
     @staticmethod
-    def __dictionary(doujin: Hentai, options: List[Option]) -> dict:
-        data = {}
-        for option in options:
-            property = getattr(doujin, option.value)
-            if isinstance(property, list) and len(property) != 0 and isinstance(property[0], Tag):
-                data[option.value] = [tag.name for tag in property]
-            elif option.value == 'title':
-                data[option.value] = doujin.title(Format.Pretty)
-            else:
-                data[option.value] = property
-        return data
-
-    @staticmethod
     def export(iterable: List[Hentai], filename: Path, options: List[Option]=None) -> None:
         """
         Store user-customized data of `Hentai` objects as a JSON file.
@@ -808,4 +755,4 @@ class Utils(object):
                 json.dump([doujin.json for doujin in iterable], file_handler)
         else:
             with open(filename, mode='w', encoding='utf-8') as file_handler:
-                json.dump([Utils.__dictionary(doujin, options) for doujin in iterable], file_handler)
+                json.dump([doujin.dictionary(options) for doujin in iterable], file_handler)
