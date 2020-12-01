@@ -1,5 +1,5 @@
 colorama==0.4.4
-tqdm==4.53.0
+tqdm==4.54.0
 requests==2.25.0
 requests_html==0.10.0
 Faker==4.17.1
