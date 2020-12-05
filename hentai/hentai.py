@@ -26,7 +26,6 @@ import json
 import os
 import sys
 import time
-import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
@@ -91,7 +90,7 @@ class Tag:
     count: int
 
     @classmethod
-    def get(cls, tags: List[Tag], property: str) -> str:
+    def get(cls, tags: List[Tag], property_: str) -> str:
         """
         Return a list of tags as comma-separated string.
 
@@ -99,12 +98,12 @@ class Tag:
         -------
             >>> from hentai import Hentai, Tag
             >>> doujin = Hentai(177013)
-            >>> print(Tag.get(doujin.language, property='name'))
+            >>> print(Tag.get(doujin.language, 'name'))
             english, translated
         """
-        if property not in Tag.__dict__.get('__dataclass_fields__').keys():
-            raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: {property} not recognized as a property in {cls.__name__}")
-        return ', '.join([getattr(tag, property) for tag in tags])
+        if property_ not in Tag.__dict__.get('__dataclass_fields__').keys():
+            raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: {property_} not recognized as a property in {cls.__name__}")
+        return ', '.join([getattr(tag, property_) for tag in tags])
 
 @dataclass
 class Page:
@@ -304,7 +303,7 @@ class Hentai(RequestHandler):
     _API = urljoin(HOME, '/api/gallery/')
 
     def __init__(self, 
-                 id: int=0, 
+                 id_: int=0, 
                  timeout: Tuple[float, float]=RequestHandler._timeout, 
                  total: int=RequestHandler._total, 
                  status_forcelist: List[int]=RequestHandler._status_forcelist, 
@@ -313,15 +312,15 @@ class Hentai(RequestHandler):
         """
         Start a request session and parse meta data from <https://nhentai.net> for this `id`.
         """
-        if id and not json:
-            self.__id = id
+        if id_ and not json:
+            self.__id = id_
             super().__init__(timeout, total, status_forcelist, backoff_factor)
             self.__handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
             self.__url = urljoin(Hentai._URL, str(self.id))
             self.__api = urljoin(Hentai._API, str(self.id))
             self.__response = self.handler.get(self.api)
             self.__json = self.response.json()
-        elif not id and json:
+        elif not id_ and json:
             self.__json = json
             self.__id = Hentai.__get_id(self.json)
             self.__url = Hentai.__get_url(self.json)
@@ -427,12 +426,12 @@ class Hentai(RequestHandler):
         """
         return int(self.json['media_id'])        
 
-    def title(self, format: Format=Format.English) -> str:
+    def title(self, format_: Format=Format.English) -> str:
         """
         Return the title of this `Hentai` object. The format of the title
         defaults to `English`, which is the verbose counterpart to `Pretty`.
         """
-        return self.json['title'].get(format.value)
+        return self.json['title'].get(format_.value)
 
     @property
     def scanlator(self) -> str:
@@ -472,8 +471,8 @@ class Hentai(RequestHandler):
         """
         return datetime.fromtimestamp(self.epos)
 
-    def __tag(json: dict, type: str) -> List[Tag]:
-        return [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type]
+    def __tag(json: dict, type_: str) -> List[Tag]:
+        return [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type_]
 
     @property
     def tag(self) -> List[Tag]:
@@ -585,12 +584,12 @@ class Hentai(RequestHandler):
         Utils.export([self], filename, options)
 
     @staticmethod
-    def exists(id: int) -> bool:
+    def exists(id_: int) -> bool:
         """
         Check whether or not an ID exists on <https://nhentai.net>.
         """
         try:
-            return RequestHandler().get(urljoin(Hentai._URL, str(id))).ok        
+            return RequestHandler().get(urljoin(Hentai._URL, str(id_))).ok        
         except HTTPError:
             return False
 
@@ -601,16 +600,17 @@ class Hentai(RequestHandler):
         """
         data = {}
 
+        if Option.Raw in options:
+            raise NotImplementedError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: Access self.json to retrieve this information.")
+
         for option in options:
-            property = getattr(self, option.value)
-            if option is Option.Raw:
-                raise NotImplementedError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: Use self.json for this option")
-            elif isinstance(property, list) and len(property) != 0 and isinstance(property[0], Tag):
-                data[option.value] = [tag.name for tag in property]
+            property_ = getattr(self, option.value)
+            if isinstance(property_, list) and len(property_) != 0 and isinstance(property_[0], Tag):
+                data[option.value] = [tag.name for tag in property_]
             elif option.value == 'title':
                 data[option.value] = self.title(Format.Pretty)
             else:
-                data[option.value] = property
+                data[option.value] = property_
         return data
 
 class Utils(object):
@@ -666,7 +666,8 @@ class Utils(object):
         excluding cover and thumbnail. Set a `delay` between each image download 
         in seconds. Enable `progressbar` for status feedback in terminal applications.
         """
-        [doujin.download(None, delay, progressbar) for doujin in doujins]
+        for doujin in doujins:
+            doujin.download(None, delay, progressbar)
 
     @staticmethod
     def browse_homepage(start_page: int, end_page: int, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
