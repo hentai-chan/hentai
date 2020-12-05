@@ -1,5 +1,17 @@
 # Changelog
 
+## Version 3.1.5 (05 December 2020)
+
+After some reconsideration I came to the conclusion that it would be best that
+none of the keyword arguments conflict with any of the built-in function from
+python to further comply with PEP8 recommendations. Therefore, the following
+arguments were renamed as followed:
+
+- `property` becomes `property_`
+- `id` becomes `id_`
+- `format` becomes `format_`
+- `type` becomes `type_`
+
 ## Version 3.1.4 (01 December 2020)
 
 Improves error message feedback for raised exceptions and deprecates all static
