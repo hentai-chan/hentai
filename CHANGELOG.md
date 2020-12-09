@@ -1,8 +1,8 @@
 # Changelog
 
-## Version 3.1.5 (05 December 2020)
+## Version 3.1.5 (09 December 2020)
 
-After some reconsideration I came to the conclusion that it would be best that
+After some reconsideration I came to the conclusion that it would be best when
 none of the keyword arguments conflict with any of the built-in function from
 python to further comply with PEP8 recommendations. Therefore, the following
 arguments were renamed as followed:
@@ -11,6 +11,10 @@ arguments were renamed as followed:
 - `id` becomes `id_`
 - `format` becomes `format_`
 - `type` becomes `type_`
+
+The functions affected by this change were `Tag.get`, `Hentai.__init__`, `self.title`,
+and `Hentai.exists`, respectively. In some instances, the previously missing return
+type for some function signatures has been added back.
 
 ## Version 3.1.4 (01 December 2020)
 
