@@ -52,9 +52,9 @@ try:
 except AssertionError:
     raise RuntimeError(f"{Fore.RED}The Hentai module requires Python 3.7+") 
 
-def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', disable=False): 
+def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', disable=False) -> dict:
     """
-    Return options arguments for `tqdm` progressbars.
+    Return custom optional arguments for `tqdm` progressbars.
     """
     return {
         'iterable': iterable,
@@ -378,42 +378,42 @@ class Hentai(RequestHandler):
         return urljoin(Hentai._API, str(Hentai.__get_id(json)))        
 
     @property
-    def id(self):
+    def id(self) -> int:
         """
         Return the ID of this `Hentai` object.
         """
         return self.__id
 
     @property
-    def url(self):
+    def url(self) -> str:
         """
         Return the URL of this `Hentai` object.
         """
         return self.__url
 
     @property
-    def api(self):
+    def api(self) -> str:
         """
         Return the API access point of this `Hentai` object.
         """
         return self.__api
 
     @property
-    def json(self):
+    def json(self) -> dict:
         """
         Return the JSON content of this `Hentai` object.
         """
         return self.__json
 
     @property
-    def handler(self):
+    def handler(self) -> RequestHandler:
         """
         Return the `RequestHandler` of this `Hentai` object.
         """
         return self.__handler
 
     @property
-    def response(self):
+    def response(self) -> Response:
         """
         Return the GET request response of this `Hentai` object.
         """
@@ -450,7 +450,7 @@ class Hentai(RequestHandler):
         return f"https://t.nhentai.net/galleries/{self.media_id}/cover{cover_ext}"
 
     @property
-    def thumbnail(self):
+    def thumbnail(self) -> str:
         """
         Return the thumbnail URL of this `Hentai` object.
         """
