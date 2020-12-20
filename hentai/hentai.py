@@ -499,7 +499,7 @@ class Hentai(RequestHandler):
         return datetime.fromtimestamp(self.epos)
 
     def __tag(json: dict, type_: str) -> List[Tag]:
-        return [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type_]
+        return [Tag(tag['id'], tag['type'], tag['name'], urljoin(Hentai.HOME, tag['url']), tag['count']) for tag in json['tags'] if tag['type'] == type_]
 
     @property
     def tag(self) -> List[Tag]:
