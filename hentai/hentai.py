@@ -78,6 +78,33 @@ class Homepage:
     new_uploads: List[Hentai]
 
 @dataclass
+class User:
+    """
+    Provides public account information in the comment section.
+    """
+    id: int
+    username: str
+    slug: str
+    avatar_url: str
+    is_superuser: bool
+    is_staff: bool
+
+    @property
+    def url(self) -> str:
+        return urljoin(Hentai.HOME, f"/users/{self.id}/{self.slug}")
+
+@dataclass
+class Comment:
+    """
+    Defines comment object instances of doujin threads.
+    """
+    id: int
+    gallery_id: int
+    poster: User
+    post_date: datetime
+    body: str
+
+@dataclass
 class Tag:
     """
     A data class that bundles related `Tag` properties and useful helper methods
@@ -556,6 +583,21 @@ class Hentai(RequestHandler):
         """
         return [image.url for image in self.pages]
 
+    def related(self) -> List[Hentai]:
+        """
+        Return a list of five related doujins.
+        """
+        return [Hentai(json=raw_json) for raw_json in self.handler.get(urljoin(Hentai._API, f"{self.id}/related")).json()['result']]
+
+    def thread(self) -> List[Comment]:
+        """
+        Return a list of comments of this `Hentai` object.
+        """
+        response = self.handler.get(urljoin(Hentai._API, f"{self.id}/comments")).json()
+        user = lambda u: User(int(u['id']), u['username'], u['slug'], urljoin('i.nhentai.net/', u['avatar_url']), bool(u['is_superuser']), bool(u['is_staff']))
+        comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), datetime.fromtimestamp(c['post_date']), c['body']) 
+        return [comment(data) for data in response]
+
     def download(self, folder: Path=None, delay: float=0, progressbar: bool=False) -> None:
         """
         Download all image URLs of this `Hentai` object to `folder`, excluding cover 
@@ -717,6 +759,16 @@ class Utils(object):
         """
         payload = {'query': query, 'page': page, 'sort': sort.value}
         response = handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload)
+        return [Hentai(json=raw_json) for raw_json in response.json()['result']]
+
+    @staticmethod
+    def search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
+        """
+        Return a list of `Hentai` objects on page `page` that match this tag 
+        `id_` sorted by `sort`.
+        """
+        payload = {'tag_id': id_, 'page': page, 'sort': sort.value}
+        response = handler.get(urljoin(Hentai.HOME, "api/galleries/tagged"), params=payload)
         return [Hentai(json=raw_json) for raw_json in response.json()['result']]
 
     @staticmethod
