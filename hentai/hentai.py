@@ -27,7 +27,7 @@ import os
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime as dt
+from datetime import datetime as dt, timezone
 from enum import Enum, unique
 from importlib.resources import path as resource_path
 from pathlib import Path
@@ -35,7 +35,6 @@ from typing import List, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
-import pytz
 import requests
 from colorama import Fore, init
 from faker import Faker
@@ -540,7 +539,7 @@ class Hentai(RequestHandler):
         """
         Return the upload date of this `Hentai` object as timezone aware datetime object.
         """
-        return dt.fromtimestamp(self.epos, tz=pytz.utc)
+        return dt.fromtimestamp(self.epos, tz=timezone.utc)
 
     def __tag(json: dict, type_: str) -> List[Tag]:
         return [Tag(tag['id'], tag['type'], tag['name'], urljoin(Hentai.HOME, tag['url']), tag['count']) 
@@ -643,7 +642,7 @@ class Hentai(RequestHandler):
         """
         response = self.handler.get(urljoin(Hentai._API, f"{self.id}/comments")).json()
         user = lambda u: User(int(u['id']), u['username'], u['slug'], urljoin('i.nhentai.net/', u['avatar_url']), bool(u['is_superuser']), bool(u['is_staff']))
-        comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=pytz.utc), c['body']) 
+        comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body']) 
         return [comment(data) for data in response]
 
     def download(self, folder: Path=None, delay: float=0, progressbar: bool=False) -> None:
