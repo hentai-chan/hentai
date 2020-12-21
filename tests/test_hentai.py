@@ -1,12 +1,11 @@
 import json
 import sys
-import time
 import unittest
 from datetime import datetime as dt
-from datetime import timedelta
 from random import choices
 from urllib.parse import urlparse
 
+import pytz
 from hentai import Format, Hentai
 
 
@@ -75,12 +74,10 @@ class TestHentai(unittest.TestCase):
 
     def test_thread(self):
         first = self.test_response.thread[-1]
-        ts = time.time()
-        utc_offset = (dt.fromtimestamp(ts) - dt.utcfromtimestamp(ts)).total_seconds()
         # comment
         self.assertEqual(first.id, 67669, msg="Comment ID")
         self.assertEqual(first.gallery_id, self.test_response.id, msg="Gallery ID")
-        self.assertAlmostEqual(first.post_date, dt(2016, 10, 18, 16, 59, 25), delta=timedelta(seconds=utc_offset), msg="Post Date")
+        self.assertAlmostEqual(first.post_date, dt(2016, 10, 18, 14, 59, 25, tzinfo=pytz.utc), msg="Post Date")
         self.assertEqual(first.body, "well depressing from the start but end up as a happy ending", msg="Message")
         # poster
         self.assertEqual(first.poster.id, 572666, msg="User ID")
