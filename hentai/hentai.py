@@ -29,6 +29,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
+from importlib.resources import path as resource_path
 from pathlib import Path
 from typing import List, Tuple
 from urllib.parse import urljoin, urlparse
@@ -77,10 +78,11 @@ class Homepage:
     popular_now: List[Hentai]
     new_uploads: List[Hentai]
 
+
 @dataclass
 class User:
     """
-    Provides public account information in the comment section.
+    Provides public account information.
     """
     id: int
     username: str
@@ -93,6 +95,7 @@ class User:
     def url(self) -> str:
         return urljoin(Hentai.HOME, f"/users/{self.id}/{self.slug}")
 
+
 @dataclass
 class Comment:
     """
@@ -103,6 +106,7 @@ class Comment:
     poster: User
     post_date: datetime
     body: str
+
 
 @dataclass
 class Tag:
@@ -131,6 +135,44 @@ class Tag:
         if property_ not in Tag.__dict__.get('__dataclass_fields__').keys():
             raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: {property_} not recognized as a property in {cls.__name__}")
         return ', '.join([getattr(tag, property_) for tag in tags])
+
+    @staticmethod
+    def list(option: Option) -> List[Tag]:
+        """
+        Return a list of all tags where `option` is either
+        
+        - `Option.Artist`
+        - `Option.Character`
+        - `Option.Group`
+        - `Option.Parody`
+        - `Option.Tag`
+
+        Example
+        -------
+            >>> from hentai import Tag, Option
+            >>> for tag in Tag.list(Option.Group):
+            ...   print(tag.name)
+            009-1
+            07-ghost
+            08th ms team
+            ...
+
+        Note
+        ----
+        All tag count properties whose values exceed 999 are rounded to the nearest thousand.
+        """
+        if option not in [Option.Artist, Option.Character, Option.Group, Option.Parody, Option.Tag]:
+            raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: Invalid option ({option.name} is not an Tag object property)")
+
+        if option is Option.Category:
+            raise NotImplementedError(f"{Fore.RED}This feature is not available yet")
+
+        with resource_path('hentai.data', f"{option.value}s.json") as file_path:
+            with open(file_path, mode='r', encoding='utf') as file_handler:
+                number = lambda count: int(count) if count.isnumeric() else int(count.strip('K')) * 1_000
+                return [Tag(int(tag['id']), option.value, tag['name'], urljoin(Hentai.HOME, tag['url']), number(tag['count'])) 
+                    for tag in json.load(file_handler)]
+
 
 @dataclass
 class Page:
@@ -198,6 +240,7 @@ class Option(Enum):
     NumPages = 'num_pages'
 
     all: List[Option] = lambda: [option for option in Option if option.value != 'raw']
+
 
 @unique
 class Format(Enum):
@@ -499,7 +542,9 @@ class Hentai(RequestHandler):
         return datetime.fromtimestamp(self.epos)
 
     def __tag(json: dict, type_: str) -> List[Tag]:
-        return [Tag(tag['id'], tag['type'], tag['name'], urljoin(Hentai.HOME, tag['url']), tag['count']) for tag in json['tags'] if tag['type'] == type_]
+        return [Tag(tag['id'], tag['type'], tag['name'], urljoin(Hentai.HOME, tag['url']), tag['count']) 
+            for tag in json['tags'] 
+                if tag['type'] == type_]
 
     @property
     def tag(self) -> List[Tag]:
@@ -583,12 +628,14 @@ class Hentai(RequestHandler):
         """
         return [image.url for image in self.pages]
 
+    @property
     def related(self) -> List[Hentai]:
         """
         Return a list of five related doujins.
         """
         return [Hentai(json=raw_json) for raw_json in self.handler.get(urljoin(Hentai._API, f"{self.id}/related")).json()['result']]
 
+    @property
     def thread(self) -> List[Comment]:
         """
         Return a list of comments of this `Hentai` object.
@@ -654,6 +701,7 @@ class Hentai(RequestHandler):
             else:
                 data[option.value] = property_
         return data
+
 
 class Utils(object):
     """
