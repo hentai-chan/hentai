@@ -3,3 +3,4 @@ tqdm==4.54.1
 requests==2.25.1
 requests_html==0.10.0
 Faker==5.0.2
+pytz==2020.4
