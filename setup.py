@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
 import re
 
 from setuptools import setup
@@ -14,4 +15,5 @@ setup(
     name="hentai",
     version=version,
     install_requires=packages,
+    include_package_data=True
 )
