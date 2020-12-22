@@ -146,6 +146,7 @@ class Tag:
         - `Option.Group`
         - `Option.Parody`
         - `Option.Tag`
+        - `Option.Language`
 
         Example
         -------
@@ -161,11 +162,11 @@ class Tag:
         ----
         All tag count properties whose values exceed 999 are rounded to the nearest thousand.
         """
-        if option not in [Option.Artist, Option.Character, Option.Group, Option.Parody, Option.Tag]:
+        if option not in [Option.Artist, Option.Character, Option.Group, Option.Parody, Option.Tag, Option.Language]:
             raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: Invalid option ({option.name} is not an Tag object property)")
 
         if option is Option.Category:
-            raise NotImplementedError(f"{Fore.RED}This feature is not available yet")
+            raise NotImplementedError(f"{Fore.RED}This feature is not implemented yet")
 
         with resource_path('hentai.data', f"{option.value}s.json") as file_path:
             with open(file_path, mode='r', encoding='utf') as file_handler:
@@ -770,7 +771,7 @@ class Utils(object):
             raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False.")
         data = []
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
-            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page' : page})
+            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page': page})
             data.extend([Hentai(json=raw_json) for raw_json in response.json()['result']])
         return data
 
