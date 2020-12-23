@@ -65,12 +65,7 @@ class TestHentai(unittest.TestCase):
         self.assertEqual(self.test_reference.category, self.test_response.category, msg=str(self.test_response))
 
     def test_related(self):
-        related =  self.test_response.related
-        self.assertEqual(related[0].id, 217499, msg=f"Title.Pretty: Moeyo Maid Motoko!! != {related[0].title(Format.Pretty)}")
-        self.assertEqual(related[1].id, 113554, msg=f"Title.Pretty: Lapping around != {related[1].title(Format.Pretty)}")
-        self.assertEqual(related[2].id, 65312, msg=f"Title.Pretty: GOD Nani ka != {related[2].title(Format.Pretty)}")
-        self.assertEqual(related[3].id, 53122, msg=f"Title.Pretty: EXPAND FRONTAGE != {related[3].title(Format.Pretty)}")
-        self.assertEqual(related[4].id, 32979, msg=f"Title.Pretty: Innocence Lost != {related[4].title(Format.Pretty)}")
+        self.assertEqual(len(self.test_response.related), 5, msg="Expected five related doujins as response.")
 
     def test_thread(self):
         first = self.test_response.thread[-1]
