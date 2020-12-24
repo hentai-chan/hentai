@@ -8,7 +8,7 @@ with open("hentai/__init__.py", encoding='utf8') as file_handler:
     version = re.search(r'__version__ = "(.*?)"', file_handler.read()).group(1)
 
 with open("requirements.txt", encoding='utf-8') as file_handler:
-    packages = [package.split('==')[0] for package in file_handler.readlines()]
+    packages = file_handler.read().splitlines()
 
 # Metadata goes in setup.cfg. These are here for GitHub's dependency graph.
 setup(
