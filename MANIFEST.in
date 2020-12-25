@@ -1,0 +1,7 @@
+include CHANGELOG.md
+include LICENSE
+
+recursive-include hentai/data *.json
+
+exclude hentai/exp.py
+exclude hentai/iexp.py

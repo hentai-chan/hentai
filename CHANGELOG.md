@@ -1,5 +1,45 @@
 # Changelog
 
+## Version 3.2.0 (27 December 2020)
+
+In this version a two new properties have been added to `Hentai` objects:
+
+- `self.thread -> List[Comment]`
+- `self.related -> List[Hentai]`
+
+Additionally, datetime objects returned in any of this module's methods have been
+made utc-timezone aware. URL properties in `Tag` objects now also return a fully
+qualified path, e.g.
+
+```python
+from hentai import Hentai, Tag
+
+doujin = Hentai(177013)
+
+# old output:
+# /language/english/, /language/translated/
+# new output:
+# https://nhentai.net/language/english/, https://nhentai.net/language/translated/
+print(Tag.get(doujin.language, 'url'))
+```
+
+The `Tag` class now also features a static `Tag.list` method for the following
+tag types:
+
+- `Option.Artist`
+- `Option.Character`
+- `Option.Group`
+- `Option.Parody`
+- `Option.Tag`
+- `Option.Language`
+
+which returns all tags available related to the options above. This may be used
+in combination with the
+
+- `search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]`
+
+method for browsing the nhentai catalogue by tag ID.
+
 ## Version 3.1.5 (09 December 2020)
 
 After some reconsideration I came to the conclusion that it would be best when

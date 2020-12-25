@@ -27,8 +27,9 @@ import os
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime as dt, timezone
 from enum import Enum, unique
+from importlib.resources import path as resource_path
 from pathlib import Path
 from typing import List, Tuple
 from urllib.parse import urljoin, urlparse
@@ -77,6 +78,36 @@ class Homepage:
     popular_now: List[Hentai]
     new_uploads: List[Hentai]
 
+
+@dataclass
+class User:
+    """
+    Provides public account information.
+    """
+    id: int
+    username: str
+    slug: str
+    avatar_url: str
+    is_superuser: bool
+    is_staff: bool
+
+    @property
+    def url(self) -> str:
+        return urljoin(Hentai.HOME, f"/users/{self.id}/{self.slug}")
+
+
+@dataclass
+class Comment:
+    """
+    Defines comment object instances of doujin threads.
+    """
+    id: int
+    gallery_id: int
+    poster: User
+    post_date: dt
+    body: str
+
+
 @dataclass
 class Tag:
     """
@@ -104,6 +135,45 @@ class Tag:
         if property_ not in Tag.__dict__.get('__dataclass_fields__').keys():
             raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: {property_} not recognized as a property in {cls.__name__}")
         return ', '.join([getattr(tag, property_) for tag in tags])
+
+    @staticmethod
+    def list(option: Option) -> List[Tag]:
+        """
+        Return a list of all tags where `option` is either
+        
+        - `Option.Artist`
+        - `Option.Character`
+        - `Option.Group`
+        - `Option.Parody`
+        - `Option.Tag`
+        - `Option.Language`
+
+        Example
+        -------
+            >>> from hentai import Tag, Option
+            >>> for tag in Tag.list(Option.Group):
+            ...   print(tag.name)
+            009-1
+            07-ghost
+            08th ms team
+            ...
+
+        Note
+        ----
+        All tag count properties whose values exceed 999 are rounded to the nearest thousand.
+        """
+        if option not in [Option.Artist, Option.Character, Option.Group, Option.Parody, Option.Tag, Option.Language]:
+            raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: Invalid option ({option.name} is not an Tag object property)")
+
+        if option is Option.Category:
+            raise NotImplementedError(f"{Fore.RED}This feature is not implemented yet")
+
+        with resource_path('hentai.data', f"{option.value}s.json") as file_path:
+            with open(file_path, mode='r', encoding='utf') as file_handler:
+                number = lambda count: int(count) if count.isnumeric() else int(count.strip('K')) * 1_000
+                return [Tag(int(tag['id']), option.value, tag['name'], urljoin(Hentai.HOME, tag['url']), number(tag['count'])) 
+                    for tag in json.load(file_handler)]
+
 
 @dataclass
 class Page:
@@ -171,6 +241,7 @@ class Option(Enum):
     NumPages = 'num_pages'
 
     all: List[Option] = lambda: [option for option in Option if option.value != 'raw']
+
 
 @unique
 class Format(Enum):
@@ -465,14 +536,16 @@ class Hentai(RequestHandler):
         return self.json['upload_date']
 
     @property
-    def upload_date(self) -> datetime:
+    def upload_date(self) -> dt:
         """
-        Return the upload date of this `Hentai` object.
+        Return the upload date of this `Hentai` object as timezone aware datetime object.
         """
-        return datetime.fromtimestamp(self.epos)
+        return dt.fromtimestamp(self.epos, tz=timezone.utc)
 
     def __tag(json: dict, type_: str) -> List[Tag]:
-        return [Tag(tag['id'], tag['type'], tag['name'], tag['url'], tag['count']) for tag in json['tags'] if tag['type'] == type_]
+        return [Tag(tag['id'], tag['type'], tag['name'], urljoin(Hentai.HOME, tag['url']), tag['count']) 
+            for tag in json['tags'] 
+                if tag['type'] == type_]
 
     @property
     def tag(self) -> List[Tag]:
@@ -556,6 +629,23 @@ class Hentai(RequestHandler):
         """
         return [image.url for image in self.pages]
 
+    @property
+    def related(self) -> List[Hentai]:
+        """
+        Return a list of five related doujins.
+        """
+        return [Hentai(json=raw_json) for raw_json in self.handler.get(urljoin(Hentai._API, f"{self.id}/related")).json()['result']]
+
+    @property
+    def thread(self) -> List[Comment]:
+        """
+        Return a list of comments of this `Hentai` object.
+        """
+        response = self.handler.get(urljoin(Hentai._API, f"{self.id}/comments")).json()
+        user = lambda u: User(int(u['id']), u['username'], u['slug'], urljoin('i.nhentai.net/', u['avatar_url']), bool(u['is_superuser']), bool(u['is_staff']))
+        comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body']) 
+        return [comment(data) for data in response]
+
     def download(self, folder: Path=None, delay: float=0, progressbar: bool=False) -> None:
         """
         Download all image URLs of this `Hentai` object to `folder`, excluding cover 
@@ -612,6 +702,7 @@ class Hentai(RequestHandler):
             else:
                 data[option.value] = property_
         return data
+
 
 class Utils(object):
     """
@@ -680,7 +771,7 @@ class Utils(object):
             raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False.")
         data = []
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
-            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page' : page})
+            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page': page})
             data.extend([Hentai(json=raw_json) for raw_json in response.json()['result']])
         return data
 
@@ -717,6 +808,16 @@ class Utils(object):
         """
         payload = {'query': query, 'page': page, 'sort': sort.value}
         response = handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload)
+        return [Hentai(json=raw_json) for raw_json in response.json()['result']]
+
+    @staticmethod
+    def search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
+        """
+        Return a list of `Hentai` objects on page `page` that match this tag 
+        `id_` sorted by `sort`.
+        """
+        payload = {'tag_id': id_, 'page': page, 'sort': sort.value}
+        response = handler.get(urljoin(Hentai.HOME, "api/galleries/tagged"), params=payload)
         return [Hentai(json=raw_json) for raw_json in response.json()['result']]
 
     @staticmethod
