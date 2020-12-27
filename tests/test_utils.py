@@ -52,6 +52,19 @@ class TestUtils(unittest.TestCase):
             self.assertTrue(doujin.image_urls, msg="ValueError: ImageURLs")
             self.assertTrue(doujin.num_pages, msg="ValueError: NumberOfPages")     
 
+    def test_search_by_tag(self):
+        holo_doujins = Utils.search_by_tag(33918, sort=Sort.PopularWeek)
+        for doujin in holo_doujins:
+            self.assertIsNotNone(doujin.json, msg="Result should not be 'None'.")
+            self.assertTrue(doujin.id, msg="ValueError: ID")
+            self.assertTrue(doujin.title(), msg="ValueError: Title")
+            self.assertTrue(doujin.media_id, msg="ValueError: MediaID")
+            self.assertTrue(doujin.upload_date, msg="ValueError: UploadDate")
+            self.assertTrue(doujin.cover, msg="ValueError: Cover")
+            self.assertTrue(doujin.thumbnail, msg="ValueError: Thumbnail")
+            self.assertTrue(doujin.image_urls, msg="ValueError: ImageURLs")
+            self.assertTrue(doujin.num_pages, msg="ValueError: NumberOfPages")
+
     def test_search_all_by_query(self):
         popular_3d = Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek)
         for doujin in popular_3d:

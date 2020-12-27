@@ -1,10 +1,12 @@
 import json
 import sys
 import unittest
+from datetime import datetime as dt
+from datetime import timezone
 from random import choices
 from urllib.parse import urlparse
 
-from hentai import Hentai
+from hentai import Format, Hentai
 
 
 class TestHentai(unittest.TestCase):    
@@ -61,6 +63,24 @@ class TestHentai(unittest.TestCase):
 
     def test_category(self):
         self.assertEqual(self.test_reference.category, self.test_response.category, msg=str(self.test_response))
+
+    def test_related(self):
+        self.assertEqual(len(self.test_response.related), 5, msg="Expected five related doujins as response.")
+
+    def test_thread(self):
+        first = self.test_response.thread[-1]
+        # comment
+        self.assertEqual(first.id, 67669, msg="Comment ID")
+        self.assertEqual(first.gallery_id, self.test_response.id, msg="Gallery ID")
+        self.assertAlmostEqual(first.post_date, dt(2016, 10, 18, 14, 59, 25, tzinfo=timezone.utc), msg="Post Date")
+        self.assertEqual(first.body, "well depressing from the start but end up as a happy ending", msg="Message")
+        # poster
+        self.assertEqual(first.poster.id, 572666, msg="User ID")
+        self.assertEqual(first.poster.username, "devil_arm", msg="User ID")
+        self.assertEqual(first.poster.slug, "devil_arm", msg="User ID")
+        self.assertEqual(first.poster.avatar_url, "i.nhentai.net/avatars/572666.png", msg="User ID")
+        self.assertFalse(first.poster.is_superuser, msg="Super User Role")
+        self.assertFalse(first.poster.is_staff, msg="Staff Member Role")
 
     def test_num_pages(self):
         self.assertEqual(self.test_reference.num_pages, self.test_response.num_pages, msg=str(self.test_response))
