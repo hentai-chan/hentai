@@ -72,12 +72,16 @@ source venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 # additionally install the following dependencies
-pip install flake8 pytest
+pip install flake8 pytest wheel
+# run all unit tests
+pytest --verbose
+# create wheel
+python setup.py bdist_wheel --universal
 ```
 
 Make sure to checkout `rec-hentai` so that your work is up-to-date with the next
-release candidate. Be sure to take care and not use any features that are incompatible
-with version 3.7 of python.
+release candidate. Don't implement any features that are incompatible with
+version 3.7+ of python.
 
 </details>
 
@@ -103,13 +107,13 @@ Hentai.exists(doujin.id)
 # METAMORPHOSIS
 print(doujin.title(Format.Pretty))
 
-# [Tag(id=3981, type='artist', name='shindol', url='/artist/shindol/', count=279)]
+# [Tag(id=3981, type='artist', name='shindol', url='https://nhentai.net/artist/shindol/', count=279)]
 print(doujin.artist)
 
 # ['dark skin', 'group', ... ]
 print([tag.name for tag in doujin.tag])
 
-# 2016-10-18 14:28:49
+# 2016-10-18 12:28:49+00:00
 print(doujin.upload_date)
 
 # ['https://i.nhentai.net/galleries/987560/1.jpg', ... ]
@@ -123,7 +127,7 @@ Apart from that, `hentai.Utils` also provides a handful of miscellaneous helper
 methods:
 
 ```python
-from hentai import Utils, Sort, Option
+from hentai import Utils, Sort, Option, Tag
 from pathlib import Path
 
 print(Utils.get_random_id())
@@ -134,6 +138,10 @@ print(Utils.get_random_hentai())
 # advanced search with queries
 for doujin in Utils.search_by_query('tag:loli', sort=Sort.PopularWeek):
     print(doujin.title(Format.Pretty))
+
+# print all character names from all doujins
+for character in Tag.list(Option.Character):
+    print(character.name)
 
 # store custom meta data as JSON file to disk
 popular_loli = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
