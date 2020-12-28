@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import errno
 import functools
+import itertools
 import json
 import os
 import sys
@@ -173,6 +174,20 @@ class Tag:
                 number = lambda count: int(count) if count.isnumeric() else int(count.strip('K')) * 1_000
                 return [Tag(int(tag['id']), option.value, tag['name'], urljoin(Hentai.HOME, tag['url']), number(tag['count'])) 
                     for tag in json.load(file_handler)]
+
+    def search(value, property_: str='name') -> Tag:
+        """
+        Return the first tag object whose `property_` matches with `value`.
+
+        Example
+        -------
+            >>> from hentai import Tag
+            >>> print(f"ID={Tag.search('shindol').id}")
+            ID=3981
+        """
+        for tag in itertools.chain(Tag.list(Option.Artist), Tag.list(Option.Character), Tag.list(Option.Group), Tag.list(Option.Parody), Tag.list(Option.Tag), Tag.list(Option.Language)):
+            if getattr(tag, property_) == value:
+                return tag
 
 
 @dataclass
