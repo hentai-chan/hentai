@@ -9,18 +9,30 @@ class TestTag(unittest.TestCase):
         cls.test_response = Hentai(177013)
 
     def test_get(self):
-        language = self.test_response.language
-        self.assertEqual(Tag.get(language, 'name'), "english, translated", msg=f"Language Tag: {language}")
+        self.assertEqual(Tag.get(self.test_response.language, 'name'), "english, translated", msg=f"Language Tag: {self.test_response.language}")
+    
+    def test_get_exception(self):
+        with self.assertRaises(ValueError) as context:
+            Tag.get(self.test_response.language, 'upload_date')
+        self.assertTrue('DNE', context.exception)
 
     def test_list(self):
         characters = Tag.list(Option.Character)
-        for char in characters:
-            if char.name == 'holo':
-                holo = char
-
-                self.assertEqual(holo.id, 33918)
-                self.assertEqual(holo.type, 'character')
-                self.assertEqual(holo.name, 'holo')
-                self.assertEqual(holo.url, urljoin(Hentai.HOME, '/character/holo/'))
-                self.assertEqual(holo.count, 160)
+        for character in characters:
+            if character.name == 'holo':
+                self.assertEqual(character.id, 33918)
+                self.assertEqual(character.type, 'character')
+                self.assertEqual(character.name, 'holo')
+                self.assertEqual(character.url, urljoin(Hentai.HOME, '/character/holo/'))
+                self.assertEqual(character.count, 160)
                 break
+
+    def test_list_first_exception(self):
+        with self.assertRaises(ValueError) as context:
+            Tag.list(Option.Epos)
+        self.assertTrue('Epos Option is not supported', context.exception)
+
+    def test_list_second_exception(self):
+        with self.assertRaises(NotImplementedError) as context:
+            Tag.list(Option.Category)
+        self.assertTrue('Category Exception is not implemented', context.exception)

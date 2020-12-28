@@ -52,6 +52,11 @@ class TestUtils(unittest.TestCase):
             self.assertTrue(doujin.image_urls, msg="ValueError: ImageURLs")
             self.assertTrue(doujin.num_pages, msg="ValueError: NumberOfPages")     
 
+    def test_browse_homepage_exception(self):
+        with self.assertRaises(ValueError) as context:
+            Utils.browse_homepage(start_page=5, end_page=1)
+        self.assertTrue('Start page number should not exceed end page number', context.exception)
+
     def test_search_by_tag(self):
         holo_doujins = Utils.search_by_tag(33918, sort=Sort.PopularWeek)
         for doujin in holo_doujins:

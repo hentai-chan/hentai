@@ -1,3 +1,4 @@
+from hentai.hentai import Option
 import json
 import sys
 import unittest
@@ -13,6 +14,7 @@ class TestHentai(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.test_response = Hentai(177013)
+        cls.test_response2 = Hentai(177014)
 
         read = lambda id: json.load(open(f"./tests/{id}.json", mode='r'))
 
@@ -21,6 +23,21 @@ class TestHentai(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         pass
+
+    def test_operators(self):
+        self.assertTrue(self.test_response < self.test_response2)
+        self.assertTrue(self.test_response <= self.test_response2)
+        self.assertFalse(self.test_response == self.test_response2)
+        self.assertFalse(self.test_response > self.test_response2)
+        self.assertFalse(self.test_response >= self.test_response2)
+
+    def test_init_exception(self):
+        with self.assertRaises(TypeError) as context:
+            Hentai(total=2)
+        self.assertTrue('Insufficient arguments supplied to CTOR', context.exception)
+
+    def test_repr(self):
+        self.assertEqual(repr(self.test_response), f"Hentai(ID={self.test_response.id})", msg=repr(self.test_response))
 
     def test_response_json(self):
         self.assertNotIn('error', self.test_response.json, msg=str(self.test_response))  
@@ -99,6 +116,10 @@ class TestHentai(unittest.TestCase):
         self.assertFalse(Hentai.exists(sys.maxsize), msg=f"Should have failed:{sys.maxsize}")
         self.assertFalse(Hentai.exists(-69), msg=f"Should have failed:{-69}")    
 
+    def test_dictionary_exception(self):
+        with self.assertRaises(NotImplementedError) as context:
+            self.test_response.dictionary([Option.Raw])
+        self.assertTrue('Category Exception is not implemented', context.exception)
 
 if __name__ == '__main__':
     unittest.main()
