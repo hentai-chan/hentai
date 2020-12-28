@@ -163,7 +163,7 @@ class Tag:
         ----
         All tag count properties whose values exceed 999 are rounded to the nearest thousand.
         """
-        if option not in [Option.Artist, Option.Character, Option.Group, Option.Parody, Option.Tag, Option.Language]:
+        if option not in [Option.Artist, Option.Character, Option.Group, Option.Parody, Option.Tag, Option.Language, Option.Category]:
             raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: Invalid option ({option.name} is not an Tag object property)")
 
         if option is Option.Category:
@@ -175,6 +175,7 @@ class Tag:
                 return [Tag(int(tag['id']), option.value, tag['name'], urljoin(Hentai.HOME, tag['url']), number(tag['count'])) 
                     for tag in json.load(file_handler)]
 
+    @staticmethod
     def search(value, property_: str='name') -> Tag:
         """
         Return the first tag object whose `property_` matches with `value`.
