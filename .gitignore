@@ -132,6 +132,6 @@ dmypy.json
 .pyre/
 
 # untracked dev file
-hentai/exp.py
+exp.py
 # interactive script
-hentai/iexp.py
+iexp.py
