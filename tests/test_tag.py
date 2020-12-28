@@ -36,3 +36,12 @@ class TestTag(unittest.TestCase):
         with self.assertRaises(NotImplementedError) as context:
             Tag.list(Option.Category)
         self.assertTrue('Category Exception is not implemented', context.exception)
+
+    def test_search(self):
+        result = Tag.search('shindol')
+        artist = self.test_response.artist[0]
+        self.assertEqual(artist.id, result.id, msg="IDs should be an exact match")
+        self.assertEqual(artist.type, result.type, msg="Types should be an exact match")
+        self.assertEqual(artist.name, result.name, msg="Names should be an exact match")
+        self.assertEqual(artist.url, result.url, msg="URLs should be an exact match")
+        self.assertAlmostEqual(artist.count, result.count, delta=100, msg="Count should be almost equal")
