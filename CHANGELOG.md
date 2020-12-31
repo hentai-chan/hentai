@@ -1,8 +1,16 @@
 # Changelog
 
+## Version 3.2.1 (31 December 2020)
+
+Improves overall test coverage and implements
+
+- `search(value, property_: str='name') -> Tag`
+
+as a static method.
+
 ## Version 3.2.0 (27 December 2020)
 
-In this version a two new properties have been added to `Hentai` objects:
+In this version two new properties have been added to `Hentai` objects:
 
 - `self.thread -> List[Comment]`
 - `self.related -> List[Hentai]`
