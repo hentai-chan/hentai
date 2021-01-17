@@ -22,13 +22,15 @@ from __future__ import annotations
 
 import errno
 import functools
-import itertools
 import json
 import os
+import sqlite3
 import sys
 import time
+from contextlib import closing
 from dataclasses import dataclass
-from datetime import datetime as dt, timezone
+from datetime import datetime as dt
+from datetime import timezone
 from enum import Enum, unique
 from importlib.resources import path as resource_path
 from pathlib import Path
@@ -67,6 +69,16 @@ def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', 
         'total': len(iterable), 
         'disable': not disable
     }
+
+def _query_db(db: str, sql: str, *args) -> List:
+    """
+    Apply a query to DBs that reside in the `hentai.data` namespace.
+    """
+    with resource_path('hentai.data', db) as resource_handler:
+        with closing(sqlite3.connect(resource_handler)) as connection:
+            with closing(connection.cursor()) as cursor:
+                return cursor.execute(sql, *args).fetchall()
+
 
 @dataclass
 class Homepage:
@@ -169,24 +181,22 @@ class Tag:
         if option is Option.Category:
             raise NotImplementedError(f"{Fore.RED}This feature is not implemented yet")
 
-        with resource_path('hentai.data', f"{option.value}s.json") as file_path:
-            with open(file_path, mode='r', encoding='utf') as file_handler:
-                number = lambda count: int(count) if count.isnumeric() else int(count.strip('K')) * 1_000
-                return [Tag(int(tag['id']), option.value, tag['name'], urljoin(Hentai.HOME, tag['url']), number(tag['count'])) 
-                    for tag in json.load(file_handler)]
+        tags = _query_db('tags.db', "SELECT * FROM Tag WHERE Type=:type_", {'type_': option.value})
+        number = lambda count: int(count) if str(count).isnumeric() else int(count.strip('K')) * 1_000
+        return [Tag(int(tag[0]), tag[1], tag[2], urljoin(Hentai.HOME, tag[3]), number(tag[4])) for tag in tags]
 
     @staticmethod
-    def search(value, property_: str='name') -> Tag:
+    def search(option: Option, property_: str, value) -> Tag:
         """
-        Return the first tag object whose `property_` matches with `value`.
+        Return the first tag object of type `option` whose `property_` matches with `value`.
 
         Example
         -------
             >>> from hentai import Tag
-            >>> print(f"ID={Tag.search('shindol').id}")
+            >>> print(f"ID={Tag.search(Option.Artist, 'name', 'shindol').id}")
             ID=3981
         """
-        for tag in itertools.chain(Tag.list(Option.Artist), Tag.list(Option.Character), Tag.list(Option.Group), Tag.list(Option.Parody), Tag.list(Option.Tag), Tag.list(Option.Language)):
+        for tag in Tag.list(option):
             if getattr(tag, property_) == value:
                 return tag
 
