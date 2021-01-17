@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import errno
 import functools
-import itertools
 import json
 import os
 import sqlite3
@@ -35,7 +34,7 @@ from datetime import timezone
 from enum import Enum, unique
 from importlib.resources import path as resource_path
 from pathlib import Path
-from typing import List, Tuple, Iterable
+from typing import List, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
