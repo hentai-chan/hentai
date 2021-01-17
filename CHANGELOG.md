@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 3.2.2 (17 January 2021)
+
+Improves performance of `list` and `search` in `Tag` and changes the signature of
+`search` to
+
+- `search(option: Option, property_: str, value) -> Tag`
+
 ## Version 3.2.1 (31 December 2020)
 
 Improves overall test coverage and implements
