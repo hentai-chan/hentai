@@ -1,7 +1,5 @@
 include CHANGELOG.md
+include README.md
 include LICENSE
 
-recursive-include hentai/data *.db
-
-exclude hentai/exp.py
-exclude hentai/iexp.py
+recursive-include src/hentai/data *.db
