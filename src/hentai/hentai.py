@@ -23,6 +23,7 @@ from __future__ import annotations
 import errno
 import functools
 import json
+import logging
 import os
 import sqlite3
 import sys
@@ -48,7 +49,7 @@ from requests_html import HTMLSession
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-from .__init__ import python_major, python_minor
+from .__init__ import package_name, python_major, python_minor
 
 init(autoreset=True)
 
@@ -57,6 +58,28 @@ try:
     assert sys.version_info.minor >= int(python_minor)
 except AssertionError:
     raise RuntimeError(f"{Fore.RED}The Hentai module requires Python 3.7+ (You have Python {sys.version_info.major}.{sys.version_info.major}.{sys.version_info.micro})")
+
+#region logging
+
+def _log_file_path(target_dir) -> Path:
+    """
+    Make a `target_dir` folder in the user's home directory, create a log
+    file (if there is none, else use the existsing one) and return its path.
+    """
+    directory = Path.home().joinpath(target_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    log_file = directory.joinpath(f"{target_dir}.log")
+    log_file.touch(exist_ok=True)
+    return log_file
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+formatter = logging.Formatter('[%(asctime)s]::[%(levelname)s]::[%(name)s]::%(message)s', datefmt='%d-%b-%y %H:%M:%S')
+file_handler = logging.FileHandler(_log_file_path(target_dir=package_name))
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+#endregion
 
 def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', disable=False) -> dict:
     """
@@ -636,8 +659,21 @@ class Hentai(RequestHandler):
 
     @property
     def num_favorites(self) -> int:
-        """Return the number of times this `Hentai` object has been favorited."""
-        return int(self.json['num_favorites'])
+        """
+        Return the number of times this `Hentai` object has been favorited. Because
+        the API does not populate `num_favorites` of recently uploaded doujins,
+        it will try to parse its HTML file as a fallback measure.
+        """
+        num_favorites = int(self.json['num_favorites'])
+        
+        if num_favorites == 0:
+            try:
+                response = HTMLSession().get(self.url)
+                num_favorites = int(response.html.find('.nobold')[1].text.strip('()'))
+            except HTTPError:
+                logger.error(f"An error occurred while trying to parse the HTML file for {repr(self)} (num_favorites={num_favorites})", exc_info=True)
+        
+        return num_favorites
 
     @property
     def pages(self) -> List[Page]:
@@ -691,6 +727,7 @@ class Hentai(RequestHandler):
                         file_handler.write(chunk)
                     time.sleep(delay)
         except HTTPError as error:
+            logger.error(f"Download failed for {repr(self)}", exc_info=True)
             if progressbar:
                 print(f"{Fore.RED}#{str(id).zfill(6)}: {error}")
 
@@ -758,6 +795,7 @@ class Utils(object):
                 try:
                     return func(*args, **kwargs)
                 except HTTPError as error:
+                    logger.error(f"DNE (*args={','.join([arg for arg in args])})", exc_info=True)
                     if error_msg:
                         print(f"{Fore.RED}{error}")
             return wrapper
@@ -819,6 +857,7 @@ class Utils(object):
         try:
             response = HTMLSession().get(Hentai.HOME)
         except HTTPError as error:
+            logger.error(f"Failed to establish a connection to {Hentai.HOME}", exc_info=True)
             print(f"{Fore.RED}{error}")
         else:
             titles = response.html.find("div.index-popular", first=True).text
