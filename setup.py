@@ -51,7 +51,7 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     entry_points={
-        'console_scripts': ['%s=%s.__main__:cli' % (package_name, package_name)]
+        'console_scripts': ['%s=%s.__main__:main' % (package_name, package_name)]
     },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
