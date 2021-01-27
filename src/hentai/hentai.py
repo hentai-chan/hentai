@@ -53,10 +53,10 @@ from .__init__ import python_major, python_minor
 init(autoreset=True)
 
 try:
-    assert sys.version_info.major == python_major
-    assert sys.version_info.minor >= python_minor
+    assert sys.version_info.major == int(python_major)
+    assert sys.version_info.minor >= int(python_minor)
 except AssertionError:
-    raise RuntimeError(f"{Fore.RED}The Hentai module requires Python 3.7+")
+    raise RuntimeError(f"{Fore.RED}The Hentai module requires Python 3.7+ (You have Python {sys.version_info.major}.{sys.version_info.major}.{sys.version_info.micro})")
 
 def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', disable=False) -> dict:
     """
