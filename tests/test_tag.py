@@ -1,7 +1,7 @@
 import unittest
 from urllib.parse import urljoin
 
-from hentai import Hentai, Tag, Option
+from src.hentai import Hentai, Tag, Option
 
 class TestTag(unittest.TestCase):
     @classmethod

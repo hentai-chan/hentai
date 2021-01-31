@@ -1,6 +1,6 @@
 import unittest
 
-from hentai import RequestHandler
+from src.hentai import RequestHandler
 
 
 class TestRequestHandler(unittest.TestCase):

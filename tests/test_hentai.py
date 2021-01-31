@@ -6,7 +6,7 @@ from datetime import timezone
 from random import choices
 from urllib.parse import urlparse
 
-from hentai import Hentai, Option
+from src.hentai import Hentai, Option
 
 
 class TestHentai(unittest.TestCase):    

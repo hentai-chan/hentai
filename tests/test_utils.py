@@ -6,7 +6,7 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 import requests
-from hentai import Format, Hentai, Option, Sort, Utils
+from src.hentai import Format, Hentai, Option, Sort, Utils
 
 
 class TestUtils(unittest.TestCase):
