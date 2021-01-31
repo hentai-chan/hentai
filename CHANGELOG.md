@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 3.2.3 (31 January 2021)
+
+Adds log handler to the `hentai` module and implements a fallback mechanism to
+the `num_favorites` property of Hentai objects for recently uploaded doujins. This
+version also deprecates `setup.cfg` and made a few additional changes to the project
+structure, none of which should have any effect on users of this library.
+
 ## Version 3.2.2 (17 January 2021)
 
 Improves performance of `list` and `search` in `Tag` and changes the signature of
