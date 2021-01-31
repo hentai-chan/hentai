@@ -61,7 +61,7 @@ except AssertionError:
 
 #region logging
 
-def _log_file_path(target_dir) -> Path:
+def _log_file_path(target_dir: str) -> Path:
     """
     Make a `target_dir` folder in the user's home directory, create a log
     file (if there is none, else use the existsing one) and return its path.
