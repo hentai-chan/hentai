@@ -95,11 +95,11 @@ def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', 
         'disable': not disable
     }
 
-def _query_db(db: str, sql: str, *args) -> List:
+def _query_db(db: str, sql: str, *args, local_: bool=False) -> List:
     """
     Apply a query to DBs that reside in the `hentai.data` namespace.
     """
-    with resource_path('hentai.data', db) as resource_handler:
+    with resource_path('src.hentai.data' if local_ else 'hentai.data', db) as resource_handler:
         with closing(sqlite3.connect(resource_handler)) as connection:
             with closing(connection.cursor()) as cursor:
                 return cursor.execute(sql, *args).fetchall()
@@ -175,7 +175,7 @@ class Tag:
         return ', '.join([getattr(tag, property_) for tag in tags])
 
     @staticmethod
-    def list(option: Option) -> List[Tag]:
+    def list(option: Option, local_: bool=False) -> List[Tag]:
         """
         Return a list of all tags where `option` is either
         
@@ -206,12 +206,12 @@ class Tag:
         if option is Option.Category:
             raise NotImplementedError(f"{Fore.RED}This feature is not implemented yet")
 
-        tags = _query_db('tags.db', "SELECT * FROM Tag WHERE Type=:type_", {'type_': option.value})
+        tags = _query_db('tags.db', "SELECT * FROM Tag WHERE Type=:type_", {'type_': option.value}, local_=local_)
         number = lambda count: int(count) if str(count).isnumeric() else int(count.strip('K')) * 1_000
         return [Tag(int(tag[0]), tag[1], tag[2], urljoin(Hentai.HOME, tag[3]), number(tag[4])) for tag in tags]
 
     @staticmethod
-    def search(option: Option, property_: str, value) -> Tag:
+    def search(option: Option, property_: str, value, local_: bool=False) -> Tag:
         """
         Return the first tag object of type `option` whose `property_` matches with `value`.
 
@@ -221,7 +221,7 @@ class Tag:
             >>> print(f"ID={Tag.search(Option.Artist, 'name', 'shindol').id}")
             ID=3981
         """
-        for tag in Tag.list(option):
+        for tag in Tag.list(option, local_=local_):
             if getattr(tag, property_) == value:
                 return tag
 

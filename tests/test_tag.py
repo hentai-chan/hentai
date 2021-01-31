@@ -17,7 +17,7 @@ class TestTag(unittest.TestCase):
         self.assertTrue('DNE', context.exception)
 
     def test_list(self):
-        characters = Tag.list(Option.Character)
+        characters = Tag.list(Option.Character, local_=True)
         for character in characters:
             if character.name == 'holo':
                 self.assertEqual(character.id, 33918)
@@ -38,7 +38,7 @@ class TestTag(unittest.TestCase):
         self.assertTrue('Category Exception is not implemented', context.exception)
 
     def test_search(self):
-        result = Tag.search(Option.Artist, 'name', 'shindol')
+        result = Tag.search(Option.Artist, 'name', 'shindol', local_=True)
         artist = self.test_response.artist[0]
         self.assertEqual(artist.id, result.id, msg="IDs should be an exact match")
         self.assertEqual(artist.type, result.type, msg="Types should be an exact match")
