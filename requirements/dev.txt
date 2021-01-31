@@ -1,0 +1,3 @@
+-r release.txt
+pretty-errors==1.2.19
+check-manifest==0.46
