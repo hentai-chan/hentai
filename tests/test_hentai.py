@@ -1,4 +1,3 @@
-from hentai.hentai import Option
 import json
 import sys
 import unittest
@@ -7,7 +6,7 @@ from datetime import timezone
 from random import choices
 from urllib.parse import urlparse
 
-from hentai import Format, Hentai
+from hentai import Hentai, Option
 
 
 class TestHentai(unittest.TestCase):    
