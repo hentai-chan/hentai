@@ -54,10 +54,9 @@ from .__init__ import package_name, python_major, python_minor
 init(autoreset=True)
 
 try:
-    assert sys.version_info.major == int(python_major)
-    assert sys.version_info.minor >= int(python_minor)
+    assert sys.version_info >= (int(python_major), int(python_minor))
 except AssertionError:
-    raise RuntimeError(f"{Fore.RED}The Hentai module requires Python 3.7+ (You have Python {sys.version_info.major}.{sys.version_info.major}.{sys.version_info.micro})")
+    raise RuntimeError(f"{Fore.RED}The Hentai module requires Python 3.7+ (You have Python {sys.version})")
 
 #region logging
 
