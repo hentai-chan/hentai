@@ -2,13 +2,7 @@
 
 import argparse
 
-from hentai.hentai import *
-
-__version__ = "3.2.4"
-package_name = "hentai"
-python_major = "3"
-python_minor = "7"
-
+from .hentai import *
 
 def main():
     parser = argparse.ArgumentParser(prog=package_name)

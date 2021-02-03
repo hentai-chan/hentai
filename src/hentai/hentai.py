@@ -49,7 +49,10 @@ from requests_html import HTMLSession
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-from .__init__ import package_name, python_major, python_minor
+__version__ = "3.2.4"
+package_name = "hentai"
+python_major = "3"
+python_minor = "7"
 
 init(autoreset=True)
 
