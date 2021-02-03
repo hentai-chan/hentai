@@ -2,7 +2,7 @@
 
 import argparse
 
-from .hentai import *
+from hentai.hentai import *
 
 __version__ = "3.2.4"
 package_name = "hentai"
@@ -11,7 +11,6 @@ python_minor = "7"
 
 
 def main():
-    from hentai import Hentai
     parser = argparse.ArgumentParser(prog=package_name)
     parser.add_argument('--id', type=int, help="download this doujin in the current working directory")
     parser.add_argument('--version', action='version', version=f"%(prog)s {__version__}")
