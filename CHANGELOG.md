@@ -1,5 +1,22 @@
 # Changelog
 
+## Version 3.2.4 (09 January 2021)
+
+Move the log file path from the home directory to `/var/log` on linux-like systems
+and to `%LOCALAPPDATA%` on Windows. Also improves the github issue templates and
+implements a basic CLI:
+
+```cli
+# get help
+hentai -h
+
+# download doujin
+hentai 177013
+
+# check module version
+hentai -version
+```
+
 ## Version 3.2.3 (31 January 2021)
 
 Adds log handler to the `hentai` module and implements a fallback mechanism to
