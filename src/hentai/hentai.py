@@ -25,6 +25,7 @@ import functools
 import json
 import logging
 import os
+import platform
 import sqlite3
 import sys
 import time
@@ -68,7 +69,7 @@ def _log_file_path(target_dir: str) -> Path:
     Make a `target_dir` folder in the user's home directory, create a log
     file (if there is none, else use the existsing one) and return its path.
     """
-    directory = Path.home().joinpath(target_dir)
+    directory = Path(os.path.expandvars('%LOCALAPPDATA%')) if platform.system() == 'Windows' else Path('/tmp')
     directory.mkdir(parents=True, exist_ok=True)
     log_file = directory.joinpath(f"{target_dir}.log")
     log_file.touch(exist_ok=True)
@@ -76,7 +77,7 @@ def _log_file_path(target_dir: str) -> Path:
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
-formatter = logging.Formatter('[%(asctime)s]::[%(levelname)s]::[%(name)s]::%(message)s', datefmt='%d-%b-%y %H:%M:%S')
+formatter = logging.Formatter('%(asctime)s::%(levelname)s::%(lineno)d::%(name)s::%(message)s', datefmt='%d-%b-%y %H:%M:%S')
 file_handler = logging.FileHandler(_log_file_path(target_dir=package_name))
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
