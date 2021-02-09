@@ -69,7 +69,7 @@ def _log_file_path(target_dir: str) -> Path:
     Make a `target_dir` folder in the user's home directory, create a log
     file (if there is none, else use the existsing one) and return its path.
     """
-    directory = Path(os.path.expandvars('%LOCALAPPDATA%')) if platform.system() == 'Windows' else Path('/tmp')
+    directory = Path(os.path.expandvars('%LOCALAPPDATA%')) if platform.system() == 'Windows' else Path('/var/log')
     directory.mkdir(parents=True, exist_ok=True)
     log_file = directory.joinpath(f"{target_dir}.log")
     log_file.touch(exist_ok=True)
