@@ -4,7 +4,7 @@ import re
 
 from setuptools import setup, find_packages
 
-with open("src/hentai/__init__.py", encoding='utf-8') as file_handler:
+with open("src/hentai/hentai.py", encoding='utf-8') as file_handler:
     lines = file_handler.read()
     version = re.search(r'__version__ = "(.*?)"', lines).group(1)
     package_name = re.search(r'package_name = "(.*?)"', lines).group(1)

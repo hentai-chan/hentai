@@ -7,17 +7,36 @@ assignees: hentai-chan
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Describe the Bug
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Information about your system and version of python
-2. Error message & warnings
-3. Code samples
+Write a clear and concise description of what the bug is.
 
-**Expected behavior**
+---
+
+## Steps To Reproduce
+
+### System Information
+
+| OS Name    | Build No.  | Python Version | App Version |
+|:----------:|:----------:|:--------------:|:-----------:|
+| `REDACTED` | `REDACTED` |  `REDACTED`    |  `REDACTED` |
+
+### Error message & warnings
+
+```cli
+# paste your exception trace and log file content here
+```
+
+### Code samples
+
+```cli
+# command that invokes an error
+```
+
+## Expected behavior
+
 A clear and concise description of what you expected to happen.
 
-**Additional context**
+## Additional context
+
 Add any other context about the problem here.

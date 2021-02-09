@@ -25,6 +25,7 @@ import functools
 import json
 import logging
 import os
+import platform
 import sqlite3
 import sys
 import time
@@ -49,15 +50,17 @@ from requests_html import HTMLSession
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-from .__init__ import package_name, python_major, python_minor
+__version__ = "3.2.4"
+package_name = "hentai"
+python_major = "3"
+python_minor = "7"
 
 init(autoreset=True)
 
 try:
-    assert sys.version_info.major == int(python_major)
-    assert sys.version_info.minor >= int(python_minor)
+    assert sys.version_info >= (int(python_major), int(python_minor))
 except AssertionError:
-    raise RuntimeError(f"{Fore.RED}The Hentai module requires Python 3.7+ (You have Python {sys.version_info.major}.{sys.version_info.major}.{sys.version_info.micro})")
+    raise RuntimeError(f"{Fore.RED}The Hentai module requires Python 3.7+ (You have Python {sys.version})")
 
 #region logging
 
@@ -66,7 +69,7 @@ def _log_file_path(target_dir: str) -> Path:
     Make a `target_dir` folder in the user's home directory, create a log
     file (if there is none, else use the existsing one) and return its path.
     """
-    directory = Path.home().joinpath(target_dir)
+    directory = Path(os.path.expandvars('%LOCALAPPDATA%')) if platform.system() == 'Windows' else Path('/var/log')
     directory.mkdir(parents=True, exist_ok=True)
     log_file = directory.joinpath(f"{target_dir}.log")
     log_file.touch(exist_ok=True)
@@ -74,7 +77,7 @@ def _log_file_path(target_dir: str) -> Path:
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
-formatter = logging.Formatter('[%(asctime)s]::[%(levelname)s]::[%(name)s]::%(message)s', datefmt='%d-%b-%y %H:%M:%S')
+formatter = logging.Formatter('%(asctime)s::%(levelname)s::%(lineno)d::%(name)s::%(message)s', datefmt='%d-%b-%y %H:%M:%S')
 file_handler = logging.FileHandler(_log_file_path(target_dir=package_name))
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)

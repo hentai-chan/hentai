@@ -6,7 +6,7 @@ from datetime import timezone
 from random import choices
 from urllib.parse import urlparse
 
-from src.hentai import Hentai, Option
+from src.hentai import Hentai, Option, Utils
 
 
 class TestHentai(unittest.TestCase):    
@@ -104,6 +104,10 @@ class TestHentai(unittest.TestCase):
     def test_num_favorites(self):
         self.assertLessEqual(self.test_reference.num_favorites, self.test_response.num_favorites, msg=str(self.test_response))
         
+    def test_num_favorites_edge_case(self):
+        new_uploads = choices(Utils.get_homepage().new_uploads, k=10)
+        self.assertTrue(any(map(lambda doujin: doujin.num_favorites > 0, new_uploads)), msg=f"HTML parsing error sample {list(map(repr, new_uploads))}")
+
     def test_image_urls(self):
         for image_url in map(urlparse, choices(self.test_response.image_urls, k=10)):
             self.assertTrue(image_url.scheme, msg=f"AssertSchemeError: {image_url}")
