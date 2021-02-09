@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 3.2.4 (09 January 2021)
+## Version 3.2.4 (09 February 2021)
 
 Move the log file path from the home directory to `/var/log` on linux-like systems
 and to `%LOCALAPPDATA%` on Windows. Also improves the github issue templates and
