@@ -2,8 +2,8 @@
 
 ## Version 3.2.4 (09 February 2021)
 
-Move the log file path from the home directory to `/var/log` on linux-like systems
-and to `%LOCALAPPDATA%` on Windows. Also improves the github issue templates and
+Moves the log file path from the home directory to `/var/log` on Linux-like systems
+and to `%LOCALAPPDATA%` on Windows. Also improves the GitHub issue templates and
 implements a basic CLI:
 
 ```cli
