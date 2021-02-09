@@ -4,3 +4,7 @@ coverage:
       default:
         target: 90%
         threshold: 5%
+  ignore:
+    - "setup.py"
+    - "src/hentai/__init__.py"
+    - "tests/test_*.py"

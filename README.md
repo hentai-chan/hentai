@@ -152,6 +152,22 @@ Utils.export(popular_loli, filename=Path('popular_loli.json'), options=custom)
 See also [https://nhentai.net/info/](https://nhentai.net/info/) for more information
 on search queries.
 
+## Command Line Interface
+
+Starting with version 3.2.4, this module also provides a rudimentary CLI for downloading
+doujins within the terminal:
+
+```cli
+# get help
+hentai -h
+
+# download this doujin to the CWD
+hentai 177013
+
+# check the module version
+hentai -version
+```
+
 ## Get In Touch
 
 You can reach me at [dev.hentai-chan@outlook.com](mailto:dev.hentai-chan@outlook.com)
