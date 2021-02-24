@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 3.2.5 (26 February 2021)
+
+Updates the documentation and moves the log file path on Linux back to `~/.hentai`,
+but also improves the contributing notes for developers.
+
 ## Version 3.2.4 (09 February 2021)
 
 Moves the log file path from the home directory to `/var/log` on Linux-like systems
@@ -11,7 +16,7 @@ implements a basic CLI:
 hentai -h
 
 # download doujin
-hentai 177013
+hentai -id 177013
 
 # check module version
 hentai -version
