@@ -50,7 +50,7 @@ from requests_html import HTMLSession
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 package_name = "hentai"
 python_major = "3"
 python_minor = "7"
@@ -70,7 +70,7 @@ def _log_file_path(target_dir: str) -> Path:
     none, else use the existing one) and return its path.
     """
     directory = Path(os.path.expandvars('%LOCALAPPDATA%')) if platform.system() == 'Windows' else Path().home()
-    directory.joinpath(f".{package_name}")
+    directory.joinpath(f".{target_dir}")
     directory.mkdir(parents=True, exist_ok=True)
     log_file = directory.joinpath(f"{target_dir}.log")
     log_file.touch(exist_ok=True)
