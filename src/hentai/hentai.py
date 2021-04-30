@@ -109,7 +109,7 @@ def _query_db(db: str, sql: str, *args, local_: bool=False) -> List:
                 return cursor.execute(sql, *args).fetchall()
 
 
-@dataclass
+@dataclass(frozen=True)
 class Homepage:
     """
     The `Homepage` dataclass contains all doujins from the frontpage of 
@@ -121,7 +121,7 @@ class Homepage:
     new_uploads: List[Hentai]
 
 
-@dataclass
+@dataclass(frozen=True)
 class User:
     """
     Provides public account information.
@@ -138,7 +138,7 @@ class User:
         return urljoin(Hentai.HOME, f"/users/{self.id}/{self.slug}")
 
 
-@dataclass
+@dataclass(frozen=True)
 class Comment:
     """
     Defines comment object instances of doujin threads.
@@ -150,7 +150,7 @@ class Comment:
     body: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class Tag:
     """
     A data class that bundles related `Tag` properties and useful helper methods
@@ -230,7 +230,7 @@ class Tag:
                 return tag
 
 
-@dataclass
+@dataclass(frozen=True)
 class Page:
     """
     A data class that bundles related `Page` properties.
