@@ -50,7 +50,7 @@ from requests_html import HTMLSession
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-__version__ = "3.2.5"
+__version__ = "3.2.6"
 package_name = "hentai"
 python_major = "3"
 python_minor = "7"
@@ -346,6 +346,8 @@ class RequestHandler(object):
         >>> response = RequestHandler().get(url=Hentai.HOME)
         >>> print(response.ok)
     """
+    __slots__ = ['timeout', 'total', 'status_forcelist', 'backoff_factor']
+
     _timeout = (5, 5)
     _total = 5
     _status_forcelist = [413, 429, 500, 502, 503, 504]
@@ -424,6 +426,8 @@ class Hentai(RequestHandler):
     ----
     See full documentation at <https://hentaichan.pythonanywhere.com/projects/hentai>.
     """
+    __slots__ = ['__id', '__handler', '__url', '__api', '__response', '__json']
+
     HOME = "https://nhentai.net/" 
     _URL = urljoin(HOME, '/g/')
     _API = urljoin(HOME, '/api/gallery/')
