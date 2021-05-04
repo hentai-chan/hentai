@@ -60,7 +60,7 @@ init(autoreset=True)
 try:
     assert sys.version_info >= (int(python_major), int(python_minor))
 except AssertionError:
-    raise RuntimeError(f"{Fore.RED}The Hentai module requires Python 3.7+ (You have Python {sys.version})")
+    raise RuntimeError(f"{package_name!r} requires Python {python_major}.{python_minor}+ (You have Python {sys.version})")
 
 #region logging
 
@@ -225,9 +225,7 @@ class Tag:
             >>> print(f"ID={Tag.search(Option.Artist, 'name', 'shindol').id}")
             ID=3981
         """
-        for tag in Tag.list(option, local_=local_):
-            if getattr(tag, property_) == value:
-                return tag
+        return next(filter(lambda tag: getattr(tag, property_) == value, Tag.list(option, local_=local_)))
 
 
 @dataclass(frozen=True)
@@ -393,16 +391,16 @@ class RequestHandler(object):
         session.mount("https://", HTTPAdapter(max_retries=self.retry_strategy))
         session.hooks['response'] = [assert_status_hook]
         session.headers.update({
-            "User-Agent" : RequestHandler._fake.chrome(version_from=80, version_to=86, build_from=4100, build_to=4200)
+            "User-Agent" : RequestHandler._fake.chrome(version_from=86, version_to=92, build_from=4300, build_to=4400)
         })
         return session
     
-    def get(self, url: str, params: dict=None, **kwargs) -> Response:
+    def get(self, url: str, **kwargs) -> Response:
         """
         Returns the GET request encoded in `utf-8`. Adds proxies to this session 
         on the fly if urllib is able to pick up the system's proxy settings.
         """
-        response = self.session.get(url, timeout=self.timeout, params=params, proxies=getproxies(), **kwargs)
+        response = self.session.get(url, timeout=self.timeout, proxies=getproxies(), **kwargs)
         response.encoding = 'utf-8'
         return response
 
@@ -737,7 +735,7 @@ class Hentai(RequestHandler):
         except HTTPError as error:
             logger.error(f"Download failed for {repr(self)}", exc_info=True)
             if progressbar:
-                print(f"{Fore.RED}#{str(id).zfill(6)}: {error}")
+                print(f"#{str(id).zfill(6)}: {error}", file=sys.stderr)
 
     def export(self, filename: Path, options: List[Option]=None) -> None:
         """
@@ -805,7 +803,7 @@ class Utils(object):
                 except HTTPError as error:
                     logger.error(f"DNE (*args={','.join([arg for arg in args])})", exc_info=True)
                     if error_msg:
-                        print(f"{Fore.RED}{error}")
+                        print(error, file=sys.stderr)
             return wrapper
         return decorator
 
@@ -866,7 +864,7 @@ class Utils(object):
             response = HTMLSession().get(Hentai.HOME)
         except HTTPError as error:
             logger.error(f"Failed to establish a connection to {Hentai.HOME}", exc_info=True)
-            print(f"{Fore.RED}{error}")
+            print(error, file=sys.stderr)
         else:
             titles = response.html.find("div.index-popular", first=True).text
 
