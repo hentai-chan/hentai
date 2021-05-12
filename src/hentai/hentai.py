@@ -716,19 +716,18 @@ class Hentai(RequestHandler):
         comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body']) 
         return [comment(data) for data in response]
 
-    def download(self, folder: Path=None, delay: float=0, progressbar: bool=False) -> None:
+    def download(self, dest: Path=None, delay: float=0, progressbar: bool=False) -> None:
         """
-        Download all image URLs of this `Hentai` object to `folder`, excluding cover 
+        Download all image URLs of this `Hentai` object to `dest`, excluding cover 
         and thumbnail. By default, `directory` will be located in the CWD named after 
         the doujin's `id`. Set a `delay` between each image download in seconds. 
         Enable `progressbar` for status feedback in terminal applications.
         """
         try:
-            if folder is None:
-                folder = Path(str(self.id))
-            folder.mkdir(parents=True, exist_ok=True)
+            dest = Path(str(self.id)) if dest is None else dest.joinpath(str(self.id))
+            dest.mkdir(parents=True, exist_ok=True)
             for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
-                with open(folder.joinpath(page.filename), mode='wb') as file_handler:
+                with open(dest.joinpath(page.filename), mode='wb') as file_handler:
                     for chunk in self.handler.get(page.url, stream=True).iter_content(1024):
                         file_handler.write(chunk)
                     time.sleep(delay)
