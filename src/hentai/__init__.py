@@ -12,17 +12,20 @@ from .hentai import __version__
 
 def main():
     parser = argparse.ArgumentParser(prog=package_name)
+    parser._positionals.title = 'Commands'
+    parser._optionals.title = 'Arguments'
+
+    parser.add_argument('-v', '--version', action='version', version=f"%(prog)s {__version__}")
+    parser.add_argument('-V', '--verbose', action='store_true', help="increase output verbosity")
+
     subparser = parser.add_subparsers(dest='command')
 
-    parser.add_argument('--version', action='version', version=f"%(prog)s {__version__}")
-    parser.add_argument('--verbose', action='store_true', help="increase output verbosity")
-
     download_parser = subparser.add_parser('download', help="download doujin (CWD by default)")
-    download_parser.add_argument('--id', type=int, nargs='+', help="magic number")
+    download_parser.add_argument('--id', type=int, nargs='+', required=True, help="magic number")
     download_parser.add_argument('--dest', type=Path, default=Path.cwd(), help="download directory (CWD by default)")
 
     preview_parser = subparser.add_parser('preview', help="print doujin preview")
-    preview_parser.add_argument('--id', type=int, nargs='+', help="magic number")
+    preview_parser.add_argument('--id', type=int, nargs='+', required=True, help="magic number")
 
     args = parser.parse_args()
     
@@ -33,7 +36,7 @@ def main():
                 doujin = Hentai(id_)
                 doujin.download(dest=args.dest, progressbar=args.verbose)
             except HTTPError as error:
-                print(f"Download #{str(id_).zfill(6)}: {error}", file=sys.stderr)
+                print(f"\033[31mDownloadError:\033[0m {error}", file=sys.stderr)
                 count -= 1
         if count: print(f"Stored {count} doujin{'s' if count > 1 else ''} in {str(args.dest)!r}")
 
@@ -41,10 +44,12 @@ def main():
         for id_ in args.id:
             try:
                 doujin = Hentai(id_)
-                print(doujin.title(Format.Pretty))
-                print(f"Genres: {Tag.get(doujin.tag, 'name')}\n")
-            except HTTPError:
-                print(f"Error: #{str(id_).zfill(6)} does not exist")
+                print(f"\033[32m{doujin.title(Format.Pretty)!r} by {Tag.get(doujin.artist, 'name')}\033[0m")
+                print(f"genres:\t{Tag.get(doujin.tag, 'name')}")
+                print(f"langs:\t{Tag.get(doujin.language, 'name')}")
+                print(f"pages:\t{doujin.num_pages}", end='\n\n' if id_ != len(args.id) else '')
+            except HTTPError as error:
+                print(f"\033[31mPreviewError:\033[0m {error}", file=sys.stderr)
 
 if __name__ == '__main__':
     main()
