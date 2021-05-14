@@ -1,9 +1,34 @@
 # Changelog
 
+## Version 3.2.6 (15 May 2021)
+
+Extends continuous integration scripts by running unit tests on all major platforms
+and recent versions of python - the version matrix now also includes `3.10-beta.1`!
+
+Note that this update also redefines the built-in CLI:
+
+```bash
+# now supports queued downloads! (turn on the progress bar with the verbose flag)
+hentai --verbose download --id 1 2 3
+
+# print title, genre, lang and num_pages (also supports multiple args)
+hentai preview --id 177013
+```
+
+More importantly, this update also removes `requests_html` and `colorama` from the
+list of required project dependencies, making this library more lightweight and
+faster to install. Lastly, a security policy is now in place for disclosing
+security vulnerabilities. Head over to this project's
+[security policy](https://github.com/hentai-chan/hentai/blob/master/SECURITY.md)
+to learn more about recommended security guidelines that you can follow while
+developing your applications.
+
 ## Version 3.2.5 (26 February 2021)
 
 Updates the documentation and moves the log file path on Linux back to `~/.hentai`,
-but also improves the contributing notes for developers.
+but also improves the
+[contributing notes](https://github.com/hentai-chan/hentai/blob/master/CONTRIBUTING.md)
+for developers.
 
 ## Version 3.2.4 (09 February 2021)
 
