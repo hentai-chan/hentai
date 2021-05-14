@@ -28,6 +28,7 @@ import logging
 import os
 import platform
 import re
+import shutil
 import sqlite3
 import sys
 import time
@@ -716,21 +717,26 @@ class Hentai(RequestHandler):
         comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body']) 
         return [comment(data) for data in response]
 
-    def download(self, dest: Path=None, delay: float=0, progressbar: bool=False) -> None:
+    def download(self, dest: Path=None, folder: str=None, delay: float=0, zip: bool=False, progressbar: bool=False) -> None:
         """
         Download all image URLs of this `Hentai` object to `dest`, excluding cover 
-        and thumbnail. By default, `directory` will be located in the CWD named after 
-        the doujin's `id`. Set a `delay` between each image download in seconds. 
-        Enable `progressbar` for status feedback in terminal applications.
+        and thumbnail. By default, `folder` will be located in the CWD named after 
+        the doujin's `id`. Set a `delay` between each image download in seconds. If
+        `zip` is set to `True`, the download directory `folder` will be archived
+        in `dest`. Enable `progressbar` for status feedback in terminal applications.
         """
         try:
-            dest = Path(str(self.id)) if dest is None else dest.joinpath(str(self.id))
+            folder = str(self.id) if folder is None else folder
+            dest = Path(folder) if dest is None else Path(dest).joinpath(folder)
             dest.mkdir(parents=True, exist_ok=True)
             for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
                 with open(dest.joinpath(page.filename), mode='wb') as file_handler:
                     for chunk in self.handler.get(page.url, stream=True).iter_content(1024):
                         file_handler.write(chunk)
                     time.sleep(delay)
+            if zip: 
+                shutil.make_archive(dest, 'zip', dest)
+                dest.unlink()
         except HTTPError as error:
             logger.error(f"Download failed for {repr(self)}", exc_info=True)
             if progressbar:
@@ -829,7 +835,7 @@ class Utils(object):
         in seconds. Enable `progressbar` for status feedback in terminal applications.
         """
         for doujin in doujins:
-            doujin.download(None, delay, progressbar)
+            doujin.download(delay=delay, progressbar=progressbar)
 
     @staticmethod
     def browse_homepage(start_page: int, end_page: int, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
