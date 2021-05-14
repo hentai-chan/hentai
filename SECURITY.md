@@ -1,4 +1,10 @@
-# Advanced Systems Security Policy
+<p align="center">
+  <a title="Project Logo">
+    <img height="150" style="margin-top:15px" src="https://raw.githubusercontent.com/Advanced-Systems/vector-assets/master/advanced-systems-logo-annotated.svg">
+  </a>
+</p>
+
+<h1 align="center">Advanced Systems Security Policy</h1>
 
 ## Python Package Distribution
 
@@ -10,7 +16,11 @@ code execution), but it will always fall back to source distributions if the
 package doesn't provide any form of binary distribution. Different threat models
 require different forms of protections, but this doesn't alter the fact that even
 safe guards like the web of trust (WoT) only offer limited protection as in theory
-anyone is qualified to become a package maintainer on PyPI.
+anyone is qualified to become a package maintainer on PyPI, and even then end users
+are vulnerable to typosquatting for all it takes is a moment of inadvertence to
+accidentally install malware on their machine. As a rule of thumb, it is strongly
+recommended to never run `pip` with root privileges. Use virtual environments to
+isolate package installs for each individual project.
 
 ## DevSecOps Measures in Place
 
