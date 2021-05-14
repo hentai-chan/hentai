@@ -58,7 +58,7 @@ this module to make an unreasonable amount of requests in a short period of time
 Get the most recent stable release from PyPI:
 
 ```bash
-pip install hentai
+pip install hentai --only-binary all
 ```
 
 <details>
@@ -76,7 +76,7 @@ pip install -r requirements.txt
 # additionally install the following dependencies
 pip install flake8 pytest wheel
 # run all unit tests
-pytest --verbose
+pytest --verbose -s
 # create wheel
 python setup.py bdist_wheel --universal
 ```

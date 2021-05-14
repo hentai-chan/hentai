@@ -55,7 +55,7 @@
 从 PyPI 取得最新的稳定版本:
 
 ```bash
-pip install hentai
+pip install hentai --only-binary all
 ```
 
 <details>
@@ -73,7 +73,7 @@ pip install -r requirements.txt
 # 另请安装以下依赖类型
 pip install flake8 pytest wheel
 # 执行全部单元测试
-pytest --verbose
+pytest --verbose -s
 # 创造 wheel
 python setup.py bdist_wheel --universal
 ```
@@ -149,6 +149,7 @@ Utils.export(popular_loli, filename=Path('popular_loli.json'), options=custom)
 ## 指令列介面
 
 自版本3.2.4起，本模组也提供基本的指令列介面以从在终端里下载同人誌：
+
 ```cli
 # 取得帮助
 hentai --help
