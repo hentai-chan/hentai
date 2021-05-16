@@ -28,7 +28,7 @@
         <img src="https://codecov.io/gh/hentai-chan/hentai/branch/master/graph/badge.svg?token=HOE2YZO4V6"/>
     </a>
     <a title="Supported Python Versions">
-        <img src="https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9-blue">
+        <img src="https://img.shields.io/pypi/pyversions/hentai">
     </a>
     <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" title="License Information" target="_blank">
         <img src="https://img.shields.io/badge/License-GPLv3-blue.svg">
@@ -58,7 +58,7 @@ this module to make an unreasonable amount of requests in a short period of time
 Get the most recent stable release from PyPI:
 
 ```bash
-pip install hentai
+pip install hentai --only-binary all
 ```
 
 <details>
@@ -76,7 +76,7 @@ pip install -r requirements.txt
 # additionally install the following dependencies
 pip install flake8 pytest wheel
 # run all unit tests
-pytest --verbose
+pytest --verbose -s
 # create wheel
 python setup.py bdist_wheel --universal
 ```
@@ -161,13 +161,13 @@ doujins within the terminal:
 
 ```cli
 # get help
-hentai -h
+hentai --help
 
 # download this doujin to the CWD
-hentai -id 177013
+hentai --verbose download --id 177013
 
 # check the module version
-hentai -version
+hentai --version
 ```
 
 ## Get In Touch

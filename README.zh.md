@@ -28,7 +28,7 @@
         <img src="https://codecov.io/gh/hentai-chan/hentai/branch/master/graph/badge.svg?token=HOE2YZO4V6"/>
     </a>
     <a title="Supported Python Versions">
-        <img src="https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9-blue">
+        <img src="https://img.shields.io/pypi/pyversions/hentai">
     </a>
     <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" title="License Information" target="_blank">
         <img src="https://img.shields.io/badge/License-GPLv3-blue.svg">
@@ -55,7 +55,7 @@
 从 PyPI 取得最新的稳定版本:
 
 ```bash
-pip install hentai
+pip install hentai --only-binary all
 ```
 
 <details>
@@ -73,7 +73,7 @@ pip install -r requirements.txt
 # 另请安装以下依赖类型
 pip install flake8 pytest wheel
 # 执行全部单元测试
-pytest --verbose
+pytest --verbose -s
 # 创造 wheel
 python setup.py bdist_wheel --universal
 ```
@@ -149,15 +149,16 @@ Utils.export(popular_loli, filename=Path('popular_loli.json'), options=custom)
 ## 指令列介面
 
 自版本3.2.4起，本模组也提供基本的指令列介面以从在终端里下载同人誌：
+
 ```cli
 # 取得帮助
-hentai -h
+hentai --help
 
 # 将此同人下载到CWD
-hentai -id 177013
+hentai --verbose download --id 177013
 
 # 查看模组版本
-hentai -version
+hentai --version
 ```
 
 ## 取得联系

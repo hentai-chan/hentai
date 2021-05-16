@@ -22,10 +22,13 @@ from __future__ import annotations
 
 import errno
 import functools
+import html
 import json
 import logging
 import os
 import platform
+import re
+import shutil
 import sqlite3
 import sys
 import time
@@ -41,26 +44,22 @@ from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
 import requests
-from colorama import Fore, init
 from faker import Faker
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
 from requests.models import Response
-from requests_html import HTMLSession
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-__version__ = "3.2.5"
+__version__ = "3.2.6"
 package_name = "hentai"
 python_major = "3"
 python_minor = "7"
 
-init(autoreset=True)
-
 try:
     assert sys.version_info >= (int(python_major), int(python_minor))
 except AssertionError:
-    raise RuntimeError(f"{Fore.RED}The Hentai module requires Python 3.7+ (You have Python {sys.version})")
+    raise RuntimeError(f"\033[31m{package_name!r} requires Python {python_major}.{python_minor}+ (You have Python {sys.version})\033[0m")
 
 #region logging
 
@@ -85,13 +84,13 @@ logger.addHandler(file_handler)
 
 #endregion
 
-def _progressbar_options(iterable, desc, unit, color=Fore.GREEN, char='\u25CB', disable=False) -> dict:
+def _progressbar_options(iterable, desc, unit, color="\033[32m", char='\u25CB', disable=False) -> dict:
     """
     Return custom optional arguments for `tqdm` progressbars.
     """
     return {
         'iterable': iterable,
-        'bar_format': "{l_bar}%s{bar}%s{r_bar}" % (color, Fore.RESET),
+        'bar_format': "{l_bar}%s{bar}%s{r_bar}" % (color, "\033[0m"),
         'ascii': char.rjust(9, ' '), 
         'desc': desc, 
         'unit': unit.rjust(1, ' '), 
@@ -109,7 +108,7 @@ def _query_db(db: str, sql: str, *args, local_: bool=False) -> List:
                 return cursor.execute(sql, *args).fetchall()
 
 
-@dataclass
+@dataclass(frozen=True)
 class Homepage:
     """
     The `Homepage` dataclass contains all doujins from the frontpage of 
@@ -121,7 +120,7 @@ class Homepage:
     new_uploads: List[Hentai]
 
 
-@dataclass
+@dataclass(frozen=True)
 class User:
     """
     Provides public account information.
@@ -138,7 +137,7 @@ class User:
         return urljoin(Hentai.HOME, f"/users/{self.id}/{self.slug}")
 
 
-@dataclass
+@dataclass(frozen=True)
 class Comment:
     """
     Defines comment object instances of doujin threads.
@@ -150,7 +149,7 @@ class Comment:
     body: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class Tag:
     """
     A data class that bundles related `Tag` properties and useful helper methods
@@ -175,7 +174,7 @@ class Tag:
             english, translated
         """
         if property_ not in Tag.__dict__.get('__dataclass_fields__').keys():
-            raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: {property_} not recognized as a property in {cls.__name__}")
+            raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: {property_} not recognized as a property in {cls.__name__}\033[0m")
         return ', '.join([getattr(tag, property_) for tag in tags])
 
     @staticmethod
@@ -205,10 +204,10 @@ class Tag:
         All tag count properties whose values exceed 999 are rounded to the nearest thousand.
         """
         if option not in [Option.Artist, Option.Character, Option.Group, Option.Parody, Option.Tag, Option.Language, Option.Category]:
-            raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: Invalid option ({option.name} is not an Tag object property)")
+            raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: Invalid option ({option.name} is not an Tag object property)\033[0m")
 
         if option is Option.Category:
-            raise NotImplementedError(f"{Fore.RED}This feature is not implemented yet")
+            raise NotImplementedError(f"\033[31mThis feature is not implemented yet\033[0m")
 
         tags = _query_db('tags.db', "SELECT * FROM Tag WHERE Type=:type_", {'type_': option.value}, local_=local_)
         number = lambda count: int(count) if str(count).isnumeric() else int(count.strip('K')) * 1_000
@@ -225,12 +224,10 @@ class Tag:
             >>> print(f"ID={Tag.search(Option.Artist, 'name', 'shindol').id}")
             ID=3981
         """
-        for tag in Tag.list(option, local_=local_):
-            if getattr(tag, property_) == value:
-                return tag
+        return next(filter(lambda tag: getattr(tag, property_) == value, Tag.list(option, local_=local_)))
 
 
-@dataclass
+@dataclass(frozen=True)
 class Page:
     """
     A data class that bundles related `Page` properties.
@@ -346,6 +343,8 @@ class RequestHandler(object):
         >>> response = RequestHandler().get(url=Hentai.HOME)
         >>> print(response.ok)
     """
+    __slots__ = ['timeout', 'total', 'status_forcelist', 'backoff_factor']
+
     _timeout = (5, 5)
     _total = 5
     _status_forcelist = [413, 429, 500, 502, 503, 504]
@@ -391,16 +390,16 @@ class RequestHandler(object):
         session.mount("https://", HTTPAdapter(max_retries=self.retry_strategy))
         session.hooks['response'] = [assert_status_hook]
         session.headers.update({
-            "User-Agent" : RequestHandler._fake.chrome(version_from=80, version_to=86, build_from=4100, build_to=4200)
+            "User-Agent" : RequestHandler._fake.chrome(version_from=86, version_to=92, build_from=4300, build_to=4400)
         })
         return session
     
-    def get(self, url: str, params: dict=None, **kwargs) -> Response:
+    def get(self, url: str, **kwargs) -> Response:
         """
         Returns the GET request encoded in `utf-8`. Adds proxies to this session 
         on the fly if urllib is able to pick up the system's proxy settings.
         """
-        response = self.session.get(url, timeout=self.timeout, params=params, proxies=getproxies(), **kwargs)
+        response = self.session.get(url, timeout=self.timeout, proxies=getproxies(), **kwargs)
         response.encoding = 'utf-8'
         return response
 
@@ -424,6 +423,8 @@ class Hentai(RequestHandler):
     ----
     See full documentation at <https://hentaichan.pythonanywhere.com/projects/hentai>.
     """
+    __slots__ = ['__id', '__handler', '__url', '__api', '__response', '__json']
+
     HOME = "https://nhentai.net/" 
     _URL = urljoin(HOME, '/g/')
     _API = urljoin(HOME, '/api/gallery/')
@@ -449,10 +450,11 @@ class Hentai(RequestHandler):
         elif not id_ and json:
             self.__json = json
             self.__id = Hentai.__get_id(self.json)
+            self.__handler = RequestHandler()
             self.__url = Hentai.__get_url(self.json)
             self.__api = Hentai.__get_api(self.json)
         else:
-            raise TypeError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: Define either id or json as argument, but not both or none")
+            raise TypeError(f"\033[31m{os.strerror(errno.EINVAL)}: Define either id or json as argument, but not both or none\033[0m")
 
     def __str__(self) -> str:
         return self.title()
@@ -672,8 +674,9 @@ class Hentai(RequestHandler):
         
         if num_favorites == 0:
             try:
-                response = HTMLSession().get(self.url)
-                num_favorites = int(response.html.find('.nobold')[1].text.strip('()'))
+                html_ = html.unescape(self.handler.get(self.url).text)
+                btn_content = re.findall(r'''<span class="nobold">(.*?)</span>''', html_, re.I)
+                num_favorites = int(btn_content[0].strip('()'))
             except HTTPError:
                 logger.error(f"An error occurred while trying to parse the HTML file for {repr(self)} (num_favorites={num_favorites})", exc_info=True)
         
@@ -714,26 +717,30 @@ class Hentai(RequestHandler):
         comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body']) 
         return [comment(data) for data in response]
 
-    def download(self, folder: Path=None, delay: float=0, progressbar: bool=False) -> None:
+    def download(self, dest: Path=None, folder: str=None, delay: float=0, zip: bool=False, progressbar: bool=False) -> None:
         """
-        Download all image URLs of this `Hentai` object to `folder`, excluding cover 
-        and thumbnail. By default, `directory` will be located in the CWD named after 
-        the doujin's `id`. Set a `delay` between each image download in seconds. 
-        Enable `progressbar` for status feedback in terminal applications.
+        Download all image URLs of this `Hentai` object to `dest`, excluding cover 
+        and thumbnail. By default, `folder` will be located in the CWD named after 
+        the doujin's `id`. Set a `delay` between each image download in seconds. If
+        `zip` is set to `True`, the download directory `folder` will be archived
+        in `dest`. Enable `progressbar` for status feedback in terminal applications.
         """
         try:
-            if folder is None:
-                folder = Path(str(self.id))
-            folder.mkdir(parents=True, exist_ok=True)
+            folder = str(self.id) if folder is None else folder
+            dest = Path(folder) if dest is None else Path(dest).joinpath(folder)
+            dest.mkdir(parents=True, exist_ok=True)
             for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
-                with open(folder.joinpath(page.filename), mode='wb') as file_handler:
+                with open(dest.joinpath(page.filename), mode='wb') as file_handler:
                     for chunk in self.handler.get(page.url, stream=True).iter_content(1024):
                         file_handler.write(chunk)
                     time.sleep(delay)
+            if zip: 
+                shutil.make_archive(dest, 'zip', dest)
+                dest.unlink()
         except HTTPError as error:
             logger.error(f"Download failed for {repr(self)}", exc_info=True)
             if progressbar:
-                print(f"{Fore.RED}#{str(id).zfill(6)}: {error}")
+                print(f"#{str(id).zfill(6)}: {error}", file=sys.stderr)
 
     def export(self, filename: Path, options: List[Option]=None) -> None:
         """
@@ -760,7 +767,7 @@ class Hentai(RequestHandler):
         data = {}
 
         if Option.Raw in options:
-            raise NotImplementedError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: Access self.json to retrieve this information.")
+            raise NotImplementedError(f"\033[31m{os.strerror(errno.EINVAL)}: Access self.json to retrieve this information\033[0m")
 
         for option in options:
             property_ = getattr(self, option.value)
@@ -801,12 +808,12 @@ class Utils(object):
                 except HTTPError as error:
                     logger.error(f"DNE (*args={','.join([arg for arg in args])})", exc_info=True)
                     if error_msg:
-                        print(f"{Fore.RED}{error}")
+                        print(error, file=sys.stderr)
             return wrapper
         return decorator
 
     @staticmethod
-    def get_random_id(handler=RequestHandler()) -> int:
+    def get_random_id(handler: RequestHandler=RequestHandler()) -> int:
         """
         Return a random ID.
         """
@@ -814,7 +821,7 @@ class Utils(object):
         return int(urlparse(response.url).path.split('/')[-2])
 
     @staticmethod
-    def get_random_hentai(handler=RequestHandler()) -> Hentai:
+    def get_random_hentai(handler: RequestHandler=RequestHandler()) -> Hentai:
         """
         Return a random `Hentai` object.
         """
@@ -828,17 +835,17 @@ class Utils(object):
         in seconds. Enable `progressbar` for status feedback in terminal applications.
         """
         for doujin in doujins:
-            doujin.download(None, delay, progressbar)
+            doujin.download(delay=delay, progressbar=progressbar)
 
     @staticmethod
-    def browse_homepage(start_page: int, end_page: int, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
+    def browse_homepage(start_page: int, end_page: int, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
         """
         Return a list of `Hentai` objects that are currently featured on the homepage 
         in range of `[start_page, end_page]`. Each page contains as much as 25 results.
         Enable `progressbar` for status feedback in terminal applications.
         """
         if start_page > end_page:
-            raise ValueError(f"{Fore.RED}{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False.")
+            raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False\033[0m")
         data = []
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
             response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page': page})
@@ -846,7 +853,7 @@ class Utils(object):
         return data
 
     @staticmethod
-    def get_homepage(handler=RequestHandler()) -> Homepage:
+    def get_homepage(handler: RequestHandler=RequestHandler()) -> Homepage:
         """
         Return an `Homepage` object, i.e. all doujins from the first page of the 
         homepage.
@@ -859,12 +866,12 @@ class Utils(object):
             >>> new_uploads = homepage.new_uploads
         """
         try:
-            response = HTMLSession().get(Hentai.HOME)
+            html_ = html.unescape(handler.get(Hentai.HOME).text)
         except HTTPError as error:
             logger.error(f"Failed to establish a connection to {Hentai.HOME}", exc_info=True)
-            print(f"{Fore.RED}{error}")
+            print(error, file=sys.stderr)
         else:
-            titles = response.html.find("div.index-popular", first=True).text
+            titles = re.findall(r'''<div class="caption">(.*?)</div>''', html_, re.I)[0:5]
 
             return Homepage(
                 popular_now=[doujin for doujin in Utils.search_by_query(query='*', sort=Sort.PopularToday, handler=handler) if str(doujin) in titles],
@@ -872,7 +879,7 @@ class Utils(object):
             )
 
     @staticmethod
-    def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
+    def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler()) -> List[Hentai]:
         """
         Return a list of `Hentai` objects on page `page` that match this search 
         `query` sorted by `sort`.
@@ -882,7 +889,7 @@ class Utils(object):
         return [Hentai(json=raw_json) for raw_json in response.json()['result']]
 
     @staticmethod
-    def search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]:
+    def search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler()) -> List[Hentai]:
         """
         Return a list of `Hentai` objects on page `page` that match this tag 
         `id_` sorted by `sort`.
@@ -892,7 +899,7 @@ class Utils(object):
         return [Hentai(json=raw_json) for raw_json in response.json()['result']]
 
     @staticmethod
-    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
+    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
         """
         Return a list of all `Hentai` objects that match this search `query` 
         sorted by `sort`. Enable `progressbar` for status feedback in terminal applications.

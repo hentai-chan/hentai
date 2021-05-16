@@ -18,8 +18,7 @@ class TestUtils(unittest.TestCase):
     
     @classmethod
     def tearDownClass(cls):
-        # missing_ok=True is only available in python 3.8+
-        remove_file = lambda file: Path(file).unlink()
+        remove_file = lambda file: Path(file).unlink() if Path(file).exists() else None
         remove_dir = lambda dir: shutil.rmtree(dir, ignore_errors=True)
 
         remove_file(cls.tiny_evil_file)
@@ -36,7 +35,7 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(response.ok, msg=f"Failing ID: {random_hentai.id}. Failing URL: {response.url}")
 
     def test_download_queue(self):
-        Utils.download([self.tiny_evil])
+        Utils.download([self.tiny_evil], progressbar=True)
         self.assertTrue(self.tiny_evil_dir.is_dir())
 
     def test_get_homepage(self):
