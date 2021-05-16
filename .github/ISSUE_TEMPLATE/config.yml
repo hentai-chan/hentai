@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+- name: Feature Request?
+  url: https://github.com/hentai-chan/hentai/discussions/53
+  about: Please open these under `hentai/discussions`.
+- name: Security Policy
+  url: https://github.com/hentai-chan/hentai/blob/master/SECURITY.md
+  about: Please learn how to report security vulnerabilities here.
+- name: Code of Conduct
+  url: https://github.com/hentai-chan/hentai/blob/master/CODE_OF_CONDUCT.md
+  about: For all Code of Conduct related matters, please refer to this document.
