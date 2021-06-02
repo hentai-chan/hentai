@@ -85,7 +85,7 @@ python setup.py bdist_wheel --universal
 
 ## 记载
 
-你可以从网上的[文件](https://hentaichan.pythonanywhere.com/projects/hentai),
+你可以从网上的[文件](https://www.hentai-chan.dev/projects/hentai),
 或在[wiki](https://github.com/hentai-chan/hentai/wiki) 取得关于此模组的更多资讯.
 
 ## 基础用法
