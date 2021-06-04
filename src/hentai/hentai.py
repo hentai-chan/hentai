@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import List, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from faker import Faker
@@ -84,17 +85,17 @@ logger.addHandler(file_handler)
 
 #endregion
 
-def _progressbar_options(iterable, desc, unit, color="\033[32m", char='\u25CB', disable=False) -> dict:
+def _progressbar_options(iterable, desc, unit, color="\033[32m", char='\u25CB', disable=False, length=None) -> dict:
     """
     Return custom optional arguments for `tqdm` progressbars.
     """
     return {
         'iterable': iterable,
         'bar_format': "{l_bar}%s{bar}%s{r_bar}" % (color, "\033[0m"),
-        'ascii': char.rjust(9, ' '), 
-        'desc': desc, 
-        'unit': unit.rjust(1, ' '), 
-        'total': len(iterable), 
+        'ascii': char.rjust(9, ' '),
+        'desc': desc,
+        'unit': unit.rjust(1, ' '),
+        'total': len(iterable) if length is None else length,
         'disable': not disable
     }
 
@@ -717,24 +718,53 @@ class Hentai(RequestHandler):
         comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body']) 
         return [comment(data) for data in response]
 
-    def download(self, dest: Path=None, folder: str=None, delay: float=0, zip: bool=False, progressbar: bool=False) -> None:
+    def download_page(self, page, destfile):
+        """Download a page and save it to destfile"""
+        with open(destfile, mode='wb') as file_handler:
+            for chunk in self.handler.get(page.url, stream=True).iter_content(1024):
+                file_handler.write(chunk)
+
+    def download(self, dest: Path = None, folder: str = None, delay: float = None, zip: bool = False,
+                 progressbar: bool = False, max_workers: int = 8) -> None:
         """
-        Download all image URLs of this `Hentai` object to `dest`, excluding cover 
-        and thumbnail. By default, `folder` will be located in the CWD named after 
-        the doujin's `id`. Set a `delay` between each image download in seconds. If
-        `zip` is set to `True`, the download directory `folder` will be archived
-        in `dest`. Enable `progressbar` for status feedback in terminal applications.
+        Download all image URLs of this `Hentai` object to `dest`, excluding cover
+        and thumbnail. By default, `folder` will be located in the CWD named after
+        the doujin's `id`. If `zip` is set to `True`, the download directory `folder`
+        will be archived in `dest`. Enable `progressbar` for status feedback in terminal
+        applications. By default the download is multithreaded with `max_workers` threads,
+        to disable it, set a `delay` between each image download in seconds. If `delay`
+        is set to 0 the download will be synchronous but without any delay.
         """
         try:
             folder = str(self.id) if folder is None else folder
             dest = Path(folder) if dest is None else Path(dest).joinpath(folder)
             dest.mkdir(parents=True, exist_ok=True)
-            for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
-                with open(dest.joinpath(page.filename), mode='wb') as file_handler:
-                    for chunk in self.handler.get(page.url, stream=True).iter_content(1024):
-                        file_handler.write(chunk)
-                    time.sleep(delay)
-            if zip: 
+
+            if delay is None:
+                # Multithreaded download
+                with tqdm(
+                        **_progressbar_options(None, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar,
+                                               length=len(self.pages))) as pbar:
+                    futures = []
+                    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                        for page in self.pages:
+                            future = executor.submit(self.download_page, page, dest.joinpath(page.filename))
+                            futures.append(future)
+
+                        for future in as_completed(futures):
+                            future.result()
+                            pbar.update(1)
+
+            else:
+                # Synchronous download
+                for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page',
+                                                        disable=progressbar)):
+                    with open(dest.joinpath(page.filename), mode='wb') as file_handler:
+                        for chunk in self.handler.get(page.url, stream=True).iter_content(1024):
+                            file_handler.write(chunk)
+                        time.sleep(delay)
+
+            if zip:
                 shutil.make_archive(dest, 'zip', dest)
                 dest.unlink()
         except HTTPError as error:
