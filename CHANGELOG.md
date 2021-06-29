@@ -1,5 +1,13 @@
 # Changelog
 
+## Version 3.2.7 (29 June 2021)
+
+Makes the `Hentai` class hashable and changes the return type of some methods from
+`List[Hentai]` to `Set[Hentai]`. It also cuts down the total amount of external
+dependencies to 2 (`requests` and `tqdm`). Another noticeable change took place
+in the `RequestHandler` class: session objects now depict a descriptive and truthful
+UA string. This makes it easier for server administrators to identify bot requests.
+
 ## Version 3.2.6 (15 May 2021)
 
 Extends continuous integration scripts by running unit tests on all major platforms
