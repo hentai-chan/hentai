@@ -39,19 +39,18 @@ from datetime import timezone
 from enum import Enum, unique
 from importlib.resources import path as resource_path
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Set, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
 import requests
-from faker import Faker
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
 from requests.models import Response
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-__version__ = "3.2.6"
+__version__ = "3.2.7"
 package_name = "hentai"
 python_major = "3"
 python_minor = "7"
@@ -83,6 +82,13 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 #endregion
+
+def _build_ua_string() -> str:
+    """
+    Return a descriptive and truthful user agent string.
+    """
+    user_name = os.environ.get('USERNAME' if platform.system() == 'Windows' else 'USER', 'N/A')
+    return f"{package_name}/{__version__} {platform.system()}/{platform.release()} CPython/{platform.python_version()} user_name/{user_name}"
 
 def _progressbar_options(iterable, desc, unit, color="\033[32m", char='\u25CB', disable=False) -> dict:
     """
@@ -116,8 +122,8 @@ class Homepage:
     `popular_now` section features 5 trending doujins, while `new_uploads`
     returns the 25 most recent additions to the DB.
     """
-    popular_now: List[Hentai]
-    new_uploads: List[Hentai]
+    popular_now: Set[Hentai]
+    new_uploads: Set[Hentai]
 
 
 @dataclass(frozen=True)
@@ -349,7 +355,6 @@ class RequestHandler(object):
     _total = 5
     _status_forcelist = [413, 429, 500, 502, 503, 504]
     _backoff_factor = 1
-    _fake = Faker()
 
     def __init__(self, 
                  timeout: Tuple[float, float]=_timeout, 
@@ -372,10 +377,7 @@ class RequestHandler(object):
         factor. It is used in the session property where these values are 
         passed to the HTTPAdapter. 
         """
-        return Retry(total=self.total,
-            status_forcelist=self.status_forcelist,
-            backoff_factor=self.backoff_factor
-        )
+        return Retry(total=self.total, status_forcelist=self.status_forcelist, backoff_factor=self.backoff_factor)
 
     @property
     def session(self) -> Session:
@@ -389,9 +391,7 @@ class RequestHandler(object):
         session = requests.Session()
         session.mount("https://", HTTPAdapter(max_retries=self.retry_strategy))
         session.hooks['response'] = [assert_status_hook]
-        session.headers.update({
-            "User-Agent" : RequestHandler._fake.chrome(version_from=86, version_to=92, build_from=4300, build_to=4400)
-        })
+        session.headers.update({"User-Agent": _build_ua_string()})
         return session
     
     def get(self, url: str, **kwargs) -> Response:
@@ -421,7 +421,7 @@ class Hentai(RequestHandler):
 
     Docs
     ----
-    See full documentation at <https://hentaichan.pythonanywhere.com/projects/hentai>.
+    See full documentation at <https://www.hentai-chan.dev/projects/hentai>.
     """
     __slots__ = ['__id', '__handler', '__url', '__api', '__response', '__json']
 
@@ -461,6 +461,9 @@ class Hentai(RequestHandler):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(ID={str(self.id).zfill(6)})"
+
+    def __hash__(self) -> int:
+        return hash(self.id)
 
     #region operators
 
@@ -599,9 +602,9 @@ class Hentai(RequestHandler):
         """
         return dt.fromtimestamp(self.epos, tz=timezone.utc)
 
-    def __tag(json: dict, type_: str) -> List[Tag]:
+    def __tag(json_: dict, type_: str) -> List[Tag]:
         return [Tag(tag['id'], tag['type'], tag['name'], urljoin(Hentai.HOME, tag['url']), tag['count']) 
-            for tag in json['tags'] 
+            for tag in json_['tags'] 
                 if tag['type'] == type_]
 
     @property
@@ -701,11 +704,11 @@ class Hentai(RequestHandler):
         return [image.url for image in self.pages]
 
     @property
-    def related(self) -> List[Hentai]:
+    def related(self) -> Set[Hentai]:
         """
-        Return a list of five related doujins.
+        Return a set of five related doujins.
         """
-        return [Hentai(json=raw_json) for raw_json in self.handler.get(urljoin(Hentai._API, f"{self.id}/related")).json()['result']]
+        return {Hentai(json=raw_json) for raw_json in self.handler.get(urljoin(Hentai._API, f"{self.id}/related")).json()['result']}
 
     @property
     def thread(self) -> List[Comment]:
@@ -838,7 +841,7 @@ class Utils(object):
             doujin.download(delay=delay, progressbar=progressbar)
 
     @staticmethod
-    def browse_homepage(start_page: int, end_page: int, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
+    def browse_homepage(start_page: int, end_page: int, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> Set[Hentai]:
         """
         Return a list of `Hentai` objects that are currently featured on the homepage 
         in range of `[start_page, end_page]`. Each page contains as much as 25 results.
@@ -846,10 +849,11 @@ class Utils(object):
         """
         if start_page > end_page:
             raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False\033[0m")
-        data = []
+        data = set()
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
             response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page': page})
-            data.extend([Hentai(json=raw_json) for raw_json in response.json()['result']])
+            for raw_json in response.json()['result']:
+                data.add(Hentai(json=raw_json))
         return data
 
     @staticmethod
@@ -874,32 +878,32 @@ class Utils(object):
             titles = re.findall(r'''<div class="caption">(.*?)</div>''', html_, re.I)[0:5]
 
             return Homepage(
-                popular_now=[doujin for doujin in Utils.search_by_query(query='*', sort=Sort.PopularToday, handler=handler) if str(doujin) in titles],
+                popular_now={doujin for doujin in Utils.search_by_query(query='*', sort=Sort.PopularToday, handler=handler) if str(doujin) in titles},
                 new_uploads=Utils.browse_homepage(1, 1, handler)
             )
 
     @staticmethod
-    def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler()) -> List[Hentai]:
+    def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler()) -> Set[Hentai]:
         """
         Return a list of `Hentai` objects on page `page` that match this search 
         `query` sorted by `sort`.
         """
         payload = {'query': query, 'page': page, 'sort': sort.value}
         response = handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload)
-        return [Hentai(json=raw_json) for raw_json in response.json()['result']]
+        return {Hentai(json=raw_json) for raw_json in response.json()['result']}
 
     @staticmethod
-    def search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler()) -> List[Hentai]:
+    def search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler()) -> Set[Hentai]:
         """
         Return a list of `Hentai` objects on page `page` that match this tag 
         `id_` sorted by `sort`.
         """
         payload = {'tag_id': id_, 'page': page, 'sort': sort.value}
         response = handler.get(urljoin(Hentai.HOME, "api/galleries/tagged"), params=payload)
-        return [Hentai(json=raw_json) for raw_json in response.json()['result']]
+        return {Hentai(json=raw_json) for raw_json in response.json()['result']}
 
     @staticmethod
-    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> List[Hentai]:
+    def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> Set[Hentai]:
         """
         Return a list of all `Hentai` objects that match this search `query` 
         sorted by `sort`. Enable `progressbar` for status feedback in terminal applications.
@@ -909,11 +913,12 @@ class Utils(object):
             >>> from hentai import Utils, Sort, Format
             >>> lolis = Utils.search_all_by_query('tag:loli', sort=Sort.PopularToday)
         """
-        data = []
+        data = set()
         payload = {'query': query, 'page': 1, 'sort': sort.value}
         response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
         for page in tqdm(**_progressbar_options(range(1, int(response['num_pages'])+1), 'Search', 'page', disable=progressbar)):
-            data.extend(Utils.search_by_query(query, page, sort, handler))
+            for doujin in Utils.search_by_query(query, page, sort, handler):
+                data.add(doujin)
         return data
 
     @staticmethod

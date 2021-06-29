@@ -89,9 +89,9 @@ version 3.7+ of python.
 
 ## Documentation
 
-You can find the [documentation](https://hentaichan.pythonanywhere.com/projects/hentai)
-online, or use the [wiki](https://github.com/hentai-chan/hentai/wiki) to learn more
-about this module.
+You can find the [documentation](https://www.hentai-chan.dev/projects/hentai)
+online, or use the [wiki](https://github.com/hentai-chan/hentai/wiki)
+to learn more about this module.
 
 ## Basic Usage
 

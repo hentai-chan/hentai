@@ -1,3 +1,2 @@
-tqdm==4.60.0
+tqdm==4.61.1
 requests==2.25.1
-Faker==8.1.4
