@@ -105,7 +105,7 @@ class TestHentai(unittest.TestCase):
         self.assertLessEqual(self.test_reference.num_favorites, self.test_response.num_favorites, msg=str(self.test_response))
         
     def test_num_favorites_edge_case(self):
-        new_uploads = choices(Utils.get_homepage().new_uploads, k=10)
+        new_uploads = choices([*Utils.get_homepage().new_uploads], k=10)
         self.assertTrue(any(map(lambda doujin: doujin.num_favorites > 0, new_uploads)), msg=f"HTML parsing error sample {list(map(repr, new_uploads))}")
 
     def test_image_urls(self):

@@ -1,5 +1,4 @@
 -r release.txt
-pretty-errors==1.2.20
 check-manifest==0.46
 pytest==6.2.4
 
