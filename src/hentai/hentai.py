@@ -602,9 +602,9 @@ class Hentai(RequestHandler):
         """
         return dt.fromtimestamp(self.epos, tz=timezone.utc)
 
-    def __tag(json: dict, type_: str) -> List[Tag]:
+    def __tag(json_: dict, type_: str) -> List[Tag]:
         return [Tag(tag['id'], tag['type'], tag['name'], urljoin(Hentai.HOME, tag['url']), tag['count']) 
-            for tag in json['tags'] 
+            for tag in json_['tags'] 
                 if tag['type'] == type_]
 
     @property
