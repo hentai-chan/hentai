@@ -34,9 +34,9 @@ setup(
     description="Implements a wrapper class around nhentai's RESTful API.",
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url="https://hentaichan.pythonanywhere.com/projects/hentai",
+    url="https://www.hentai-chan.dev/projects/hentai",
     project_urls={
-        'Documentation': "https://hentaichan.pythonanywhere.com/projects/hentai",
+        'Documentation': "https://www.hentai-chan.dev/projects/hentai",
         'Source Code': "https://github.com/hentai-chan/hentai",
         'Bug Reports': "https://github.com/hentai-chan/hentai/issues",
         'Changelog': "https://github.com/hentai-chan/hentai/blob/master/CHANGELOG.md"

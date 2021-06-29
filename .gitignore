@@ -131,7 +131,14 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# cProfile stats
+tests/*.cprof
+
 # untracked dev file
 exp.py
+benchmark.py
 # interactive script
 iexp.py
+
+# local test data
+data/
