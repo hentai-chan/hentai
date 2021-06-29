@@ -44,7 +44,6 @@ from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 
 import requests
-from faker import Faker
 from requests import HTTPError, Session
 from requests.adapters import HTTPAdapter
 from requests.models import Response
@@ -83,6 +82,13 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 #endregion
+
+def _build_ua_string() -> str:
+    """
+    Return a descriptive and truthful user agent string.
+    """
+    user_name = os.environ.get('USERNAME' if platform.system() == 'Windows' else 'USER', 'N/A')
+    return f"{package_name}/{__version__} {platform.system()}/{platform.release()} CPython/{platform.python_version()} user_name/{user_name}"
 
 def _progressbar_options(iterable, desc, unit, color="\033[32m", char='\u25CB', disable=False) -> dict:
     """
@@ -349,7 +355,6 @@ class RequestHandler(object):
     _total = 5
     _status_forcelist = [413, 429, 500, 502, 503, 504]
     _backoff_factor = 1
-    _fake = Faker()
 
     def __init__(self, 
                  timeout: Tuple[float, float]=_timeout, 
@@ -372,10 +377,7 @@ class RequestHandler(object):
         factor. It is used in the session property where these values are 
         passed to the HTTPAdapter. 
         """
-        return Retry(total=self.total,
-            status_forcelist=self.status_forcelist,
-            backoff_factor=self.backoff_factor
-        )
+        return Retry(total=self.total, status_forcelist=self.status_forcelist, backoff_factor=self.backoff_factor)
 
     @property
     def session(self) -> Session:
@@ -389,9 +391,7 @@ class RequestHandler(object):
         session = requests.Session()
         session.mount("https://", HTTPAdapter(max_retries=self.retry_strategy))
         session.hooks['response'] = [assert_status_hook]
-        session.headers.update({
-            "User-Agent" : RequestHandler._fake.chrome(version_from=86, version_to=92, build_from=4300, build_to=4400)
-        })
+        session.headers.update({"User-Agent": _build_ua_string()})
         return session
     
     def get(self, url: str, **kwargs) -> Response:
