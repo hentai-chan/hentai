@@ -97,10 +97,10 @@ def _progressbar_options(iterable, desc, unit, color="\033[32m", char='\u25CB', 
     return {
         'iterable': iterable,
         'bar_format': "{l_bar}%s{bar}%s{r_bar}" % (color, "\033[0m"),
-        'ascii': char.rjust(9, ' '), 
-        'desc': desc, 
-        'unit': unit.rjust(1, ' '), 
-        'total': len(iterable), 
+        'ascii': char.rjust(9, ' '),
+        'desc': desc,
+        'unit': unit.rjust(1, ' '),
+        'total': len(iterable),
         'disable': not disable
     }
 
@@ -117,7 +117,7 @@ def _query_db(db: str, sql: str, *args, local_: bool=False) -> List:
 @dataclass(frozen=True)
 class Homepage:
     """
-    The `Homepage` dataclass contains all doujins from the frontpage of 
+    The `Homepage` dataclass contains all doujins from the frontpage of
     <https://nhentai.net>, which is divided into two sub-sections: the
     `popular_now` section features 5 trending doujins, while `new_uploads`
     returns the 25 most recent additions to the DB.
@@ -187,7 +187,7 @@ class Tag:
     def list(option: Option, local_: bool=False) -> List[Tag]:
         """
         Return a list of all tags where `option` is either
-        
+
         - `Option.Artist`
         - `Option.Character`
         - `Option.Group`
@@ -304,7 +304,7 @@ class Option(Enum):
 @unique
 class Format(Enum):
     """
-    The title format. In some instances, `Format.Japanese` or `Format.Pretty` 
+    The title format. In some instances, `Format.Japanese` or `Format.Pretty`
     return an empty string.
     """
     English = 'english'
@@ -339,7 +339,7 @@ class RequestHandler(object):
     """
     RequestHandler
     ==============
-    Defines a synchronous request handler class that provides methods and 
+    Defines a synchronous request handler class that provides methods and
     properties for working with REST APIs that is backed by the `requests`
     library.
 
@@ -356,16 +356,16 @@ class RequestHandler(object):
     _status_forcelist = [413, 429, 500, 502, 503, 504]
     _backoff_factor = 1
 
-    def __init__(self, 
-                 timeout: Tuple[float, float]=_timeout, 
-                 total: int=_total, 
-                 status_forcelist: List[int]=_status_forcelist, 
+    def __init__(self,
+                 timeout: Tuple[float, float]=_timeout,
+                 total: int=_total,
+                 status_forcelist: List[int]=_status_forcelist,
                  backoff_factor: int=_backoff_factor):
         """
         Instantiates a new request handler object.
         """
         self.timeout = timeout
-        self.total = total        
+        self.total = total
         self.status_forcelist = status_forcelist
         self.backoff_factor = backoff_factor
 
@@ -374,8 +374,8 @@ class RequestHandler(object):
         """
         The retry strategy returns the retry configuration made up of the
         number of total retries, the status forcelist as well as the backoff
-        factor. It is used in the session property where these values are 
-        passed to the HTTPAdapter. 
+        factor. It is used in the session property where these values are
+        passed to the HTTPAdapter.
         """
         return Retry(total=self.total, status_forcelist=self.status_forcelist, backoff_factor=self.backoff_factor)
 
@@ -384,7 +384,7 @@ class RequestHandler(object):
         """
         Creates a custom session object. A request session provides cookie
         persistence, connection-pooling, and further configuration options
-        that are exposed in the RequestHandler methods in form of parameters 
+        that are exposed in the RequestHandler methods in form of parameters
         and keyword arguments.
         """
         assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
@@ -393,10 +393,10 @@ class RequestHandler(object):
         session.hooks['response'] = [assert_status_hook]
         session.headers.update({"User-Agent": _build_ua_string()})
         return session
-    
+
     def get(self, url: str, **kwargs) -> Response:
         """
-        Returns the GET request encoded in `utf-8`. Adds proxies to this session 
+        Returns the GET request encoded in `utf-8`. Adds proxies to this session
         on the fly if urllib is able to pick up the system's proxy settings.
         """
         response = self.session.get(url, timeout=self.timeout, proxies=getproxies(), **kwargs)
@@ -409,7 +409,7 @@ class Hentai(RequestHandler):
     Python Hentai API Wrapper
     =========================
     Implements a wrapper class around `nhentai`'s RESTful API that inherits from
-    `RequestHandler`. Note that the content of this module is generally considered 
+    `RequestHandler`. Note that the content of this module is generally considered
     NSFW.
 
     Basic Usage
@@ -425,15 +425,15 @@ class Hentai(RequestHandler):
     """
     __slots__ = ['__id', '__handler', '__url', '__api', '__response', '__json']
 
-    HOME = "https://nhentai.net/" 
+    HOME = "https://nhentai.net/"
     _URL = urljoin(HOME, '/g/')
     _API = urljoin(HOME, '/api/gallery/')
 
-    def __init__(self, 
-                 id_: int=0, 
-                 timeout: Tuple[float, float]=RequestHandler._timeout, 
-                 total: int=RequestHandler._total, 
-                 status_forcelist: List[int]=RequestHandler._status_forcelist, 
+    def __init__(self,
+                 id_: int=0,
+                 timeout: Tuple[float, float]=RequestHandler._timeout,
+                 total: int=RequestHandler._total,
+                 status_forcelist: List[int]=RequestHandler._status_forcelist,
                  backoff_factor: int=RequestHandler._backoff_factor,
                  json: dict=None):
         """
@@ -486,7 +486,7 @@ class Hentai(RequestHandler):
         return self.id != other.id
 
     #endregion
-    
+
     @staticmethod
     def __get_id(json: dict) -> int:
         """
@@ -506,7 +506,7 @@ class Hentai(RequestHandler):
         """
         Return the API access point of an raw nhentai response object.
         """
-        return urljoin(Hentai._API, str(Hentai.__get_id(json)))        
+        return urljoin(Hentai._API, str(Hentai.__get_id(json)))
 
     @property
     def id(self) -> int:
@@ -555,7 +555,7 @@ class Hentai(RequestHandler):
         """
         Return the media ID of this `Hentai` object.
         """
-        return int(self.json['media_id'])        
+        return int(self.json['media_id'])
 
     def title(self, format_: Format=Format.English) -> str:
         """
@@ -567,7 +567,7 @@ class Hentai(RequestHandler):
     @property
     def scanlator(self) -> str:
         """
-        Return the scanlator of this `Hentai` object. This information is often 
+        Return the scanlator of this `Hentai` object. This information is often
         not specified by the provider.
         """
         return self.json['scanlator']
@@ -603,8 +603,8 @@ class Hentai(RequestHandler):
         return dt.fromtimestamp(self.epos, tz=timezone.utc)
 
     def __tag(json_: dict, type_: str) -> List[Tag]:
-        return [Tag(tag['id'], tag['type'], tag['name'], urljoin(Hentai.HOME, tag['url']), tag['count']) 
-            for tag in json_['tags'] 
+        return [Tag(tag['id'], tag['type'], tag['name'], urljoin(Hentai.HOME, tag['url']), tag['count'])
+            for tag in json_['tags']
                 if tag['type'] == type_]
 
     @property
@@ -617,7 +617,7 @@ class Hentai(RequestHandler):
     @property
     def group(self) -> List[Tag]:
         """
-        Return all tags of type group of this `Hentai` object. This tag is sometimes 
+        Return all tags of type group of this `Hentai` object. This tag is sometimes
         not specified by the provider.
         """
         return Hentai.__tag(self.json, 'group')
@@ -625,7 +625,7 @@ class Hentai(RequestHandler):
     @property
     def parody(self) -> List[Tag]:
         """
-        Return all tags of type parody of this `Hentai` object. This tag is sometimes 
+        Return all tags of type parody of this `Hentai` object. This tag is sometimes
         not specified by the provider.
         """
         return Hentai.__tag(self.json, 'parody')
@@ -633,7 +633,7 @@ class Hentai(RequestHandler):
     @property
     def character(self) -> List[Tag]:
         """
-        Return all tags of type character of this `Hentai` object. This tag is sometimes 
+        Return all tags of type character of this `Hentai` object. This tag is sometimes
         not specified by the provider.
         """
         return Hentai.__tag(self.json, 'character')
@@ -657,7 +657,7 @@ class Hentai(RequestHandler):
         """
         Return all tags of type category of this `Hentai` object.
         """
-        return Hentai.__tag(self.json, 'category')        
+        return Hentai.__tag(self.json, 'category')
 
     @property
     def num_pages(self) -> int:
@@ -674,7 +674,7 @@ class Hentai(RequestHandler):
         it will try to parse its HTML file as a fallback measure.
         """
         num_favorites = int(self.json['num_favorites'])
-        
+
         if num_favorites == 0:
             try:
                 html_ = html.unescape(self.handler.get(self.url).text)
@@ -682,13 +682,13 @@ class Hentai(RequestHandler):
                 num_favorites = int(btn_content[0].strip('()'))
             except HTTPError:
                 logger.error(f"An error occurred while trying to parse the HTML file for {repr(self)} (num_favorites={num_favorites})", exc_info=True)
-        
+
         return num_favorites
 
     @property
     def pages(self) -> List[Page]:
         """
-        Return a collection of pages detailing URL, file extension, width and 
+        Return a collection of pages detailing URL, file extension, width and
         height of this `Hentai` object.
         """
         pages = self.json['images']['pages']
@@ -717,13 +717,13 @@ class Hentai(RequestHandler):
         """
         response = self.handler.get(urljoin(Hentai._API, f"{self.id}/comments")).json()
         user = lambda u: User(int(u['id']), u['username'], u['slug'], urljoin('i.nhentai.net/', u['avatar_url']), bool(u['is_superuser']), bool(u['is_staff']))
-        comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body']) 
+        comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body'])
         return [comment(data) for data in response]
 
     def download(self, dest: Path=None, folder: str=None, delay: float=0, zip: bool=False, progressbar: bool=False) -> None:
         """
-        Download all image URLs of this `Hentai` object to `dest`, excluding cover 
-        and thumbnail. By default, `folder` will be located in the CWD named after 
+        Download all image URLs of this `Hentai` object to `dest`, excluding cover
+        and thumbnail. By default, `folder` will be located in the CWD named after
         the doujin's `id`. Set a `delay` between each image download in seconds. If
         `zip` is set to `True`, the download directory `folder` will be archived
         in `dest`. Enable `progressbar` for status feedback in terminal applications.
@@ -737,9 +737,9 @@ class Hentai(RequestHandler):
                     for chunk in self.handler.get(page.url, stream=True).iter_content(1024):
                         file_handler.write(chunk)
                     time.sleep(delay)
-            if zip: 
+            if zip:
                 shutil.make_archive(dest, 'zip', dest)
-                dest.unlink()
+                shutil.rmtree(dest, ignore_errors=True)
         except HTTPError as error:
             logger.error(f"Download failed for {repr(self)}", exc_info=True)
             if progressbar:
@@ -758,7 +758,7 @@ class Hentai(RequestHandler):
         Check whether or not an ID exists on <https://nhentai.net>.
         """
         try:
-            return RequestHandler().get(urljoin(Hentai._URL, str(id_))).ok        
+            return RequestHandler().get(urljoin(Hentai._URL, str(id_))).ok
         except HTTPError:
             return False
 
@@ -788,7 +788,7 @@ class Utils(object):
     Hentai Utility Library
     ======================
 
-    This class provides a handful of miscellaneous static methods that extend the 
+    This class provides a handful of miscellaneous static methods that extend the
     functionality of the `Hentai` class.
 
     Example 1
@@ -834,7 +834,7 @@ class Utils(object):
     def download(doujins: List[Hentai], delay: float=0, progressbar: bool=False) -> None:
         """
         Download all image URLs for a sequence of `Hentai` object to the CWD,
-        excluding cover and thumbnail. Set a `delay` between each image download 
+        excluding cover and thumbnail. Set a `delay` between each image download
         in seconds. Enable `progressbar` for status feedback in terminal applications.
         """
         for doujin in doujins:
@@ -843,7 +843,7 @@ class Utils(object):
     @staticmethod
     def browse_homepage(start_page: int, end_page: int, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> Set[Hentai]:
         """
-        Return a list of `Hentai` objects that are currently featured on the homepage 
+        Return a list of `Hentai` objects that are currently featured on the homepage
         in range of `[start_page, end_page]`. Each page contains as much as 25 results.
         Enable `progressbar` for status feedback in terminal applications.
         """
@@ -859,9 +859,9 @@ class Utils(object):
     @staticmethod
     def get_homepage(handler: RequestHandler=RequestHandler()) -> Homepage:
         """
-        Return an `Homepage` object, i.e. all doujins from the first page of the 
+        Return an `Homepage` object, i.e. all doujins from the first page of the
         homepage.
-        
+
         Example
         -------
             >>> from hentai import Utils
@@ -885,7 +885,7 @@ class Utils(object):
     @staticmethod
     def search_by_query(query: str, page: int=1, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler()) -> Set[Hentai]:
         """
-        Return a list of `Hentai` objects on page `page` that match this search 
+        Return a list of `Hentai` objects on page `page` that match this search
         `query` sorted by `sort`.
         """
         payload = {'query': query, 'page': page, 'sort': sort.value}
@@ -895,7 +895,7 @@ class Utils(object):
     @staticmethod
     def search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler()) -> Set[Hentai]:
         """
-        Return a list of `Hentai` objects on page `page` that match this tag 
+        Return a list of `Hentai` objects on page `page` that match this tag
         `id_` sorted by `sort`.
         """
         payload = {'tag_id': id_, 'page': page, 'sort': sort.value}
@@ -905,7 +905,7 @@ class Utils(object):
     @staticmethod
     def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> Set[Hentai]:
         """
-        Return a list of all `Hentai` objects that match this search `query` 
+        Return a list of all `Hentai` objects that match this search `query`
         sorted by `sort`. Enable `progressbar` for status feedback in terminal applications.
 
         Example
