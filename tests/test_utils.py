@@ -1,6 +1,5 @@
 import json
 import random
-import shutil
 import unittest
 from pathlib import Path
 from urllib.parse import urljoin
@@ -20,10 +19,9 @@ class TestUtils(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         remove_file = lambda file: Path(file).unlink() if Path(file).exists() else None
-        remove_dir = lambda dir: shutil.rmtree(dir, ignore_errors=True)
 
         remove_file(cls.tiny_evil_file)
-        remove_dir(cls.tiny_evil_dir)
+        remove_file(cls.tiny_evil_zip)
 
     def test_random_id(self):
         random_id = Utils.get_random_id()
