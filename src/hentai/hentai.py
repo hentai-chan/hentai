@@ -720,12 +720,12 @@ class Hentai(RequestHandler):
         comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body'])
         return [comment(data) for data in response]
 
-    def download(self, dest: Path=None, folder: str=None, delay: float=0, _zip: bool=False, progressbar: bool=False) -> None:
+    def download(self, dest: Path=None, folder: str=None, delay: float=0, zip_dir: bool=False, progressbar: bool=False) -> None:
         """
         Download all image URLs of this `Hentai` object to `dest`, excluding cover
         and thumbnail. By default, `folder` will be located in the CWD named after
         the doujin's `id`. Set a `delay` between each image download in seconds. If
-        `_zip` is set to `True`, the download directory `folder` will be archived
+        `zip_dir` is set to `True`, the download directory `folder` will be archived
         in `dest`. Enable `progressbar` for status feedback in terminal applications.
         """
         try:
@@ -737,7 +737,7 @@ class Hentai(RequestHandler):
                     for chunk in self.handler.get(page.url, stream=True).iter_content(1024):
                         file_handler.write(chunk)
                     time.sleep(delay)
-            if _zip:
+            if zip_dir:
                 shutil.make_archive(dest, 'zip', dest)
                 shutil.rmtree(dest, ignore_errors=True)
         except HTTPError as error:
@@ -831,14 +831,14 @@ class Utils(object):
         return Hentai(Utils.get_random_id(handler))
 
     @staticmethod
-    def download(doujins: List[Hentai], delay: float=0, progressbar: bool=False, _zip: bool=False) -> None:
+    def download(doujins: List[Hentai], delay: float=0, progressbar: bool=False, zip_dir: bool=False) -> None:
         """
         Download all image URLs for a sequence of `Hentai` object to the CWD,
         excluding cover and thumbnail. Set a `delay` between each image download
         in seconds. Enable `progressbar` for status feedback in terminal applications.
         """
         for doujin in doujins:
-            doujin.download(delay=delay, progressbar=progressbar, _zip=_zip)
+            doujin.download(delay=delay, progressbar=progressbar, zip_dir=zip_dir)
 
     @staticmethod
     def browse_homepage(start_page: int, end_page: int, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> Set[Hentai]:
