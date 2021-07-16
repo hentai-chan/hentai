@@ -831,14 +831,14 @@ class Utils(object):
         return Hentai(Utils.get_random_id(handler))
 
     @staticmethod
-    def download(doujins: List[Hentai], delay: float=0, progressbar: bool=False) -> None:
+    def download(doujins: List[Hentai], delay: float=0, progressbar: bool=False, zip: bool=False) -> None:
         """
         Download all image URLs for a sequence of `Hentai` object to the CWD,
         excluding cover and thumbnail. Set a `delay` between each image download
         in seconds. Enable `progressbar` for status feedback in terminal applications.
         """
         for doujin in doujins:
-            doujin.download(delay=delay, progressbar=progressbar)
+            doujin.download(delay=delay, progressbar=progressbar, zip=zip)
 
     @staticmethod
     def browse_homepage(start_page: int, end_page: int, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> Set[Hentai]:
