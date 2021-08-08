@@ -31,6 +31,7 @@ import re
 import shutil
 import sqlite3
 import sys
+import tarfile
 import time
 from contextlib import closing
 from dataclasses import dataclass
@@ -42,6 +43,7 @@ from pathlib import Path
 from typing import List, Set, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
+from zipfile import ZipFile, ZIP_DEFLATED
 
 import requests
 from requests import HTTPError, Session
@@ -738,7 +740,7 @@ class Hentai(RequestHandler):
                         file_handler.write(chunk)
                     time.sleep(delay)
             if zip_dir:
-                shutil.make_archive(dest, 'zip', dest)
+                Utils.compress(dest)
                 shutil.rmtree(dest, ignore_errors=True)
         except HTTPError as error:
             logger.error(f"Download failed for {repr(self)}", exc_info=True)
@@ -941,3 +943,19 @@ class Utils(object):
         else:
             with open(filename, mode='w', encoding='utf-8') as file_handler:
                 json.dump([doujin.dictionary(options) for doujin in iterable], file_handler)
+
+    @staticmethod
+    def compress(dir: Path) -> None:
+        """
+        Archive `dir` as `ZipFile` (Windows) or `TarFile` (Linux and macOS)
+        using the highest compression levels available.
+        """
+        files = Path(dir).glob('**/*')
+        if platform.system() == 'Windows':
+            with ZipFile(f"{dir}.zip", mode='w', compression=ZIP_DEFLATED, compresslevel=9) as zip_handler:
+                for file in files:
+                    zip_handler.write(file)
+        else:
+            with tarfile.open(f"{dir}.tar.gz", mode='x:gz') as tar_handler:
+                for file in files:
+                    tar_handler.add(file)

@@ -1,6 +1,7 @@
 import json
 import random
 import unittest
+import platform
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -14,7 +15,7 @@ class TestUtils(unittest.TestCase):
         cls.tiny_evil = Hentai(269582)
         cls.tiny_evil_file = Path(f"{cls.tiny_evil.title(Format.Pretty)}.json")
         cls.tiny_evil_dir = Path(str(cls.tiny_evil.id))
-        cls.tiny_evil_zip = Path(f"{cls.tiny_evil.id}.zip")
+        cls.tiny_evil_zip = Path(f"{cls.tiny_evil.id}.{'zip' if platform.system() == 'Windows' else 'tar.gz'}")
 
     @classmethod
     def tearDownClass(cls):
