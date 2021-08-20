@@ -260,6 +260,21 @@ class Page:
         num = Path(urlparse(self.url).path).name
         return Path(num).with_suffix(self.ext)
 
+    def download(self, handler: RequestHandler, dest: Path=Path.cwd()) -> None:
+        """
+        Download an individual page to `dest`.
+
+        Example
+        -------
+            >>> from hentai import Hentai
+            >>> doujin = Hentai(177013)
+            >>> # download the last page to the CWD
+            >>> doujin.pages[-1].download(doujin.handler)
+        """
+        with open(dest.joinpath(self.filename), mode='wb') as file_handler:
+            for chunk in handler.get(self.url, stream=True).iter_content(1024):
+                file_handler.write(chunk)
+
 
 @unique
 class Sort(Enum):
@@ -735,10 +750,8 @@ class Hentai(RequestHandler):
             dest = Path(folder) if dest is None else Path(dest).joinpath(folder)
             dest.mkdir(parents=True, exist_ok=True)
             for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
-                with open(dest.joinpath(page.filename), mode='wb') as file_handler:
-                    for chunk in self.handler.get(page.url, stream=True).iter_content(1024):
-                        file_handler.write(chunk)
-                    time.sleep(delay)
+                page.download(self.handler, dest)
+                time.sleep(delay)
             if zip_dir:
                 Utils.compress(dest)
                 shutil.rmtree(dest, ignore_errors=True)
