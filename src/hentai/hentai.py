@@ -70,8 +70,8 @@ def get_config_dir(package_name: str) -> Path:
     """
     return {
         'Windows': Path(os.path.expandvars('%LOCALAPPDATA%')),
-        'Darwin': Path('~/Library/Application Support'),
-        'Linux': Path('~/.config')
+        'Darwin': Path.home().joinpath('Library').joinpath('Application Support'),
+        'Linux': Path.home().joinpath('.config')
     }[platform.system()].joinpath(package_name)
 
 
