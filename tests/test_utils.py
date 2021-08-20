@@ -6,6 +6,7 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 import requests
+
 from src.hentai import Format, Hentai, Option, Sort, Utils
 
 
@@ -20,19 +21,13 @@ class TestUtils(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         remove_file = lambda file: Path(file).unlink() if Path(file).exists() else None
-
         remove_file(cls.tiny_evil_file)
         remove_file(cls.tiny_evil_zip)
-
-    def test_random_id(self):
-        random_id = Utils.get_random_id()
-        response = requests.get(urljoin(Hentai._URL, str(random_id)))
-        self.assertTrue(response.ok, msg=f"Failing ID: {random_id}. Failing URL: {response.url}")
 
     def test_random_hentai(self):
         random_hentai = Utils.get_random_hentai()
         response = requests.get(random_hentai.url)
-        self.assertTrue(response.ok, msg=f"Failing ID: {random_hentai.id}. Failing URL: {response.url}")
+        self.assertEqual(response.status_code, 200, msg=f"Failing URL: {response.url} (status code: {response.status_code})")
 
     def test_download_queue(self):
         Utils.download([self.tiny_evil], progressbar=True, zip_dir=True)
