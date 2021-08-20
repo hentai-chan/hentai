@@ -969,12 +969,10 @@ class Utils(object):
         Archive `dir` as `ZipFile` (Windows) or `TarFile` (Linux and macOS)
         using the highest compression levels available.
         """
-        files = Path(dir).glob('**/*')
         if platform.system() == 'Windows':
             with ZipFile(f"{dir}.zip", mode='w', compression=ZIP_DEFLATED, compresslevel=9) as zip_handler:
-                for file in files:
+                for file in Path(dir).glob('**/*'):
                     zip_handler.write(file)
         else:
             with tarfile.open(f"{dir}.tar.gz", mode='x:gz') as tar_handler:
-                for file in files:
-                    tar_handler.add(file)
+                tar_handler.add(dir)
