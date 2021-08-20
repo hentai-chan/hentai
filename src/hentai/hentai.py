@@ -68,8 +68,11 @@ def get_config_dir(package_name: str) -> Path:
     """
     Return a platform-specific root directory for user configuration settings.
     """
-    config_dir = Path().home().joinpath('.config').joinpath(package_name)
-    return Path(os.path.expandvars('%LOCALAPPDATA%')) if platform.system() == 'Windows' else config_dir
+    return {
+        'Windows': Path(os.path.expandvars('%LOCALAPPDATA%')),
+        'Darwin': Path('~/Library/Application Support'),
+        'Linux': Path('~/.config')
+    }[platform.system()].joinpath(package_name)
 
 
 def log_file_path(package_name: str) -> Path:
