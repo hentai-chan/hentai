@@ -64,22 +64,28 @@ except AssertionError:
 
 #region logging
 
-def _log_file_path(target_dir: str) -> Path:
+def get_config_dir(package_name: str) -> Path:
     """
-    Create a hidden `target_dir` folder and attach a log file to it (if there is
-    none, else use the existing one) and return its path.
+    Return a platform-specific root directory for user configuration settings.
     """
-    directory = Path(os.path.expandvars('%LOCALAPPDATA%')) if platform.system() == 'Windows' else Path().home()
-    directory.joinpath(f".{target_dir}")
-    directory.mkdir(parents=True, exist_ok=True)
-    log_file = directory.joinpath(f"{target_dir}.log")
+    config_dir = Path().home().joinpath('.config').joinpath(package_name)
+    return Path(os.path.expandvars('%LOCALAPPDATA%')) if platform.system() == 'Windows' else config_dir
+
+
+def log_file_path(package_name: str) -> Path:
+    """
+    Return a platform-specific log file path.
+    """
+    config_dir = get_config_dir(package_name)
+    config_dir.mkdir(parents=True, exist_ok=True)
+    log_file = config_dir.joinpath("error.log")
     log_file.touch(exist_ok=True)
     return log_file
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 formatter = logging.Formatter('%(asctime)s::%(levelname)s::%(lineno)d::%(name)s::%(message)s', datefmt='%d-%b-%y %H:%M:%S')
-file_handler = logging.FileHandler(_log_file_path(target_dir=package_name))
+file_handler = logging.FileHandler(log_file_path(package_name))
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
