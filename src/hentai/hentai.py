@@ -967,15 +967,15 @@ class Utils(object):
                 json.dump([doujin.dictionary(options) for doujin in iterable], file_handler)
 
     @staticmethod
-    def compress(dir: Path) -> None:
+    def compress(folder: Path) -> None:
         """
-        Archive `dir` as `ZipFile` (Windows) or `TarFile` (Linux and macOS)
+        Archive `folder` as `ZipFile` (Windows) or `TarFile` (Linux and macOS)
         using the highest compression levels available.
         """
         if platform.system() == 'Windows':
-            with ZipFile(f"{dir}.zip", mode='w', compression=ZIP_DEFLATED, compresslevel=9) as zip_handler:
-                for file in Path(dir).glob('**/*'):
+            with ZipFile(f"{folder}.zip", mode='w', compression=ZIP_DEFLATED, compresslevel=9) as zip_handler:
+                for file in Path(folder).glob('**/*'):
                     zip_handler.write(file)
         else:
-            with tarfile.open(f"{dir}.tar.gz", mode='x:gz') as tar_handler:
-                tar_handler.add(dir)
+            with tarfile.open(f"{folder}.tar.gz", mode='x:gz') as tar_handler:
+                tar_handler.add(folder)

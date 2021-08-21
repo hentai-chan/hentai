@@ -39,7 +39,8 @@ def main():
             except HTTPError as error:
                 print(f"\033[31mDownloadError:\033[0m {error}", file=sys.stderr)
                 count -= 1
-        if count: print(f"Stored {count} doujin{'s' if count > 1 else ''} in {str(args.dest)!r}")
+        if count:
+            print(f"Stored {count} doujin{'s' if count > 1 else ''} in {str(args.dest)!r}")
     elif args.command == 'preview':
         for id_ in args.id:
             try:
