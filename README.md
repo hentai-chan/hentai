@@ -164,7 +164,7 @@ doujins within the terminal:
 hentai --help
 
 # download this doujin to the CWD
-hentai --verbose download --id 177013
+hentai download --id 177013
 
 # check the module version
 hentai --version

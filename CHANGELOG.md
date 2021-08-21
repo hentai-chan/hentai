@@ -24,7 +24,8 @@ configuration, which makes for smaller archives but also increases the overall
 execution time. Lastly, a bug related to the previous implementation has been fixed
 by Shikanime Deva (<deva.shikanime@protonmail.com>) that was also caused by the
 (former) `zip` option in which the download directory was not properly cleaned up
-afterwards.
+afterwards. Last but not least, the `--verbose` option in the CLI is now turned on
+by default. You can revert this change by using the `--no-verbose` flag.
 
 ## Version 3.2.7 (29 June 2021)
 
