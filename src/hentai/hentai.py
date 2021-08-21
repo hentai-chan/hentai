@@ -64,7 +64,7 @@ except AssertionError:
 
 #region logging
 
-def get_config_dir(package_name: str) -> Path:
+def get_config_dir() -> Path:
     """
     Return a platform-specific root directory for user configuration settings.
     """
@@ -75,11 +75,11 @@ def get_config_dir(package_name: str) -> Path:
     }[platform.system()].joinpath(package_name)
 
 
-def log_file_path(package_name: str) -> Path:
+def get_logfile_path() -> Path:
     """
     Return a platform-specific log file path.
     """
-    config_dir = get_config_dir(package_name)
+    config_dir = get_config_dir()
     config_dir.mkdir(parents=True, exist_ok=True)
     log_file = config_dir.joinpath("error.log")
     log_file.touch(exist_ok=True)
@@ -87,8 +87,8 @@ def log_file_path(package_name: str) -> Path:
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
-formatter = logging.Formatter('%(asctime)s::%(levelname)s::%(lineno)d::%(name)s::%(message)s', datefmt='%d-%b-%y %H:%M:%S')
-file_handler = logging.FileHandler(log_file_path(package_name))
+formatter = logging.Formatter('%(asctime)s::%(levelname)s::%(lineno)d::%(name)s::%(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+file_handler = logging.FileHandler(get_logfile_path())
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
