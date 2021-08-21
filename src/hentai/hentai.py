@@ -52,7 +52,7 @@ from requests.models import Response
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-__version__ = "3.2.7"
+__version__ = "3.2.8"
 package_name = "hentai"
 python_major = "3"
 python_minor = "7"
