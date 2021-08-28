@@ -281,7 +281,7 @@ class Page:
             >>> doujin.pages[-1].download(doujin.handler)
         """
         with open(dest.joinpath(self.filename), mode='wb') as file_handler:
-            for chunk in handler.get(self.url, stream=True).iter_content(1024):
+            for chunk in handler.get(self.url, stream=True).iter_content(1024*1024):
                 file_handler.write(chunk)
 
 
@@ -413,10 +413,9 @@ class RequestHandler(object):
         that are exposed in the RequestHandler methods in form of parameters
         and keyword arguments.
         """
-        assert_status_hook = lambda response, *args, **kwargs: response.raise_for_status()
         session = requests.Session()
         session.mount("https://", HTTPAdapter(max_retries=self.retry_strategy))
-        session.hooks['response'] = [assert_status_hook]
+        session.hooks['response'] = lambda response, *args, **kwargs: response.raise_for_status()
         session.headers.update({"User-Agent": _build_ua_string()})
         return session
 
@@ -425,9 +424,9 @@ class RequestHandler(object):
         Returns the GET request encoded in `utf-8`. Adds proxies to this session
         on the fly if urllib is able to pick up the system's proxy settings.
         """
-        response = self.session.get(url, timeout=self.timeout, proxies=getproxies(), **kwargs)
-        response.encoding = 'utf-8'
-        return response
+        with self.session.get(url, timeout=self.timeout, proxies=getproxies(), **kwargs) as response:
+            response.encoding = 'utf-8'
+            return response
 
 
 class Hentai(RequestHandler):
@@ -875,9 +874,9 @@ class Utils(object):
             raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False\033[0m")
         data = set()
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
-            response = handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page': page})
-            for raw_json in response.json()['result']:
-                data.add(Hentai(json=raw_json))
+            with handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page': page}) as response:
+                for raw_json in response.json()['result']:
+                    data.add(Hentai(json=raw_json))
         return data
 
     @staticmethod
@@ -913,8 +912,8 @@ class Utils(object):
         `query` sorted by `sort`.
         """
         payload = {'query': query, 'page': page, 'sort': sort.value}
-        response = handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload)
-        return {Hentai(json=raw_json) for raw_json in response.json()['result']}
+        with handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload) as response:
+            return {Hentai(json=raw_json) for raw_json in response.json()['result']}
 
     @staticmethod
     def search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler()) -> Set[Hentai]:
@@ -923,8 +922,8 @@ class Utils(object):
         `id_` sorted by `sort`.
         """
         payload = {'tag_id': id_, 'page': page, 'sort': sort.value}
-        response = handler.get(urljoin(Hentai.HOME, "api/galleries/tagged"), params=payload)
-        return {Hentai(json=raw_json) for raw_json in response.json()['result']}
+        with handler.get(urljoin(Hentai.HOME, "api/galleries/tagged"), params=payload) as response:
+            return {Hentai(json=raw_json) for raw_json in response.json()['result']}
 
     @staticmethod
     def search_all_by_query(query: str, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> Set[Hentai]:
@@ -939,10 +938,10 @@ class Utils(object):
         """
         data = set()
         payload = {'query': query, 'page': 1, 'sort': sort.value}
-        response = handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload).json()
-        for page in tqdm(**_progressbar_options(range(1, int(response['num_pages'])+1), 'Search', 'page', disable=progressbar)):
-            for doujin in Utils.search_by_query(query, page, sort, handler):
-                data.add(doujin)
+        with handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload) as response:
+            for page in tqdm(**_progressbar_options(range(1, int(response.json()['num_pages'])+1), 'Search', 'page', disable=progressbar)):
+                for doujin in Utils.search_by_query(query, page, sort, handler):
+                    data.add(doujin)
         return data
 
     @staticmethod
