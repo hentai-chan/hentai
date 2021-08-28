@@ -1,5 +1,39 @@
 # Changelog
 
+## Version 3.2.8 (28 Aug 2021)
+
+The log file path has been changed to a new, platform-specific location which is
+accessible via code through the `get_logfile_path` method. Page objects now also
+implement a download method which makes it possible to download individual pages:
+
+```python
+from hentai import Hentai
+doujin = Hentai(177013)
+
+# download the last page to the CWD
+doujin.pages[-1].download(doujin.handler)
+```
+
+Another noticeably change took place in the download method of `Hentai` objects:
+The `zip` option has been renamed to `zip_dir` to prevent conflicts with the built-in
+`zip` method from the Python standard library. On top of all of that, its implementation
+has also changed: archives created as a result of this operation use a `.zip` extension
+on Windows platforms (as it already did previously), and `.tar.gz` on macOS and
+Linux platforms (which is what's new). It also uses a more aggressive compression
+configuration, which makes for smaller archives but also increases the overall
+execution time.
+
+Additionally, a bug related to the previous implementation has been fixed
+by Shikanime Deva (<deva.shikanime@protonmail.com>) that was also caused by the
+(former) `zip` option in which the download directory was not properly cleaned up
+afterwards.
+
+The `--verbose` option in the CLI is now turned on by default. You can revert this
+change by using the `--no-verbose` flag to run this command in scripts silently.
+
+Last but not least, the underlying `RequestHandler` class experienced a few minor
+optimizations which also affects the `Hentai` class.
+
 ## Version 3.2.7 (29 June 2021)
 
 Makes the `Hentai` class hashable and changes the return type of some methods from

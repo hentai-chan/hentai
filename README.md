@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://hentaichan.pythonanywhere.com/projects/hentai" title="Project Logo">
+  <a href="https://www.hentai-chan.dev/projects/hentai" title="Project Logo">
     <img height="150" style="margin-top:15px" src="https://raw.githubusercontent.com/hentai-chan/hentai/master/docs/hentai.svg">
   </a>
 </p>
@@ -164,7 +164,7 @@ doujins within the terminal:
 hentai --help
 
 # download this doujin to the CWD
-hentai --verbose download --id 177013
+hentai download --id 177013
 
 # check the module version
 hentai --version

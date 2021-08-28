@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://hentaichan.pythonanywhere.com/projects/hentai" title="Project Logo">
+  <a href="https://www.hentai-chan.dev/projects/hentai" title="Project Logo">
     <img height="150" style="margin-top:15px" src="https://raw.githubusercontent.com/hentai-chan/hentai/master/docs/hentai.svg">
   </a>
 </p>
@@ -155,7 +155,7 @@ Utils.export(popular_loli, filename=Path('popular_loli.json'), options=custom)
 hentai --help
 
 # 将此同人下载到CWD
-hentai --verbose download --id 177013
+hentai download --id 177013
 
 # 查看模组版本
 hentai --version
