@@ -52,7 +52,7 @@ from requests.models import Response
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-__version__ = "3.2.8"
+__version__ = "3.2.9"
 package_name = "hentai"
 python_major = "3"
 python_minor = "7"
@@ -415,7 +415,7 @@ class RequestHandler(object):
         """
         session = requests.Session()
         session.mount("https://", HTTPAdapter(max_retries=self.retry_strategy))
-        session.hooks['response'] = lambda response, *args, **kwargs: response.raise_for_status()
+        session.hooks['response'] = [lambda response, *args, **kwargs: response.raise_for_status()]
         session.headers.update({"User-Agent": _build_ua_string()})
         return session
 
@@ -424,9 +424,9 @@ class RequestHandler(object):
         Returns the GET request encoded in `utf-8`. Adds proxies to this session
         on the fly if urllib is able to pick up the system's proxy settings.
         """
-        with self.session.get(url, timeout=self.timeout, proxies=getproxies(), **kwargs) as response:
-            response.encoding = 'utf-8'
-            return response
+        response = self.session.get(url, timeout=self.timeout, proxies=getproxies(), **kwargs)
+        response.encoding = 'utf-8'
+        return response
 
 
 class Hentai(RequestHandler):
