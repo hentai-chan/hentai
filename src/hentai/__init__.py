@@ -3,6 +3,7 @@
 import argparse
 import errno
 import sys
+from distutils.util import strtobool
 from pathlib import Path
 
 from requests import HTTPError
@@ -10,6 +11,8 @@ from requests import HTTPError
 from .hentai import *
 from .hentai import __version__
 
+def __print_dict(dictionary: dict, indent=4) -> None:
+    print("{\n%s\n}" % '\n'.join([f"\033[36m{indent*' '}{key}\033[0m: \033[32m{value}\033[0m" for key, value in dictionary.items()]))
 
 def main():
     parser = argparse.ArgumentParser(prog=package_name)
@@ -24,36 +27,37 @@ def main():
     download_parser = subparser.add_parser('download', help="download doujin (CWD by default)")
     download_parser.add_argument('--id', type=int, nargs='+', required=True, help="magic number")
     download_parser.add_argument('--dest', type=Path, default=Path.cwd(), help="download directory (CWD by default)")
+    download_parser.add_argument('-c', '--check', default=True, action=argparse.BooleanOptionalAction, help="check for duplicates")
 
     preview_parser = subparser.add_parser('preview', help="print doujin preview")
     preview_parser.add_argument('--id', type=int, nargs='+', required=True, help="magic number")
 
     args = parser.parse_args()
 
-    if args.command == 'download':
-        count = len(args.id)
-        for id_ in args.id:
-            try:
+    try:
+        if args.command == 'download':
+            for id_ in args.id:
                 doujin = Hentai(id_)
-                doujin.download(dest=args.dest, progressbar=args.verbose)
-            except HTTPError as error:
-                print(f"\033[31mDownloadError:\033[0m {error}", file=sys.stderr)
-                count -= 1
-        if count:
-            print(f"Stored {count} doujin{'s' if count > 1 else ''} in {str(args.dest)!r}")
-    elif args.command == 'preview':
-        for id_ in args.id:
-            try:
+                if args.check and Path(args.dest).joinpath(str(doujin.id)).exists():
+                    print(f"\033[33mWarning:\033[0m A file with the same name already exists in {str(args.dest)!r}.")
+                    choice = input("Proceed with download? [Y/n] ")
+                    if choice == '' or strtobool(choice):
+                        doujin.download(dest=args.dest, progressbar=args.verbose)
+                else:
+                    doujin.download(dest=args.dest, progressbar=args.verbose)
+        elif args.command == 'preview':
+            for id_ in args.id:
                 doujin = Hentai(id_)
-                print(f"\033[32m{doujin.title(Format.Pretty)!r} by {Tag.get(doujin.artist, 'name')}\033[0m")
-                print(f"genres:\t{Tag.get(doujin.tag, 'name')}")
-                print(f"langs:\t{Tag.get(doujin.language, 'name')}")
-                print(f"pages:\t{doujin.num_pages}", end='\n\n' if id_ != len(args.id) else '')
-            except HTTPError as error:
-                print(f"\033[31mPreviewError:\033[0m {error}", file=sys.stderr)
-    else:
-        parser.print_help(sys.stderr)
-        sys.stderr(errno.EINVAL)
+                values = [doujin.title(Format.Pretty), doujin.artist[0].name, doujin.num_pages, doujin.num_favorites, doujin.url]
+                if args.verbose:
+                    __print_dict(dict(zip(['Title', 'Artist', 'NumPages', 'NumFavorites', 'URL'], values)))
+                else:
+                    print(','.join(map(str, values)))
+        else:
+            parser.print_help(sys.stderr)
+            sys.stderr(errno.EINVAL)
+    except HTTPError as error:
+        print(f"\033[31mError:\033[0m {error}", file=sys.stderr)
 
 if __name__ == '__main__':
     main()
