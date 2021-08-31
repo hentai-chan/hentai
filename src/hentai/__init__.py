@@ -1,18 +1,26 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 import argparse
 import errno
 import sys
 from distutils.util import strtobool
 from pathlib import Path
+from typing import List
 
 from requests import HTTPError
 
 from .hentai import *
 from .hentai import __version__
 
+
 def __print_dict(dictionary: dict, indent=4) -> None:
     print("{\n%s\n}" % '\n'.join([f"\033[36m{indent*' '}{key}\033[0m: \033[32m{value}\033[0m" for key, value in dictionary.items()]))
+
+def __from_file(path: Path) -> List[int]:
+    with open(path, mode='r', encoding='utf-8') as file_handler:
+        return [int(line.strip('#').rstrip()) for line in file_handler.readlines()]
 
 def main():
     parser = argparse.ArgumentParser(prog=package_name)
@@ -25,9 +33,10 @@ def main():
     subparser = parser.add_subparsers(dest='command')
 
     download_parser = subparser.add_parser('download', help="download doujin (CWD by default)")
-    download_parser.add_argument('--id', type=int, nargs='+', required=True, help="magic number")
+    download_parser.add_argument('--id', type=int, nargs='*', help="magic number")
     download_parser.add_argument('--dest', type=Path, default=Path.cwd(), help="download directory (CWD by default)")
     download_parser.add_argument('-c', '--check', default=True, action=argparse.BooleanOptionalAction, help="check for duplicates")
+    download_parser.add_argument('--batch-file', type=Path, nargs='?', help="file containing IDs to download, one ID per line")
 
     preview_parser = subparser.add_parser('preview', help="print doujin preview")
     preview_parser.add_argument('--id', type=int, nargs='+', required=True, help="magic number")
@@ -36,7 +45,7 @@ def main():
 
     try:
         if args.command == 'download':
-            for id_ in args.id:
+            for id_ in (args.id or __from_file(args.batch_file)):
                 doujin = Hentai(id_)
                 if args.check and Path(args.dest).joinpath(str(doujin.id)).exists():
                     print(f"\033[33mWarning:\033[0m A file with the same name already exists in {str(args.dest)!r}.")
