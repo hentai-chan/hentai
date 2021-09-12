@@ -40,10 +40,10 @@ from datetime import timezone
 from enum import Enum, unique
 from importlib.resources import path as resource_path
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Set, Tuple, Union
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import requests
 from requests import HTTPError, Session
@@ -279,7 +279,7 @@ class Page:
         num = Path(urlparse(self.url).path).name
         return Path(num).with_suffix(self.ext)
 
-    def download(self, handler: RequestHandler, dest: Path=Path.cwd()) -> None:
+    def download(self, handler: RequestHandler, dest: Union[str, Path]=Path.cwd()) -> None:
         """
         Download an individual page to `dest`.
 
@@ -294,7 +294,7 @@ class Page:
         doujin.pages[-1].download(doujin.handler)
         ```
         """
-        with open(dest.joinpath(self.filename), mode='wb') as file_handler:
+        with open(Path(dest).joinpath(self.filename), mode='wb') as file_handler:
             for chunk in handler.get(self.url, stream=True).iter_content(1024*1024):
                 file_handler.write(chunk)
 
@@ -338,7 +338,11 @@ class Option(Enum):
     Images = 'image_urls'
     NumPages = 'num_pages'
 
-    all: List[Option] = lambda: [option for option in Option if option.value != 'raw']
+    def all() -> List[Option]:
+        """
+        Return all available options with the exception of `Option.Raw`.
+        """
+        return [option for option in Option if option.value != 'raw']
 
 
 @unique
@@ -771,7 +775,7 @@ class Hentai(RequestHandler):
         comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body'])
         return [comment(data) for data in response]
 
-    def download(self, dest: Path=None, folder: str=None, delay: float=0, zip_dir: bool=False, progressbar: bool=False) -> None:
+    def download(self, dest: Union[str, Path]=None, folder: Union[str, Path]=None, delay: float=0, zip_dir: bool=False, progressbar: bool=False) -> None:
         """
         Download all image URLs of this `Hentai` object to `dest`, excluding cover
         and thumbnail. By default, `folder` will be located in the CWD named after
@@ -780,7 +784,7 @@ class Hentai(RequestHandler):
         in `dest`. Enable `progressbar` for status feedback in terminal applications.
         """
         try:
-            folder = str(self.id) if folder is None else folder
+            folder = str(self.id) if folder is None else str(folder)
             dest = Path(folder) if dest is None else Path(dest).joinpath(folder)
             dest.mkdir(parents=True, exist_ok=True)
             for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
@@ -794,7 +798,7 @@ class Hentai(RequestHandler):
             if progressbar:
                 print(f"#{str(id).zfill(6)}: {error}", file=sys.stderr)
 
-    def export(self, filename: Path, options: List[Option]=None) -> None:
+    def export(self, filename: Union[str, Path], options: List[Option]=None) -> None:
         """
         Store user-customized data about this `Hentai` object as a JSON file.
         Includes all available options by default.
@@ -982,7 +986,7 @@ class Utils(object):
         return data
 
     @staticmethod
-    def export(iterable: List[Hentai], filename: Path, options: List[Option]=None) -> None:
+    def export(iterable: List[Hentai], filename: Union[str, Path], options: List[Option]=None) -> None:
         """
         Store user-customized data of `Hentai` objects as a JSON file.
         Includes all available options by default.
@@ -1006,15 +1010,15 @@ class Utils(object):
                 json.dump([doujin.dictionary(options) for doujin in iterable], file_handler)
 
     @staticmethod
-    def compress(folder: Path) -> None:
+    def compress(folder: Union[str, Path]) -> None:
         """
         Archive `folder` as `ZipFile` (Windows) or `TarFile` (Linux and macOS)
         using the highest compression levels available.
         """
         if platform.system() == 'Windows':
-            with ZipFile(f"{folder}.zip", mode='w', compression=ZIP_DEFLATED, compresslevel=9) as zip_handler:
+            with ZipFile(f"{str(folder)}.zip", mode='w', compression=ZIP_DEFLATED, compresslevel=9) as zip_handler:
                 for file in Path(folder).glob('**/*'):
                     zip_handler.write(file)
         else:
-            with tarfile.open(f"{folder}.tar.gz", mode='x:gz') as tar_handler:
-                tar_handler.add(folder)
+            with tarfile.open(f"{str(folder)}.tar.gz", mode='x:gz') as tar_handler:
+                tar_handler.add(str(folder))
