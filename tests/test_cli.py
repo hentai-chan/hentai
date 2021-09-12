@@ -11,16 +11,16 @@ remove_file = lambda file: file.unlink() if file.exists() else None
 class TestHentaiCLI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.tiny_evil_id = 269582
+        cls.holo_id = 308592
 
     def test_cli_download(self):
-        call = subprocess.call("hentai download --id %s --no-check" % self.tiny_evil_id, shell=True)
-        self.assertFalse(call, msg="Download failed for ID=%d" % self.tiny_evil_id)
+        call = subprocess.call("hentai download --id %s --no-check" % self.holo_id, shell=True)
+        self.assertFalse(call, msg="Download failed for ID=%d" % self.holo_id)
 
     def test_cli_preview(self):
         print()
-        call = subprocess.call("hentai preview --id %d" % self.tiny_evil_id, shell=True)
-        self.assertFalse(call, msg="Preview failed for ID=%d" % self.tiny_evil_id)
+        call = subprocess.call("hentai preview --id %d" % self.holo_id, shell=True)
+        self.assertFalse(call, msg="Preview failed for ID=%d" % self.holo_id)
 
     def test_cli_log(self):
         print()
@@ -30,4 +30,4 @@ class TestHentaiCLI(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         remove_file(get_logfile_path())
-        shutil.rmtree(str(cls.tiny_evil_id), ignore_errors=True)
+        shutil.rmtree(str(cls.holo_id), ignore_errors=True)
