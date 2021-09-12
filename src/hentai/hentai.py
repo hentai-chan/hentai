@@ -185,10 +185,14 @@ class Tag:
 
         Example
         -------
-            >>> from hentai import Hentai, Tag
-            >>> doujin = Hentai(177013)
-            >>> print(Tag.get(doujin.language, 'name'))
-            english, translated
+        ```
+        from hentai import Hentai, Tag
+
+        doujin = Hentai(177013)
+
+        # english, translated
+        print(Tag.get(doujin.language, 'name'))
+        ```
         """
         if property_ not in Tag.__dict__.get('__dataclass_fields__').keys():
             raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: {property_} not recognized as a property in {cls.__name__}\033[0m")
@@ -199,22 +203,21 @@ class Tag:
         """
         Return a list of all tags where `option` is either
 
-        - `Option.Artist`
-        - `Option.Character`
-        - `Option.Group`
-        - `Option.Parody`
-        - `Option.Tag`
-        - `Option.Language`
+        `Option.Artist`
+        `Option.Character`
+        `Option.Group`
+        `Option.Parody`
+        `Option.Tag`
+        `Option.Language`
 
         Example
         -------
-            >>> from hentai import Tag, Option
-            >>> for tag in Tag.list(Option.Group):
-            ...   print(tag.name)
-            009-1
-            07-ghost
-            08th ms team
-            ...
+        ```
+        from hentai import Tag, Option
+
+        # ['009-1', '07-ghost', '08th ms team', ...]
+        print([tag.name for tag in Tag.list(Option.Group)])
+        ```
 
         Note
         ----
@@ -237,9 +240,12 @@ class Tag:
 
         Example
         -------
-            >>> from hentai import Tag
-            >>> print(f"ID={Tag.search(Option.Artist, 'name', 'shindol').id}")
-            ID=3981
+        ```
+        from hentai import Tag
+
+        # ID=3981
+        print(f"ID={Tag.search(Option.Artist, 'name', 'shindol').id}")
+        ```
         """
         return next(filter(lambda tag: getattr(tag, property_) == value, Tag.list(option, local_=local_)))
 
@@ -261,10 +267,14 @@ class Page:
 
         Example
         -------
-            >>> from hentai import Hentai
-            >>> doujin = Hentai(177013)
-            >>> [page.filename for page in doujin.pages]
-            [WindowsPath('1.jpg'), WindowsPath('2.jpg'), ...]
+        ```
+        from hentai import Hentai
+
+        doujin = Hentai(177013)
+
+        # [WindowsPath('1.jpg'), WindowsPath('2.jpg'), ...]
+        print([page.filename for page in doujin.pages])
+        ```
         """
         num = Path(urlparse(self.url).path).name
         return Path(num).with_suffix(self.ext)
@@ -275,10 +285,14 @@ class Page:
 
         Example
         -------
-            >>> from hentai import Hentai
-            >>> doujin = Hentai(177013)
-            >>> # download the last page to the CWD
-            >>> doujin.pages[-1].download(doujin.handler)
+        ```
+        from hentai import Hentai
+
+        doujin = Hentai(177013)
+
+        # download the last page to the CWD
+        doujin.pages[-1].download(doujin.handler)
+        ```
         """
         with open(dest.joinpath(self.filename), mode='wb') as file_handler:
             for chunk in handler.get(self.url, stream=True).iter_content(1024*1024):
@@ -354,9 +368,12 @@ class Extension(Enum):
 
         Example
         -------
-            >>> from hentai import Extension
-            >>> Extension.convert('j')
-            '.jpg'
+        ```
+        from hentai import Extension
+
+        # .jpg
+        print(Extension.convert('j'))
+        ```
         """
         return f".{cls(key).name.lower()}"
 
@@ -371,9 +388,14 @@ class RequestHandler(object):
 
     Example
     -------
-        >>> from hentai import Hentai, RequestHandler
-        >>> response = RequestHandler().get(url=Hentai.HOME)
-        >>> print(response.ok)
+    ```
+    from hentai import Hentai, RequestHandler
+
+    response = RequestHandler().get(url=Hentai.HOME)
+
+    # True
+    print(response.ok)
+    ```
     """
     __slots__ = ['timeout', 'total', 'status_forcelist', 'backoff_factor']
 
@@ -439,10 +461,14 @@ class Hentai(RequestHandler):
 
     Basic Usage
     -----------
-        >>> from hentai import Hentai
-        >>> doujin = Hentai(177013)
-        >>> print(doujin)
-        '[ShindoLA] METAMORPHOSIS (Complete) [English]'
+    ```
+    from hentai import Hentai
+
+    doujin = Hentai(177013)
+
+    # [ShindoLA] METAMORPHOSIS (Complete) [English]
+    print(doujin)
+    ````
 
     Docs
     ----
@@ -810,20 +836,25 @@ class Utils(object):
     """
     Hentai Utility Library
     ======================
-
     This class provides a handful of miscellaneous static methods that extend the
     functionality of the `Hentai` class.
 
     Example 1
     ---------
-        >>> from hentai import Utils
-        >>> print(Utils.get_random_id())
-        177013
+    ```
+    from hentai import Utils
+
+    # 177013
+    print(Utils.get_random_id())
+    ```
 
     Example 2
     ---------
-        >>> from hentai import Hentai, Sort, Format, Utils
-        >>> lolis = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
+    ```
+    from hentai import Hentai, Sort, Format, Utils
+
+    lolis = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
+    ```
     """
     def exists(error_msg: bool=False):
         def decorator(func):
@@ -887,10 +918,13 @@ class Utils(object):
 
         Example
         -------
-            >>> from hentai import Utils
-            >>> homepage = Utils.get_homepage()
-            >>> popular_now = homepage.popular_now
-            >>> new_uploads = homepage.new_uploads
+        ```
+        from hentai import Utils
+
+        homepage = Utils.get_homepage()
+        popular_now = homepage.popular_now
+        new_uploads = homepage.new_uploads
+        ```
         """
         try:
             html_ = html.unescape(handler.get(Hentai.HOME).text)
@@ -933,8 +967,11 @@ class Utils(object):
 
         Example
         -------
-            >>> from hentai import Utils, Sort, Format
-            >>> lolis = Utils.search_all_by_query('tag:loli', sort=Sort.PopularToday)
+        ```
+        from hentai import Utils, Sort, Format
+
+        lolis = Utils.search_all_by_query('tag:loli', sort=Sort.PopularToday)
+        ```
         """
         data = set()
         payload = {'query': query, 'page': 1, 'sort': sort.value}
@@ -952,9 +989,12 @@ class Utils(object):
 
         Example
         -------
-            >>> from hentai import Utils, Sort, Option
-            >>> lolis = Utils.search_by_query('tag:loli', sort=Sort.PopularToday)
-            >>> Utils.export(popular_loli, Path('lolis.json'), options=[Option.ID, Option.Title])
+        ```
+        from hentai import Utils, Sort, Option
+
+        lolis = Utils.search_by_query('tag:loli', sort=Sort.PopularToday)
+        Utils.export(popular_loli, Path('lolis.json'), options=[Option.ID, Option.Title])
+        ```
         """
         if options is None:
             Utils.export(iterable, filename, options=Option.all())
