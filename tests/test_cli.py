@@ -6,8 +6,6 @@ import unittest
 
 from src.hentai import get_logfile_path
 
-remove_file = lambda file: file.unlink() if file.exists() else None
-
 class TestHentaiCLI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -29,5 +27,4 @@ class TestHentaiCLI(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        remove_file(get_logfile_path())
         shutil.rmtree(str(cls.holo_id), ignore_errors=True)
