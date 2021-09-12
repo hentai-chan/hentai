@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import json
 import sys
 import unittest
@@ -9,7 +11,7 @@ from urllib.parse import urlparse
 from src.hentai import Hentai, Option, Utils
 
 
-class TestHentai(unittest.TestCase):    
+class TestHentai(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.test_response = Hentai(177013)
@@ -39,8 +41,8 @@ class TestHentai(unittest.TestCase):
         self.assertEqual(repr(self.test_response), f"Hentai(ID={self.test_response.id})", msg=repr(self.test_response))
 
     def test_response_json(self):
-        self.assertNotIn('error', self.test_response.json, msg=str(self.test_response))  
-    
+        self.assertNotIn('error', self.test_response.json, msg=str(self.test_response))
+
     def test_media_id(self):
         self.assertEqual(self.test_reference.media_id, self.test_response.media_id, msg=str(self.test_response))
 
@@ -103,7 +105,7 @@ class TestHentai(unittest.TestCase):
 
     def test_num_favorites(self):
         self.assertLessEqual(self.test_reference.num_favorites, self.test_response.num_favorites, msg=str(self.test_response))
-        
+
     def test_num_favorites_edge_case(self):
         new_uploads = choices([*Utils.get_homepage().new_uploads], k=10)
         self.assertTrue(any(map(lambda doujin: doujin.num_favorites > 0, new_uploads)), msg=f"HTML parsing error sample {list(map(repr, new_uploads))}")
@@ -117,7 +119,7 @@ class TestHentai(unittest.TestCase):
     def test_exists(self):
         self.assertTrue(Hentai.exists(self.test_response.id), msg=str(self.test_response))
         self.assertFalse(Hentai.exists(sys.maxsize), msg=f"Should have failed:{sys.maxsize}")
-        self.assertFalse(Hentai.exists(-69), msg=f"Should have failed:{-69}")    
+        self.assertFalse(Hentai.exists(-69), msg=f"Should have failed:{-69}")
 
     def test_dictionary_exception(self):
         with self.assertRaises(NotImplementedError) as context:

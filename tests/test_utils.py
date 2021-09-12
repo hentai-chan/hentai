@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import json
 import random
 import unittest
@@ -9,6 +11,7 @@ import requests
 
 from src.hentai import Format, Hentai, Option, Sort, Utils
 
+remove_file = lambda file: file.unlink() if file.exists() else None
 
 class TestUtils(unittest.TestCase):
     @classmethod
@@ -20,7 +23,6 @@ class TestUtils(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        remove_file = lambda file: Path(file).unlink() if Path(file).exists() else None
         remove_file(cls.tiny_evil_file)
         remove_file(cls.tiny_evil_zip)
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import unittest
 from urllib.parse import urljoin
 
@@ -10,7 +12,7 @@ class TestTag(unittest.TestCase):
 
     def test_get(self):
         self.assertEqual(Tag.get(self.test_response.language, 'name'), "english, translated", msg=f"Language Tag: {self.test_response.language}")
-    
+
     def test_get_exception(self):
         with self.assertRaises(ValueError) as context:
             Tag.get(self.test_response.language, 'upload_date')
