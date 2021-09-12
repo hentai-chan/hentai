@@ -401,18 +401,22 @@ class RequestHandler(object):
     print(response.ok)
     ```
     """
-    __slots__ = ['timeout', 'total', 'status_forcelist', 'backoff_factor']
+    __slots__ = ['timeout', 'total', 'status_forcelist', 'backoff_factor', 'user_agent', 'proxies']
 
     _timeout = (5, 5)
     _total = 5
     _status_forcelist = [413, 429, 500, 502, 503, 504]
     _backoff_factor = 1
+    _user_agent = None
+    _proxies = None
 
     def __init__(self,
                  timeout: Tuple[float, float]=_timeout,
                  total: int=_total,
                  status_forcelist: List[int]=_status_forcelist,
-                 backoff_factor: int=_backoff_factor):
+                 backoff_factor: int=_backoff_factor,
+                 user_agent: str=_user_agent,
+                 proxies: dict=_proxies):
         """
         Instantiates a new request handler object.
         """
@@ -420,6 +424,8 @@ class RequestHandler(object):
         self.total = total
         self.status_forcelist = status_forcelist
         self.backoff_factor = backoff_factor
+        self.user_agent = user_agent
+        self.proxies = proxies
 
     @property
     def retry_strategy(self) -> Retry:
@@ -442,7 +448,9 @@ class RequestHandler(object):
         session = requests.Session()
         session.mount("https://", HTTPAdapter(max_retries=self.retry_strategy))
         session.hooks['response'] = [lambda response, *args, **kwargs: response.raise_for_status()]
-        session.headers.update({"User-Agent": _build_ua_string()})
+        session.headers.update({
+            'User-Agent': self.user_agent or _build_ua_string()
+        })
         return session
 
     def get(self, url: str, **kwargs) -> Response:
@@ -450,7 +458,7 @@ class RequestHandler(object):
         Returns the GET request encoded in `utf-8`. Adds proxies to this session
         on the fly if urllib is able to pick up the system's proxy settings.
         """
-        response = self.session.get(url, timeout=self.timeout, proxies=getproxies(), **kwargs)
+        response = self.session.get(url, timeout=self.timeout, proxies=self.proxies or getproxies(), **kwargs)
         response.encoding = 'utf-8'
         return response
 
@@ -490,14 +498,16 @@ class Hentai(RequestHandler):
                  total: int=RequestHandler._total,
                  status_forcelist: List[int]=RequestHandler._status_forcelist,
                  backoff_factor: int=RequestHandler._backoff_factor,
+                 user_agent: str=RequestHandler._user_agent,
+                 proxies: dict=RequestHandler._proxies,
                  json: dict=None):
         """
         Start a request session and parse meta data from <https://nhentai.net> for this `id`.
         """
         if id_ and not json:
             self.__id = id_
-            super().__init__(timeout, total, status_forcelist, backoff_factor)
-            self.__handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
+            super().__init__(timeout, total, status_forcelist, backoff_factor, user_agent, proxies)
+            self.__handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor, self.user_agent, self.proxies)
             self.__url = urljoin(Hentai._URL, str(self.id))
             self.__api = urljoin(Hentai._API, str(self.id))
             self.__response = self.handler.get(self.api)
