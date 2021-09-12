@@ -20,6 +20,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r requirements/release.txt
+          pip install -e .
       - name: Generate Code Coverage Report
         run: |
           pip install pytest pytest-cov
