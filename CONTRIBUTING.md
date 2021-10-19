@@ -31,8 +31,8 @@ these acronyms:
 - **TST:** addition or modification of tests
 
 Commit messages that only change a few lines of code should be compressed
-into one line, else try to be more descriptive and outline the reasons
-that justify each modification.
+into one line (less than 72 characters in length), else try to be more descriptive
+and outline the reasons that justify each modification.
 
 ## Style Guidelines
 
@@ -40,9 +40,9 @@ At the moment, there're no strict rules in place to enforce a particular style.
 By and large I try to follow PEP8 with a few exceptions; for example, line lengths
 can go up to 160 characters, although I don't encourage you to go out of your way
 to write one-liner everywhere. Another thing you might notice is that enums use
-CamelCase instead of ALLCAPPS. Client-facing methods and properties should contain
-doc string and examples where examples would make sense, the code itself however
-should be self-explanatory. Use this discussion panel if you have any other questions
+`CamelCase` instead of `ALLCAPPS`. Client-facing methods and properties should contain
+doc strings and examples where examples would make sense, the code itself however
+should be self-explanatory. Use the discussion panel if you have any other questions
 about this or reach out to me personally via mail which is my preferred method of
 communication.
 
@@ -52,10 +52,13 @@ After forking this repository you can open a new `dev-*` branch. When working in
 a team it's better to let all changes come together in a release branch (`rec-hentai`),
 before they go on to `master` where they get build and deployed to PyPI. It is
 important to respect this naming convention to trigger the CI scripts. Therefore,
-PR that don't follow this convention cannot be merged into this project.
+PR that don't follow this convention cannot be merged into this project. Adding
+unit tests is for the most part mandatory if you implement new functionality. Passing
+all required checks is important to qualify for a code review. Despite all of that
+don't shy away from asking questions if anything is unclear.
 
 ## Additional Sources
 
 You may find it useful to browse through code of similar repositories.
-[Documentation](https://hentaichan.pythonanywhere.com/projects/hentai) for this
+[Documentation](https://www.hentai-chan.dev/projects/hentai) for this
 code base is a work in progress and will be continuously improved over time.
