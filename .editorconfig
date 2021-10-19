@@ -1,7 +1,7 @@
 root = true
 
 [*]
-indent_style = 4
+indent_size = 4
 indent_style = tab
 tab_width = 4
 end_of_line = lf
