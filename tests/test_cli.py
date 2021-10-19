@@ -22,7 +22,7 @@ class TestHentaiCLI(unittest.TestCase):
 
     def test_cli_log(self):
         print()
-        call = subprocess.call("hentai log --read", shell=True)
+        call = subprocess.call("hentai log --list", shell=True)
         self.assertTrue(get_logfile_path().exists() and (call == 0), msg="No log file was produced in '%s'" % str(get_logfile_path()))
 
     @classmethod
