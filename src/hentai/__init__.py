@@ -40,17 +40,20 @@ def main():
 
     subparser = parser.add_subparsers(dest='command')
 
-    download_parser = subparser.add_parser('download', description="download a doujin from https://nhentai.net/ to your local harddrive")
+    download_help_msg = "download a doujin from https://nhentai.net/ to your local harddrive"
+    download_parser = subparser.add_parser('download', description=download_help_msg, help=download_help_msg)
     download_parser.add_argument('--id', type=int, nargs='*', help="doujin ID")
     download_parser.add_argument('--dest', type=Path, metavar='PATH', default=Path.cwd(), help="download directory (default: %(default)s)")
     download_parser.add_argument('-c', '--check', default=True, action='store_true', help="check for duplicates (default: %(default)s)")
     download_parser.add_argument('--no-check', dest='check', action='store_false', help="disable checking for duplicates")
     download_parser.add_argument('--batch-file', type=Path, metavar='PATH', nargs='?', help="file containing IDs to download, one ID per line")
 
-    preview_parser = subparser.add_parser('preview', description="print doujin meta data")
+    preview_help_msg = "print doujin meta data"
+    preview_parser = subparser.add_parser('preview', description=preview_help_msg, help=preview_help_msg)
     preview_parser.add_argument('--id', type=int, nargs='+', required=True, help="doujin ID")
 
-    log_parser = subparser.add_parser('log', description="access the application logger")
+    log_help_msg = "access the CLI logger"
+    log_parser = subparser.add_parser('log', description=log_help_msg, help=log_help_msg)
     log_parser.add_argument('--reset', action='store_true', help="reset all log file entries")
     log_parser.add_argument('--path', action='store_true', help="return the log file path")
     log_parser.add_argument('--list', action='store_true', help='read the log file')
