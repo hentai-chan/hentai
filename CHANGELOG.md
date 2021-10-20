@@ -1,5 +1,23 @@
 # Changelog
 
+## Version 3.2.9 (20 Oct 2021)
+
+It's a been a little over a year since this last major version (`v2.0.0`) and a
+lot of things have been improved since then.
+
+- Fix an issue in the download method that was responsible for creating corrupted
+  images
+- Make verbose output in the command line interface prettier
+- Update and reformat doc strings for VS Code mouseover
+- Add the `log` command to the CLI
+- Add `--user-agent`, `--proxies`, `--batch-file`, `--check` and `--no-check`
+  arguments to the download command in the CLI
+- Add backwards compatibility for Python 3.7 in the CLI and include unit tests for
+  this part of the application as well
+- Overload `Path` params in function with `str` using `typing.Union`
+- Test library against Python 3.10 which previously has only been in beta phase
+- Improve help message formatting
+
 ## Version 3.2.8 (28 Aug 2021)
 
 The log file path has been changed to a new, platform-specific location which is
