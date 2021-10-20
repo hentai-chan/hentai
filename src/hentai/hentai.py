@@ -62,6 +62,25 @@ try:
 except AssertionError:
     raise RuntimeError(f"\033[31m{package_name!r} requires Python {python_major}.{python_minor}+ (You have Python {sys.version})\033[0m")
 
+#region global variables
+
+COLORS: dict = {
+    'reset': '\033[0m',
+    'bright': '\033[1m',
+    'dim': '\033[2m',
+    'normal': '',
+    'black': '\033[30m',
+    'red': '\033[31m',
+    'green': '\033[32m',
+    'yellow': '\033[33m',
+    'blue': '\033[34m',
+    'magenta': '\033[35m',
+    'cyan': '\033[36m',
+    'white': '\033[37m'
+}
+
+#endregion
+
 #region logging
 
 def get_config_dir() -> Path:
@@ -101,13 +120,13 @@ def _build_ua_string() -> str:
     user_name = os.environ.get('USERNAME' if platform.system() == 'Windows' else 'USER', 'N/A')
     return f"{package_name}/{__version__} {platform.system()}/{platform.release()} CPython/{platform.python_version()} user_name/{user_name}"
 
-def _progressbar_options(iterable, desc, unit, color="\033[32m", char='\u25CB', disable=False) -> dict:
+def _progressbar_options(iterable, desc, unit, color=COLORS['green'], char='\u25CB', disable=False) -> dict:
     """
     Return custom optional arguments for `tqdm` progressbars.
     """
     return {
         'iterable': iterable,
-        'bar_format': "{l_bar}%s{bar}%s{r_bar}" % (color, "\033[0m"),
+        'bar_format': "{l_bar}%s{bar}%s{r_bar}" % (color, COLORS['reset']),
         'ascii': char.rjust(9, ' '),
         'desc': desc,
         'unit': unit.rjust(1, ' '),
@@ -195,7 +214,7 @@ class Tag:
         ```
         """
         if property_ not in Tag.__dict__.get('__dataclass_fields__').keys():
-            raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: {property_} not recognized as a property in {cls.__name__}\033[0m")
+            raise ValueError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: {property_} not recognized as a property in {cls.__name__}{COLORS['reset']}")
         return ', '.join([getattr(tag, property_) for tag in tags])
 
     @staticmethod
@@ -224,10 +243,10 @@ class Tag:
         All tag count properties whose values exceed 999 are rounded to the nearest thousand.
         """
         if option not in [Option.Artist, Option.Character, Option.Group, Option.Parody, Option.Tag, Option.Language, Option.Category]:
-            raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: Invalid option ({option.name} is not an Tag object property)\033[0m")
+            raise ValueError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: Invalid option ({option.name} is not an Tag object property){COLORS['reset']}")
 
         if option is Option.Category:
-            raise NotImplementedError(f"\033[31mThis feature is not implemented yet\033[0m")
+            raise NotImplementedError(f"{COLORS['red']}This feature is not implemented yet{COLORS['reset']}")
 
         tags = _query_db('tags.db', "SELECT * FROM Tag WHERE Type=:type_", {'type_': option.value}, local_=local_)
         number = lambda count: int(count) if str(count).isnumeric() else int(count.strip('K')) * 1_000
@@ -519,7 +538,7 @@ class Hentai(RequestHandler):
             self.__url = Hentai.__get_url(self.json)
             self.__api = Hentai.__get_api(self.json)
         else:
-            raise TypeError(f"\033[31m{os.strerror(errno.EINVAL)}: Define either id or json as argument, but not both or none\033[0m")
+            raise TypeError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: Define either id or json as argument, but not both or none{COLORS['reset']}")
 
     def __str__(self) -> str:
         return self.title()
@@ -833,7 +852,7 @@ class Hentai(RequestHandler):
         data = {}
 
         if Option.Raw in options:
-            raise NotImplementedError(f"\033[31m{os.strerror(errno.EINVAL)}: Access self.json to retrieve this information\033[0m")
+            raise NotImplementedError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: Access self.json to retrieve this information{COLORS['reset']}")
 
         for option in options:
             property_ = getattr(self, option.value)
@@ -916,7 +935,7 @@ class Utils(object):
         Enable `progressbar` for status feedback in terminal applications.
         """
         if start_page > end_page:
-            raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False\033[0m")
+            raise ValueError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False{COLORS['reset']}")
         data = set()
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
             with handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page': page}) as response:

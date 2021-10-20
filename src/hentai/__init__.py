@@ -17,7 +17,7 @@ from .hentai import __version__
 
 
 def __print_dict(dictionary: dict, indent=4) -> None:
-    print("{\n%s\n}" % '\n'.join([f"\033[36m{indent * ' '}{key}\033[0m: \033[32m{value}\033[0m," for key, value in dictionary.items()]))
+    print("{\n%s\n}" % '\n'.join([f"{COLORS['blue']}{indent * ' '}{key}{COLORS['reset']}: {COLORS['green']}{value}{COLORS['reset']}," for key, value in dictionary.items()]))
 
 def __from_file(path: Path) -> List[int]:
     with open(path, mode='r', encoding='utf-8') as file_handler:
@@ -27,7 +27,8 @@ def format_proxies(proxies: str) -> dict:
     return {prot: f"{prot}://{ip}" for (prot, ip) in [proxy.split('://') for proxy in proxies.split()]}
 
 def main():
-    parser = argparse.ArgumentParser(prog=package_name, description="CLI for the hentai module.")
+    formatter = lambda prog: argparse.HelpFormatter(prog,max_help_position=52)
+    parser = argparse.ArgumentParser(prog=package_name, formatter_class=formatter, description="hentai command line interface.")
     parser._positionals.title = 'Commands'
     parser._optionals.title = 'Arguments'
 
@@ -61,7 +62,7 @@ def main():
             for id_ in (args.id or __from_file(args.batch_file)):
                 doujin = Hentai(id_)
                 if args.check and Path(args.dest).joinpath(str(doujin.id)).exists():
-                    print(f"\033[33mWarning:\033[0m A file with the same name already exists in {str(args.dest)!r}.")
+                    print(f"{COLORS['yellow']}WARNING:{COLORS['reset']} A file with the same name already exists in {str(args.dest)!r}.")
                     choice = input("Proceed with download? [Y/n] ")
                     if choice == '' or strtobool(choice):
                         doujin.download(dest=args.dest, progressbar=args.verbose)
@@ -85,7 +86,7 @@ def main():
                     log = file_handler.readlines()
 
                     if not log:
-                        print("\033[33mOperation suspended: there is nothing to read because the log file is empty\033[0m")
+                        print(f"{COLORS['yellow']}INFO:{COLORS['reset']} there is nothing to read because the log file is empty")
                         return
 
                     parse = lambda line: line.strip('\n').split('::')
@@ -93,7 +94,7 @@ def main():
 
                     tabulate = "{:<7} {:<8} {:<30} {:<30}".format
 
-                    print(f"\033[32m{tabulate('Line', 'Level', 'File Name', 'Message')}\033[0m")
+                    print(COLORS['green'] + tabulate('Line', 'Level', 'File Name', 'Message') + COLORS['reset'])
 
                     for line in log:
                         entry = Entry(parse(line)[0], parse(line)[1], parse(line)[2], parse(line)[3], parse(line)[4])
@@ -102,10 +103,10 @@ def main():
             parser.print_help(sys.stderr)
             sys.stderr(errno.EINVAL)
     except HTTPError as error:
-        print(f"\033[31mError:\033[0m {error}", file=sys.stderr)
+        print(f"{COLORS['red']}ERROR:{COLORS['reset']} {error}", file=sys.stderr)
         logger.error("CLI caught an HTTP error (network down?): %s" % str(error))
     except Exception as error:
-        print(f"\033[31mError:\033[0m {error}", file=sys.stderr)
+        print(f"{COLORS['red']}ERROR:{COLORS['reset']} {error}", file=sys.stderr)
         logger.error("CLI caught an error: %s" % str(error))
 
 if __name__ == '__main__':
