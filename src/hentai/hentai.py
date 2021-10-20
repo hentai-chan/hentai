@@ -40,10 +40,10 @@ from datetime import timezone
 from enum import Enum, unique
 from importlib.resources import path as resource_path
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Set, Tuple, Union
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import requests
 from requests import HTTPError, Session
@@ -52,7 +52,7 @@ from requests.models import Response
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-__version__ = "3.2.8"
+__version__ = "3.2.9"
 package_name = "hentai"
 python_major = "3"
 python_minor = "7"
@@ -61,6 +61,25 @@ try:
     assert sys.version_info >= (int(python_major), int(python_minor))
 except AssertionError:
     raise RuntimeError(f"\033[31m{package_name!r} requires Python {python_major}.{python_minor}+ (You have Python {sys.version})\033[0m")
+
+#region global variables
+
+COLORS: dict = {
+    'reset': '\033[0m',
+    'bright': '\033[1m',
+    'dim': '\033[2m',
+    'normal': '',
+    'black': '\033[30m',
+    'red': '\033[31m',
+    'green': '\033[32m',
+    'yellow': '\033[33m',
+    'blue': '\033[34m',
+    'magenta': '\033[35m',
+    'cyan': '\033[36m',
+    'white': '\033[37m'
+}
+
+#endregion
 
 #region logging
 
@@ -101,13 +120,13 @@ def _build_ua_string() -> str:
     user_name = os.environ.get('USERNAME' if platform.system() == 'Windows' else 'USER', 'N/A')
     return f"{package_name}/{__version__} {platform.system()}/{platform.release()} CPython/{platform.python_version()} user_name/{user_name}"
 
-def _progressbar_options(iterable, desc, unit, color="\033[32m", char='\u25CB', disable=False) -> dict:
+def _progressbar_options(iterable, desc, unit, color=COLORS['green'], char='\u25CB', disable=False) -> dict:
     """
     Return custom optional arguments for `tqdm` progressbars.
     """
     return {
         'iterable': iterable,
-        'bar_format': "{l_bar}%s{bar}%s{r_bar}" % (color, "\033[0m"),
+        'bar_format': "{l_bar}%s{bar}%s{r_bar}" % (color, COLORS['reset']),
         'ascii': char.rjust(9, ' '),
         'desc': desc,
         'unit': unit.rjust(1, ' '),
@@ -185,13 +204,17 @@ class Tag:
 
         Example
         -------
-            >>> from hentai import Hentai, Tag
-            >>> doujin = Hentai(177013)
-            >>> print(Tag.get(doujin.language, 'name'))
-            english, translated
+        ```
+        from hentai import Hentai, Tag
+
+        doujin = Hentai(177013)
+
+        # english, translated
+        print(Tag.get(doujin.language, 'name'))
+        ```
         """
         if property_ not in Tag.__dict__.get('__dataclass_fields__').keys():
-            raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: {property_} not recognized as a property in {cls.__name__}\033[0m")
+            raise ValueError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: {property_} not recognized as a property in {cls.__name__}{COLORS['reset']}")
         return ', '.join([getattr(tag, property_) for tag in tags])
 
     @staticmethod
@@ -199,32 +222,31 @@ class Tag:
         """
         Return a list of all tags where `option` is either
 
-        - `Option.Artist`
-        - `Option.Character`
-        - `Option.Group`
-        - `Option.Parody`
-        - `Option.Tag`
-        - `Option.Language`
+        `Option.Artist`
+        `Option.Character`
+        `Option.Group`
+        `Option.Parody`
+        `Option.Tag`
+        `Option.Language`
 
         Example
         -------
-            >>> from hentai import Tag, Option
-            >>> for tag in Tag.list(Option.Group):
-            ...   print(tag.name)
-            009-1
-            07-ghost
-            08th ms team
-            ...
+        ```
+        from hentai import Tag, Option
+
+        # ['009-1', '07-ghost', '08th ms team', ...]
+        print([tag.name for tag in Tag.list(Option.Group)])
+        ```
 
         Note
         ----
         All tag count properties whose values exceed 999 are rounded to the nearest thousand.
         """
         if option not in [Option.Artist, Option.Character, Option.Group, Option.Parody, Option.Tag, Option.Language, Option.Category]:
-            raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: Invalid option ({option.name} is not an Tag object property)\033[0m")
+            raise ValueError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: Invalid option ({option.name} is not an Tag object property){COLORS['reset']}")
 
         if option is Option.Category:
-            raise NotImplementedError(f"\033[31mThis feature is not implemented yet\033[0m")
+            raise NotImplementedError(f"{COLORS['red']}This feature is not implemented yet{COLORS['reset']}")
 
         tags = _query_db('tags.db', "SELECT * FROM Tag WHERE Type=:type_", {'type_': option.value}, local_=local_)
         number = lambda count: int(count) if str(count).isnumeric() else int(count.strip('K')) * 1_000
@@ -237,9 +259,12 @@ class Tag:
 
         Example
         -------
-            >>> from hentai import Tag
-            >>> print(f"ID={Tag.search(Option.Artist, 'name', 'shindol').id}")
-            ID=3981
+        ```
+        from hentai import Tag
+
+        # ID=3981
+        print(f"ID={Tag.search(Option.Artist, 'name', 'shindol').id}")
+        ```
         """
         return next(filter(lambda tag: getattr(tag, property_) == value, Tag.list(option, local_=local_)))
 
@@ -261,26 +286,34 @@ class Page:
 
         Example
         -------
-            >>> from hentai import Hentai
-            >>> doujin = Hentai(177013)
-            >>> [page.filename for page in doujin.pages]
-            [WindowsPath('1.jpg'), WindowsPath('2.jpg'), ...]
+        ```
+        from hentai import Hentai
+
+        doujin = Hentai(177013)
+
+        # [WindowsPath('1.jpg'), WindowsPath('2.jpg'), ...]
+        print([page.filename for page in doujin.pages])
+        ```
         """
         num = Path(urlparse(self.url).path).name
         return Path(num).with_suffix(self.ext)
 
-    def download(self, handler: RequestHandler, dest: Path=Path.cwd()) -> None:
+    def download(self, handler: RequestHandler, dest: Union[str, Path]=Path.cwd()) -> None:
         """
         Download an individual page to `dest`.
 
         Example
         -------
-            >>> from hentai import Hentai
-            >>> doujin = Hentai(177013)
-            >>> # download the last page to the CWD
-            >>> doujin.pages[-1].download(doujin.handler)
+        ```
+        from hentai import Hentai
+
+        doujin = Hentai(177013)
+
+        # download the last page to the CWD
+        doujin.pages[-1].download(doujin.handler)
+        ```
         """
-        with open(dest.joinpath(self.filename), mode='wb') as file_handler:
+        with open(Path(dest).joinpath(self.filename), mode='wb') as file_handler:
             for chunk in handler.get(self.url, stream=True).iter_content(1024*1024):
                 file_handler.write(chunk)
 
@@ -324,7 +357,11 @@ class Option(Enum):
     Images = 'image_urls'
     NumPages = 'num_pages'
 
-    all: List[Option] = lambda: [option for option in Option if option.value != 'raw']
+    def all() -> List[Option]:
+        """
+        Return all available options with the exception of `Option.Raw`.
+        """
+        return [option for option in Option if option.value != 'raw']
 
 
 @unique
@@ -354,9 +391,12 @@ class Extension(Enum):
 
         Example
         -------
-            >>> from hentai import Extension
-            >>> Extension.convert('j')
-            '.jpg'
+        ```
+        from hentai import Extension
+
+        # .jpg
+        print(Extension.convert('j'))
+        ```
         """
         return f".{cls(key).name.lower()}"
 
@@ -371,22 +411,31 @@ class RequestHandler(object):
 
     Example
     -------
-        >>> from hentai import Hentai, RequestHandler
-        >>> response = RequestHandler().get(url=Hentai.HOME)
-        >>> print(response.ok)
+    ```
+    from hentai import Hentai, RequestHandler
+
+    response = RequestHandler().get(url=Hentai.HOME)
+
+    # True
+    print(response.ok)
+    ```
     """
-    __slots__ = ['timeout', 'total', 'status_forcelist', 'backoff_factor']
+    __slots__ = ['timeout', 'total', 'status_forcelist', 'backoff_factor', 'user_agent', 'proxies']
 
     _timeout = (5, 5)
     _total = 5
     _status_forcelist = [413, 429, 500, 502, 503, 504]
     _backoff_factor = 1
+    _user_agent = None
+    _proxies = None
 
     def __init__(self,
                  timeout: Tuple[float, float]=_timeout,
                  total: int=_total,
                  status_forcelist: List[int]=_status_forcelist,
-                 backoff_factor: int=_backoff_factor):
+                 backoff_factor: int=_backoff_factor,
+                 user_agent: str=_user_agent,
+                 proxies: dict=_proxies):
         """
         Instantiates a new request handler object.
         """
@@ -394,6 +443,8 @@ class RequestHandler(object):
         self.total = total
         self.status_forcelist = status_forcelist
         self.backoff_factor = backoff_factor
+        self.user_agent = user_agent
+        self.proxies = proxies
 
     @property
     def retry_strategy(self) -> Retry:
@@ -415,8 +466,10 @@ class RequestHandler(object):
         """
         session = requests.Session()
         session.mount("https://", HTTPAdapter(max_retries=self.retry_strategy))
-        session.hooks['response'] = lambda response, *args, **kwargs: response.raise_for_status()
-        session.headers.update({"User-Agent": _build_ua_string()})
+        session.hooks['response'] = [lambda response, *args, **kwargs: response.raise_for_status()]
+        session.headers.update({
+            'User-Agent': self.user_agent or _build_ua_string()
+        })
         return session
 
     def get(self, url: str, **kwargs) -> Response:
@@ -424,9 +477,9 @@ class RequestHandler(object):
         Returns the GET request encoded in `utf-8`. Adds proxies to this session
         on the fly if urllib is able to pick up the system's proxy settings.
         """
-        with self.session.get(url, timeout=self.timeout, proxies=getproxies(), **kwargs) as response:
-            response.encoding = 'utf-8'
-            return response
+        response = self.session.get(url, timeout=self.timeout, proxies=self.proxies or getproxies(), **kwargs)
+        response.encoding = 'utf-8'
+        return response
 
 
 class Hentai(RequestHandler):
@@ -439,10 +492,14 @@ class Hentai(RequestHandler):
 
     Basic Usage
     -----------
-        >>> from hentai import Hentai
-        >>> doujin = Hentai(177013)
-        >>> print(doujin)
-        '[ShindoLA] METAMORPHOSIS (Complete) [English]'
+    ```
+    from hentai import Hentai
+
+    doujin = Hentai(177013)
+
+    # [ShindoLA] METAMORPHOSIS (Complete) [English]
+    print(doujin)
+    ````
 
     Docs
     ----
@@ -460,14 +517,16 @@ class Hentai(RequestHandler):
                  total: int=RequestHandler._total,
                  status_forcelist: List[int]=RequestHandler._status_forcelist,
                  backoff_factor: int=RequestHandler._backoff_factor,
+                 user_agent: str=RequestHandler._user_agent,
+                 proxies: dict=RequestHandler._proxies,
                  json: dict=None):
         """
         Start a request session and parse meta data from <https://nhentai.net> for this `id`.
         """
         if id_ and not json:
             self.__id = id_
-            super().__init__(timeout, total, status_forcelist, backoff_factor)
-            self.__handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor)
+            super().__init__(timeout, total, status_forcelist, backoff_factor, user_agent, proxies)
+            self.__handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor, self.user_agent, self.proxies)
             self.__url = urljoin(Hentai._URL, str(self.id))
             self.__api = urljoin(Hentai._API, str(self.id))
             self.__response = self.handler.get(self.api)
@@ -479,7 +538,7 @@ class Hentai(RequestHandler):
             self.__url = Hentai.__get_url(self.json)
             self.__api = Hentai.__get_api(self.json)
         else:
-            raise TypeError(f"\033[31m{os.strerror(errno.EINVAL)}: Define either id or json as argument, but not both or none\033[0m")
+            raise TypeError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: Define either id or json as argument, but not both or none{COLORS['reset']}")
 
     def __str__(self) -> str:
         return self.title()
@@ -745,7 +804,7 @@ class Hentai(RequestHandler):
         comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body'])
         return [comment(data) for data in response]
 
-    def download(self, dest: Path=None, folder: str=None, delay: float=0, zip_dir: bool=False, progressbar: bool=False) -> None:
+    def download(self, dest: Union[str, Path]=None, folder: Union[str, Path]=None, delay: float=0, zip_dir: bool=False, progressbar: bool=False) -> None:
         """
         Download all image URLs of this `Hentai` object to `dest`, excluding cover
         and thumbnail. By default, `folder` will be located in the CWD named after
@@ -754,7 +813,7 @@ class Hentai(RequestHandler):
         in `dest`. Enable `progressbar` for status feedback in terminal applications.
         """
         try:
-            folder = str(self.id) if folder is None else folder
+            folder = str(self.id) if folder is None else str(folder)
             dest = Path(folder) if dest is None else Path(dest).joinpath(folder)
             dest.mkdir(parents=True, exist_ok=True)
             for page in tqdm(**_progressbar_options(self.pages, f"Download #{str(self.id).zfill(6)}", 'page', disable=progressbar)):
@@ -768,7 +827,7 @@ class Hentai(RequestHandler):
             if progressbar:
                 print(f"#{str(id).zfill(6)}: {error}", file=sys.stderr)
 
-    def export(self, filename: Path, options: List[Option]=None) -> None:
+    def export(self, filename: Union[str, Path], options: List[Option]=None) -> None:
         """
         Store user-customized data about this `Hentai` object as a JSON file.
         Includes all available options by default.
@@ -793,7 +852,7 @@ class Hentai(RequestHandler):
         data = {}
 
         if Option.Raw in options:
-            raise NotImplementedError(f"\033[31m{os.strerror(errno.EINVAL)}: Access self.json to retrieve this information\033[0m")
+            raise NotImplementedError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: Access self.json to retrieve this information{COLORS['reset']}")
 
         for option in options:
             property_ = getattr(self, option.value)
@@ -810,20 +869,25 @@ class Utils(object):
     """
     Hentai Utility Library
     ======================
-
     This class provides a handful of miscellaneous static methods that extend the
     functionality of the `Hentai` class.
 
     Example 1
     ---------
-        >>> from hentai import Utils
-        >>> print(Utils.get_random_id())
-        177013
+    ```
+    from hentai import Utils
+
+    # 177013
+    print(Utils.get_random_id())
+    ```
 
     Example 2
     ---------
-        >>> from hentai import Hentai, Sort, Format, Utils
-        >>> lolis = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
+    ```
+    from hentai import Hentai, Sort, Format, Utils
+
+    lolis = Utils.search_by_query('tag:loli', sort=Sort.PopularWeek)
+    ```
     """
     def exists(error_msg: bool=False):
         def decorator(func):
@@ -871,7 +935,7 @@ class Utils(object):
         Enable `progressbar` for status feedback in terminal applications.
         """
         if start_page > end_page:
-            raise ValueError(f"\033[31m{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False\033[0m")
+            raise ValueError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False{COLORS['reset']}")
         data = set()
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
             with handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page': page}) as response:
@@ -887,10 +951,13 @@ class Utils(object):
 
         Example
         -------
-            >>> from hentai import Utils
-            >>> homepage = Utils.get_homepage()
-            >>> popular_now = homepage.popular_now
-            >>> new_uploads = homepage.new_uploads
+        ```
+        from hentai import Utils
+
+        homepage = Utils.get_homepage()
+        popular_now = homepage.popular_now
+        new_uploads = homepage.new_uploads
+        ```
         """
         try:
             html_ = html.unescape(handler.get(Hentai.HOME).text)
@@ -933,8 +1000,11 @@ class Utils(object):
 
         Example
         -------
-            >>> from hentai import Utils, Sort, Format
-            >>> lolis = Utils.search_all_by_query('tag:loli', sort=Sort.PopularToday)
+        ```
+        from hentai import Utils, Sort, Format
+
+        lolis = Utils.search_all_by_query('tag:loli', sort=Sort.PopularToday)
+        ```
         """
         data = set()
         payload = {'query': query, 'page': 1, 'sort': sort.value}
@@ -945,16 +1015,19 @@ class Utils(object):
         return data
 
     @staticmethod
-    def export(iterable: List[Hentai], filename: Path, options: List[Option]=None) -> None:
+    def export(iterable: List[Hentai], filename: Union[str, Path], options: List[Option]=None) -> None:
         """
         Store user-customized data of `Hentai` objects as a JSON file.
         Includes all available options by default.
 
         Example
         -------
-            >>> from hentai import Utils, Sort, Option
-            >>> lolis = Utils.search_by_query('tag:loli', sort=Sort.PopularToday)
-            >>> Utils.export(popular_loli, Path('lolis.json'), options=[Option.ID, Option.Title])
+        ```
+        from hentai import Utils, Sort, Option
+
+        lolis = Utils.search_by_query('tag:loli', sort=Sort.PopularToday)
+        Utils.export(popular_loli, Path('lolis.json'), options=[Option.ID, Option.Title])
+        ```
         """
         if options is None:
             Utils.export(iterable, filename, options=Option.all())
@@ -966,15 +1039,15 @@ class Utils(object):
                 json.dump([doujin.dictionary(options) for doujin in iterable], file_handler)
 
     @staticmethod
-    def compress(folder: Path) -> None:
+    def compress(folder: Union[str, Path]) -> None:
         """
         Archive `folder` as `ZipFile` (Windows) or `TarFile` (Linux and macOS)
         using the highest compression levels available.
         """
         if platform.system() == 'Windows':
-            with ZipFile(f"{folder}.zip", mode='w', compression=ZIP_DEFLATED, compresslevel=9) as zip_handler:
+            with ZipFile(f"{str(folder)}.zip", mode='w', compression=ZIP_DEFLATED, compresslevel=9) as zip_handler:
                 for file in Path(folder).glob('**/*'):
                     zip_handler.write(file)
         else:
-            with tarfile.open(f"{folder}.tar.gz", mode='x:gz') as tar_handler:
-                tar_handler.add(folder)
+            with tarfile.open(f"{str(folder)}.tar.gz", mode='x:gz') as tar_handler:
+                tar_handler.add(str(folder))
