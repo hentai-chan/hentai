@@ -324,7 +324,6 @@ class Sort(Enum):
     Expose endpoints used to sort queries. Defaults to `Popular`.
     """
     Popular = 'popular'
-    PopularYear = 'popular-year'
     PopularMonth = 'popular-month'
     PopularWeek = 'popular-week'
     PopularToday = 'popular-today'
