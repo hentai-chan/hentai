@@ -70,9 +70,9 @@ fork this repository and run
 
 ```bash
 python -m venv venv/
-source venv/bin/activate
+source venv/bin/activate # For Windows: .\venv\Scripts\activate
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r requirements/dev.txt
 # additionally install the following dependencies
 pip install flake8 pytest wheel
 # run all unit tests
