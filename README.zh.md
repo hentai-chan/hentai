@@ -67,9 +67,9 @@ pip install hentai --only-binary all
 
 ```bash
 python -m venv venv/
-source venv/bin/activate
+source venv/bin/activate # Windows: .\venv\Scripts\activate
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r requirements/dev.txt
 # 另请安装以下依赖类型
 pip install flake8 pytest wheel
 # 执行全部单元测试
