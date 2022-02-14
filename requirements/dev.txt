@@ -1,4 +1,4 @@
 -r release.txt
 check-manifest==0.47
-pytest==6.2.5
+pytest==7.0.1
 
