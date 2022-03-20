@@ -1,22 +1,34 @@
 # Changelog
 
+## Version 3.2.10 (20 Mar 2022)
+
+Update project dependencies and improve type hints here and there. After some
+investigations it turned out that `Sort.Popular` exhibits the same behavior as
+`Sort.PopularYear`, which is why we decided to remove the `Sort.PopularYear`
+option from the library (see also: <https://github.com/hentai-chan/hentai/pull/144>).
+If in some shape or form your code depended on that option, replace it `Sort.Popular`.
+As far as I know, there is no suitable REST endpoint to retrieve that search option.
+
+Special thanks to <https://github.com/ttdyce> for submitting a pull request for
+this issue.
+
 ## Version 3.2.9 (20 Oct 2021)
 
 It's a been a little over a year since this last major version (`v2.0.0`) and a
 lot of things have been improved since then.
 
-- Fix an issue in the download method that was responsible for creating corrupted
-  images
-- Make verbose output in the command line interface prettier
-- Update and reformat doc strings for VS Code mouseover
-- Add the `log` command to the CLI
-- Add `--user-agent`, `--proxies`, `--batch-file`, `--check` and `--no-check`
-  arguments to the download command in the CLI
-- Add backwards compatibility for Python 3.7 in the CLI and include unit tests for
-  this part of the application as well
-- Overload `Path` params in function with `str` using `typing.Union`
-- Test library against Python 3.10 which previously has only been in beta phase
-- Improve help message formatting
+-   Fix an issue in the download method that was responsible for creating corrupted
+    images
+-   Make verbose output in the command line interface prettier
+-   Update and reformat doc strings for VS Code mouseover
+-   Add the `log` command to the CLI
+-   Add `--user-agent`, `--proxies`, `--batch-file`, `--check` and `--no-check`
+    arguments to the download command in the CLI
+-   Add backwards compatibility for Python 3.7 in the CLI and include unit tests for
+    this part of the application as well
+-   Overload `Path` params in function with `str` using `typing.Union`
+-   Test library against Python 3.10 which previously has only been in beta phase
+-   Improve help message formatting
 
 ## Version 3.2.8 (28 Aug 2021)
 
@@ -119,13 +131,13 @@ structure, none of which should have any effect on users of this library.
 Improves performance of `list` and `search` in `Tag` and changes the signature of
 `search` to
 
-- `search(option: Option, property_: str, value) -> Tag`
+-   `search(option: Option, property_: str, value) -> Tag`
 
 ## Version 3.2.1 (31 December 2020)
 
 Improves overall test coverage and implements
 
-- `search(value, property_: str='name') -> Tag`
+-   `search(value, property_: str='name') -> Tag`
 
 as a static method.
 
@@ -133,8 +145,8 @@ as a static method.
 
 In this version two new properties have been added to `Hentai` objects:
 
-- `self.thread -> List[Comment]`
-- `self.related -> List[Hentai]`
+-   `self.thread -> List[Comment]`
+-   `self.related -> List[Hentai]`
 
 Additionally, datetime objects returned in any of this module's methods have been
 made utc-timezone aware. URL properties in `Tag` objects now also return a fully
@@ -155,17 +167,17 @@ print(Tag.get(doujin.language, 'url'))
 The `Tag` class now also features a static `Tag.list` method for the following
 tag types:
 
-- `Option.Artist`
-- `Option.Character`
-- `Option.Group`
-- `Option.Parody`
-- `Option.Tag`
-- `Option.Language`
+-   `Option.Artist`
+-   `Option.Character`
+-   `Option.Group`
+-   `Option.Parody`
+-   `Option.Tag`
+-   `Option.Language`
 
 which returns all tags available related to the options above. This may be used
 in combination with the
 
-- `search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]`
+-   `search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler=RequestHandler()) -> List[Hentai]`
 
 method for browsing the nhentai catalogue by tag ID.
 
@@ -176,10 +188,10 @@ none of the keyword arguments conflict with any of the built-in function from
 python to further comply with PEP8 recommendations. Therefore, the following
 arguments were renamed as followed:
 
-- `property` becomes `property_`
-- `id` becomes `id_`
-- `format` becomes `format_`
-- `type` becomes `type_`
+-   `property` becomes `property_`
+-   `id` becomes `id_`
+-   `format` becomes `format_`
+-   `type` becomes `type_`
 
 The functions affected by this change were `Tag.get`, `Hentai.__init__`, `self.title`,
 and `Hentai.exists`, respectively. In some instances, the previously missing return
@@ -190,19 +202,19 @@ type for some function signatures has been added back.
 Improves error message feedback for raised exceptions and deprecates all static
 `Tag` methods in favor of
 
-- `Tag.get(cls, tags: List[Tag], property: str) -> str:`
+-   `Tag.get(cls, tags: List[Tag], property: str) -> str:`
 
 Besides, the `self.download` method in `Hentai` replaces the `dest` keyword argument
 with `folder`, i.e. the name of the folder where the images are to be stored. The
 new default name for this folder corresponds to the `id` of this doujin. A previous
 internal method is also now exposed in the pubic interface:
 
-- `self.dictionary(options: List[Option]=None) -> dict`
+-   `self.dictionary(options: List[Option]=None) -> dict`
 
 This method returns a flattened dictionary whose key-value pairs are determined
 by the list of options passed as argument to this method. Also note that the
 
-- `Utils.get_homepage(handler=RequestHandler()) -> Homepage`
+-   `Utils.get_homepage(handler=RequestHandler()) -> Homepage`
 
 method lost its `page: int=1` keyword argument.
 
@@ -219,9 +231,9 @@ the API.
 
 Also notice that the following export options have been renamed:
 
-- `Option.Favorites` now is `Option.NumFavorites`
-- `Option.UploadDate` now is `Option.Epos`
-- `Option.PageCount` now is `Option.NumPages`
+-   `Option.Favorites` now is `Option.NumFavorites`
+-   `Option.UploadDate` now is `Option.Epos`
+-   `Option.PageCount` now is `Option.NumPages`
 
 ## Version 3.1.2 (16 November 2020)
 
@@ -244,31 +256,31 @@ which considerably reduces the file size of this module.
 This version adds a `progressbar` option (disabled by default) to the following
 functions:
 
-- `self.download` in `Hentai`
-- `Utils.download`
-- `Utils.browse_homepage`
-- `Utils.search_all_by_query`
+-   `self.download` in `Hentai`
+-   `Utils.download`
+-   `Utils.browse_homepage`
+-   `Utils.search_all_by_query`
 
 Another new feature allows a direct comparison between `Hentai` objects based on
 their ID:
 
-- `__gt__` (`>`)
-- `__ge__` (`>=`)
-- `__eq__` (`==`)
-- `__le__` (`<`)
-- `__lt__` (`<=`)
-- `__ne__` (`!=`)
+-   `__gt__` (`>`)
+-   `__ge__` (`>=`)
+-   `__eq__` (`==`)
+-   `__le__` (`<`)
+-   `__lt__` (`<=`)
+-   `__ne__` (`!=`)
 
 Additionally, you can now also access the `epos` value directly in `Hentai`
 by property instead of going back and forth between conversions. Lastly, the
 following fields are now readonly:
 
-- `self.id`
-- `self.json`
-- `self.url`
-- `self.api`
-- `self.handler`
-- `self.response`
+-   `self.id`
+-   `self.json`
+-   `self.url`
+-   `self.api`
+-   `self.handler`
+-   `self.response`
 
 This upgrade also fixes an error that previously occurred when you used the `Option.Raw`
 option in `Utils.export`. Last but not least, the `RequestHandler._timeout` value
@@ -279,20 +291,20 @@ has been relaxed to `(5,5)`.
 This will be the last major update to this library as work on this project slowly
 comes to an end. In this version,
 
-- Virtually all static methods in the `Hentai` have been removed - use their
-  corresponding properties instead. This change drastically reduces the number of
-  lines of code in the main class
-- The following functions have been renamed:
-  - `Utils.static_export` now is `Utils.export`
-  - `Utils.download_queue` now is `Utils.download`
-- Adds `List[Hentai]` as type hint to `Utils.export`
-- Additionally, three more properties have been added to the `Hentai` object:
-  - `self.group`
-  - `self.parody`
-  - `self.character`
-- Adds export of all new options mentioned above
-- The magic method `__repr__` changes its output to `Hentai(ID={self.id})`
-- Updates & improves doc strings
+-   Virtually all static methods in the `Hentai` have been removed - use their
+    corresponding properties instead. This change drastically reduces the number of
+    lines of code in the main class
+-   The following functions have been renamed:
+    -   `Utils.static_export` now is `Utils.export`
+    -   `Utils.download_queue` now is `Utils.download`
+-   Adds `List[Hentai]` as type hint to `Utils.export`
+-   Additionally, three more properties have been added to the `Hentai` object:
+    -   `self.group`
+    -   `self.parody`
+    -   `self.character`
+-   Adds export of all new options mentioned above
+-   The magic method `__repr__` changes its output to `Hentai(ID={self.id})`
+-   Updates & improves doc strings
 
 ## Version 2.0.1 (06 Nov 2020)
 
@@ -300,20 +312,20 @@ Fixes a bug that occurred every time the `make_request` parameter was used outsi
 the library's root directory. Additionally, this patch also comes with a few new
 features:
 
-- Adds the `scanlator` property to the `Hentai` class
-- Overloads the constructor with the `json` option
+-   Adds the `scanlator` property to the `Hentai` class
+-   Overloads the constructor with the `json` option
 
 ## Version 2.0 (11 Oct 2020)
 
 Warning: This version breaks backwards compatibility. In particular, the methods
 
-- `search_by_query` moved from `Hentai` to `Utils`
-- `search_all_by_query` moved from `Hentai` to `Utils`
-- `get_homepage` moved from `Hentai` to `Utils`
-- `browse_homepage` moved from `Hentai` to `Utils`
-- `download_queue` moved from `Hentai` to `Utils`
-- `get_random_id` moved from `Hentai` to `Utils`
-- `call_api` was renamed to `get` in `RequestHandler`
+-   `search_by_query` moved from `Hentai` to `Utils`
+-   `search_all_by_query` moved from `Hentai` to `Utils`
+-   `get_homepage` moved from `Hentai` to `Utils`
+-   `browse_homepage` moved from `Hentai` to `Utils`
+-   `download_queue` moved from `Hentai` to `Utils`
+-   `get_random_id` moved from `Hentai` to `Utils`
+-   `call_api` was renamed to `get` in `RequestHandler`
 
 now reside in a newly created `Utils` class. Note that the return type from
 `browse_homepage` changes from an iterator of lists of dictionaries to a list of
@@ -324,18 +336,18 @@ it easier to work with. This change also affects the `get_homepage` and
 On top of that, the following functions now take an additional optional
 `make_request` parameter:
 
-- `Hentai.exists(id: int, make_request: bool=True) -> bool`
-- `Utils.get_random_id(make_request: bool=True, handler=RequestHandler()) -> int`
-- `Utils.get_random_hentai(make_request: bool=True) -> Hentai`
+-   `Hentai.exists(id: int, make_request: bool=True) -> bool`
+-   `Utils.get_random_id(make_request: bool=True, handler=RequestHandler()) -> int`
+-   `Utils.get_random_hentai(make_request: bool=True) -> Hentai`
 
 Additionally, this version implements the following new features:
 
-- `Hentai.get_url(json: dict) -> str`
-- `Hentai.get_api(json: dict) -> str`
-- `Hentai.export(self, filename: Path, options: List[Option]=None) -> None`
-- `Utils.static_export(iterable, filename: Path, options: List[Option]=None) -> None:`
-- `Option` enum for specifying export options in `export` and `static_export`
-- Most functions attained descriptive doc strings and sometimes even small code snippets
+-   `Hentai.get_url(json: dict) -> str`
+-   `Hentai.get_api(json: dict) -> str`
+-   `Hentai.export(self, filename: Path, options: List[Option]=None) -> None`
+-   `Utils.static_export(iterable, filename: Path, options: List[Option]=None) -> None:`
+-   `Option` enum for specifying export options in `export` and `static_export`
+-   Most functions attained descriptive doc strings and sometimes even small code snippets
 
 Moreover, the `download` function now writes in chunks which should be a little
 faster for bigger images. The `RequestHandler` sessions now looks for proxies if
@@ -347,21 +359,21 @@ Finally, this version also includes an utility script for collaborators.
 
 ## Version 1.2 (26 Sep 2020)
 
-- Makes this module compatible with python version 3.7
-- Adds the following Tag helper method:
-  - `get_ids(tags: List[Tag])`
-  - `get_types(tags: List[Tag])`
-  - `get_names(tags: List[Tag])`
-  - `get_count(tags: List[Tag])`
-- Extends sort enum by
-  - `PopularYear`
-  - `PopularMonth`
-  - `Date`
-- Adds Page as a new data class featuring
-  - `url`
-  - Extension `ext`
-  - Image `width`
-  - Image `height`
-  - Image `filename`
-- Changes the signature from `get_tags(json: dict)` to `get_tag(json: dict)`
-- Renames the property `tags` to `tag` in `Hentai`
+-   Makes this module compatible with python version 3.7
+-   Adds the following Tag helper method:
+    -   `get_ids(tags: List[Tag])`
+    -   `get_types(tags: List[Tag])`
+    -   `get_names(tags: List[Tag])`
+    -   `get_count(tags: List[Tag])`
+-   Extends sort enum by
+    -   `PopularYear`
+    -   `PopularMonth`
+    -   `Date`
+-   Adds Page as a new data class featuring
+    -   `url`
+    -   Extension `ext`
+    -   Image `width`
+    -   Image `height`
+    -   Image `filename`
+-   Changes the signature from `get_tags(json: dict)` to `get_tag(json: dict)`
+-   Renames the property `tags` to `tag` in `Hentai`

@@ -40,7 +40,7 @@ from datetime import timezone
 from enum import Enum, unique
 from importlib.resources import path as resource_path
 from pathlib import Path
-from typing import List, Set, Tuple, Union
+from typing import Iterable, List, Optional, Set, Tuple, Union
 from urllib.parse import urljoin, urlparse
 from urllib.request import getproxies
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -52,7 +52,7 @@ from requests.models import Response
 from tqdm import tqdm
 from urllib3.util.retry import Retry
 
-__version__ = "3.2.9"
+__version__ = "3.2.10"
 package_name = "hentai"
 python_major = "3"
 python_minor = "7"
@@ -120,7 +120,7 @@ def _build_ua_string() -> str:
     user_name = os.environ.get('USERNAME' if platform.system() == 'Windows' else 'USER', 'N/A')
     return f"{package_name}/{__version__} {platform.system()}/{platform.release()} CPython/{platform.python_version()} user_name/{user_name}"
 
-def _progressbar_options(iterable, desc, unit, color=COLORS['green'], char='\u25CB', disable=False) -> dict:
+def _progressbar_options(iterable: Iterable, desc: str, unit: str, color: str=COLORS['green'], char: str='\u25CB', disable: bool=False) -> dict:
     """
     Return custom optional arguments for `tqdm` progressbars.
     """
@@ -324,7 +324,6 @@ class Sort(Enum):
     Expose endpoints used to sort queries. Defaults to `Popular`.
     """
     Popular = 'popular'
-    PopularYear = 'popular-year'
     PopularMonth = 'popular-month'
     PopularWeek = 'popular-week'
     PopularToday = 'popular-today'
@@ -519,7 +518,7 @@ class Hentai(RequestHandler):
                  backoff_factor: int=RequestHandler._backoff_factor,
                  user_agent: str=RequestHandler._user_agent,
                  proxies: dict=RequestHandler._proxies,
-                 json: dict=None):
+                 json: Optional[dict]=None):
         """
         Start a request session and parse meta data from <https://nhentai.net> for this `id`.
         """
@@ -804,7 +803,7 @@ class Hentai(RequestHandler):
         comment = lambda c: Comment(int(c['id']), int(c['gallery_id']), user(c['poster']), dt.fromtimestamp(c['post_date'], tz=timezone.utc), c['body'])
         return [comment(data) for data in response]
 
-    def download(self, dest: Union[str, Path]=None, folder: Union[str, Path]=None, delay: float=0, zip_dir: bool=False, progressbar: bool=False) -> None:
+    def download(self, dest: Optional[Union[str, Path]]=None, folder: Optional[Union[str, Path]]=None, delay: float=0, zip_dir: bool=False, progressbar: bool=False) -> None:
         """
         Download all image URLs of this `Hentai` object to `dest`, excluding cover
         and thumbnail. By default, `folder` will be located in the CWD named after
@@ -827,7 +826,7 @@ class Hentai(RequestHandler):
             if progressbar:
                 print(f"#{str(id).zfill(6)}: {error}", file=sys.stderr)
 
-    def export(self, filename: Union[str, Path], options: List[Option]=None) -> None:
+    def export(self, filename: Union[str, Path], options: Optional[List[Option]]=None) -> None:
         """
         Store user-customized data about this `Hentai` object as a JSON file.
         Includes all available options by default.
@@ -1015,7 +1014,7 @@ class Utils(object):
         return data
 
     @staticmethod
-    def export(iterable: List[Hentai], filename: Union[str, Path], options: List[Option]=None) -> None:
+    def export(iterable: List[Hentai], filename: Union[str, Path], options: Optional[List[Option]]=None) -> None:
         """
         Store user-customized data of `Hentai` objects as a JSON file.
         Includes all available options by default.

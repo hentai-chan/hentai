@@ -34,6 +34,7 @@ setup(
     description="Implements a wrapper class around nhentai's RESTful API.",
     long_description=long_description,
     long_description_content_type='text/markdown',
+    license="General Public License V3",
     url="https://www.hentai-chan.dev/projects/hentai",
     project_urls={
         'Documentation': "https://www.hentai-chan.dev/projects/hentai",
