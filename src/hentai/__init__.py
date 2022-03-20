@@ -6,7 +6,6 @@ import argparse
 import errno
 import sys
 from collections import namedtuple
-from distutils.util import strtobool
 from pathlib import Path
 from typing import List
 
@@ -15,6 +14,11 @@ from requests import HTTPError
 from .hentai import *
 from .hentai import __version__
 
+def str2bool(val: str) -> bool:
+    """
+    Convert string to boolean.
+    """
+    return val.lower() in ('', 'y', 'yes', 't', 'true', 'on', '1')
 
 def __print_dict(dictionary: dict, indent=4) -> None:
     print("{\n%s\n}" % '\n'.join([f"{COLORS['blue']}{indent * ' '}{key}{COLORS['reset']}: {COLORS['green']}{value}{COLORS['reset']}," for key, value in dictionary.items()]))
@@ -67,7 +71,7 @@ def main():
                 if args.check and Path(args.dest).joinpath(str(doujin.id)).exists():
                     print(f"{COLORS['yellow']}WARNING:{COLORS['reset']} A file with the same name already exists in {str(args.dest)!r}.")
                     choice = input("Proceed with download? [Y/n] ")
-                    if choice == '' or strtobool(choice):
+                    if choice == '' or str2bool(choice):
                         doujin.download(dest=args.dest, progressbar=args.verbose)
                 else:
                     doujin.download(dest=args.dest, progressbar=args.verbose)
