@@ -41,7 +41,7 @@ from enum import Enum, unique
 from importlib.resources import path as resource_path
 from pathlib import Path
 from typing import Iterable, List, Optional, Set, Tuple, Union
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, urlencode
 from urllib.request import getproxies
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -940,7 +940,7 @@ class Utils(object):
             raise ValueError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False{COLORS['reset']}")
         data = set()
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
-            with handler.get(urljoin(Hentai.HOME, 'api/galleries/all'+f'?page={page}') ) as response:
+            with handler.get(urljoin(Hentai.HOME, 'api/galleries/all' + "?" + urlencode({'page': page})) ) as response:
                 for raw_json in response.json()['result']:
                     data.add(Hentai(json=raw_json))
         return data
@@ -980,8 +980,7 @@ class Utils(object):
         Return a list of `Hentai` objects on page `page` that match this search
         `query` sorted by `sort`.
         """
-        payload = f"?query={query}&page={page}&sort={sort.value}"
-        with handler.get(urljoin(Hentai.HOME, 'api/galleries/search'+payload)) as response:
+        with handler.get(urljoin(Hentai.HOME, 'api/galleries/search'+ "?" + urlencode({'query': query, 'page': page, 'sort': sort.value}))) as response:
             return {Hentai(json=raw_json) for raw_json in response.json()['result']}
  
     @staticmethod
@@ -990,8 +989,7 @@ class Utils(object):
         Return a list of `Hentai` objects on page `page` that match this tag
         `id_` sorted by `sort`.
         """
-        payload = f"?tag_id={id_}&page={page}&sort={sort.value}"
-        with handler.get(urljoin(Hentai.HOME, "api/galleries/tagged"+payload)) as response:
+        with handler.get(urljoin(Hentai.HOME, "api/galleries/tagged" + "?" + urlencode({'tag_id': id_, 'page': page, 'sort': sort.value}))) as response:
             return {Hentai(json=raw_json) for raw_json in response.json()['result']}
 
     @staticmethod
@@ -1009,8 +1007,7 @@ class Utils(object):
         ```
         """
         data = set()
-        payload = f"?query={query}&page=1&sort={sort.value}"
-        with handler.get(urljoin(Hentai.HOME, '/api/galleries/search'+payload)) as response:
+        with handler.get(urljoin(Hentai.HOME, '/api/galleries/search'+ "?" + urlencode({'query': query, 'page': 1, 'sort': sort.value}))) as response:
             for page in tqdm(**_progressbar_options(range(1, int(response.json()['num_pages'])+1), 'Search', 'page', disable=progressbar)):
                 for doujin in Utils.search_by_query(query, page, sort, handler):
                     data.add(doujin)
