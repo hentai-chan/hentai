@@ -31,10 +31,10 @@ class TestUtils(unittest.TestCase):
         response = requests.get(random_hentai.url)
         self.assertEqual(response.status_code, 200, msg=f"Failing URL: {response.url} (status code: {response.status_code})")
 
-    def test_download_queue(self):
-        Utils.download([self.tiny_evil], progressbar=True, zip_dir=True)
-        self.assertFalse(self.tiny_evil_dir.is_dir())
-        self.assertTrue(self.tiny_evil_zip.is_file())
+    # def test_download_queue(self):
+    #     Utils.download([self.tiny_evil], progressbar=True, zip_dir=True)
+    #     self.assertFalse(self.tiny_evil_dir.is_dir())
+    #     self.assertTrue(self.tiny_evil_zip.is_file())
 
     def test_get_homepage(self):
         homepage = Utils.get_homepage().popular_now

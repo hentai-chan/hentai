@@ -419,7 +419,7 @@ class RequestHandler(object):
     print(response.ok)
     ```
     """
-    __slots__ = ['timeout', 'total', 'status_forcelist', 'backoff_factor', 'user_agent', 'proxies']
+    __slots__ = ['timeout', 'total', 'status_forcelist', 'backoff_factor', 'user_agent', 'proxies', "updated_client"]
 
     _timeout = (5, 5)
     _total = 5
@@ -427,6 +427,7 @@ class RequestHandler(object):
     _backoff_factor = 1
     _user_agent = None
     _proxies = None
+    _updated_client = "https://translate.google.com/translate?sl=vi&tl=en&hl=vi&u={0}&client=webapp"
 
     def __init__(self,
                  timeout: Tuple[float, float]=_timeout,
@@ -434,7 +435,8 @@ class RequestHandler(object):
                  status_forcelist: List[int]=_status_forcelist,
                  backoff_factor: int=_backoff_factor,
                  user_agent: str=_user_agent,
-                 proxies: dict=_proxies):
+                 proxies: dict=_proxies,
+                 updated_client: str=_updated_client) -> None:
         """
         Instantiates a new request handler object.
         """
@@ -444,6 +446,7 @@ class RequestHandler(object):
         self.backoff_factor = backoff_factor
         self.user_agent = user_agent
         self.proxies = proxies
+        self.updated_client = updated_client
 
     @property
     def retry_strategy(self) -> Retry:
@@ -476,7 +479,8 @@ class RequestHandler(object):
         Returns the GET request encoded in `utf-8`. Adds proxies to this session
         on the fly if urllib is able to pick up the system's proxy settings.
         """
-        response = self.session.get(url, timeout=self.timeout, proxies=self.proxies or getproxies(), **kwargs)
+        print(self.updated_client.format(url))
+        response = self.session.get(self.updated_client.format(url), timeout=self.timeout, proxies=self.proxies or getproxies(), **kwargs)
         response.encoding = 'utf-8'
         return response
 
@@ -937,7 +941,8 @@ class Utils(object):
             raise ValueError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False{COLORS['reset']}")
         data = set()
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
-            with handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page': page}) as response:
+            # with handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page': page}) as response:
+            with handler.get(urljoin(Hentai.HOME, 'api/galleries/all'+f'?page={page}') ) as response:
                 for raw_json in response.json()['result']:
                     data.add(Hentai(json=raw_json))
         return data
@@ -977,8 +982,10 @@ class Utils(object):
         Return a list of `Hentai` objects on page `page` that match this search
         `query` sorted by `sort`.
         """
-        payload = {'query': query, 'page': page, 'sort': sort.value}
-        with handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload) as response:
+        # payload = {'query': query, 'page': page, 'sort': sort.value}
+        payload = f"?query={query}&page={page}&sort={sort.value}"
+        # with handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload) as response:
+        with handler.get(urljoin(Hentai.HOME, 'api/galleries/search'+payload)) as response:
             return {Hentai(json=raw_json) for raw_json in response.json()['result']}
 
     @staticmethod
@@ -987,8 +994,10 @@ class Utils(object):
         Return a list of `Hentai` objects on page `page` that match this tag
         `id_` sorted by `sort`.
         """
-        payload = {'tag_id': id_, 'page': page, 'sort': sort.value}
-        with handler.get(urljoin(Hentai.HOME, "api/galleries/tagged"), params=payload) as response:
+        # payload = {'tag_id': id_, 'page': page, 'sort': sort.value}
+        payload = f"?tag_id={id_}&page={page}&sort={sort.value}"
+        # with handler.get(urljoin(Hentai.HOME, "api/galleries/tagged"), params=payload) as response:
+        with handler.get(urljoin(Hentai.HOME, "api/galleries/tagged"+payload)) as response:
             return {Hentai(json=raw_json) for raw_json in response.json()['result']}
 
     @staticmethod
@@ -1006,8 +1015,10 @@ class Utils(object):
         ```
         """
         data = set()
-        payload = {'query': query, 'page': 1, 'sort': sort.value}
-        with handler.get(urljoin(Hentai.HOME, '/api/galleries/search'), params=payload) as response:
+        # payload = {'query': query, 'page': 1, 'sort': sort.value}
+        payload = f"?query={query}&page=1&sort={sort.value}"
+        # with handler.get(urljoin(Hentai.HOME, '/api/galleries/search'+payload), params=payload) as response:
+        with handler.get(urljoin(Hentai.HOME, '/api/galleries/search'+payload)) as response:
             for page in tqdm(**_progressbar_options(range(1, int(response.json()['num_pages'])+1), 'Search', 'page', disable=progressbar)):
                 for doujin in Utils.search_by_query(query, page, sort, handler):
                     data.add(doujin)
