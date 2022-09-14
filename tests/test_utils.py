@@ -28,8 +28,7 @@ class TestUtils(unittest.TestCase):
 
     def test_random_hentai(self):
         random_hentai = Utils.get_random_hentai()
-        response = requests.get(random_hentai.url)
-        self.assertEqual(response.status_code, 200, msg=f"Failing URL: {response.url} (status code: {response.status_code})")
+        self.assertEqual(type(random_hentai.json), dict, msg=f"Failing URL: {random_hentai.url} (possibility: doesn't exists(?) or blocked by Cloudflare)")
 
     # def test_download_queue(self):
     #     Utils.download([self.tiny_evil], progressbar=True, zip_dir=True)
@@ -68,7 +67,7 @@ class TestUtils(unittest.TestCase):
             self.assertTrue(doujin.num_pages, msg="ValueError: NumberOfPages")
 
     def test_search_all_by_query(self):
-        popular_3d = Utils.search_all_by_query(query="tag:3d", sort=Sort.PopularWeek)
+        popular_3d = Utils.search_all_by_query(query="tag:3dlive", sort=Sort.PopularWeek)
         for doujin in popular_3d:
             self.assertIsNotNone(doujin.json, msg="Result should not be 'None'.")
             self.assertTrue(doujin.id, msg="ValueError: ID")
