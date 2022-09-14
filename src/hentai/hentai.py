@@ -940,7 +940,6 @@ class Utils(object):
             raise ValueError(f"{COLORS['red']}{os.strerror(errno.EINVAL)}: start_page={start_page} <= {end_page}=end_page is False{COLORS['reset']}")
         data = set()
         for page in tqdm(**_progressbar_options(range(start_page, end_page+1), 'Browse', 'page', disable=progressbar)):
-            # with handler.get(urljoin(Hentai.HOME, 'api/galleries/all'), params={'page': page}) as response:
             with handler.get(urljoin(Hentai.HOME, 'api/galleries/all'+f'?page={page}') ) as response:
                 for raw_json in response.json()['result']:
                     data.add(Hentai(json=raw_json))
@@ -981,21 +980,17 @@ class Utils(object):
         Return a list of `Hentai` objects on page `page` that match this search
         `query` sorted by `sort`.
         """
-        # payload = {'query': query, 'page': page, 'sort': sort.value}
         payload = f"?query={query}&page={page}&sort={sort.value}"
-        # with handler.get(urljoin(Hentai.HOME, 'api/galleries/search'), params=payload) as response:
         with handler.get(urljoin(Hentai.HOME, 'api/galleries/search'+payload)) as response:
             return {Hentai(json=raw_json) for raw_json in response.json()['result']}
-
+ 
     @staticmethod
     def search_by_tag(id_: int, page: int=1, sort: Sort=Sort.Popular, handler: RequestHandler=RequestHandler()) -> Set[Hentai]:
         """
         Return a list of `Hentai` objects on page `page` that match this tag
         `id_` sorted by `sort`.
         """
-        # payload = {'tag_id': id_, 'page': page, 'sort': sort.value}
         payload = f"?tag_id={id_}&page={page}&sort={sort.value}"
-        # with handler.get(urljoin(Hentai.HOME, "api/galleries/tagged"), params=payload) as response:
         with handler.get(urljoin(Hentai.HOME, "api/galleries/tagged"+payload)) as response:
             return {Hentai(json=raw_json) for raw_json in response.json()['result']}
 
@@ -1014,9 +1009,7 @@ class Utils(object):
         ```
         """
         data = set()
-        # payload = {'query': query, 'page': 1, 'sort': sort.value}
         payload = f"?query={query}&page=1&sort={sort.value}"
-        # with handler.get(urljoin(Hentai.HOME, '/api/galleries/search'+payload), params=payload) as response:
         with handler.get(urljoin(Hentai.HOME, '/api/galleries/search'+payload)) as response:
             for page in tqdm(**_progressbar_options(range(1, int(response.json()['num_pages'])+1), 'Search', 'page', disable=progressbar)):
                 for doujin in Utils.search_by_query(query, page, sort, handler):
