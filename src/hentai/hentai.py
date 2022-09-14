@@ -479,7 +479,6 @@ class RequestHandler(object):
         Returns the GET request encoded in `utf-8`. Adds proxies to this session
         on the fly if urllib is able to pick up the system's proxy settings.
         """
-        print(self.updated_client.format(url))
         response = self.session.get(self.updated_client.format(url), timeout=self.timeout, proxies=self.proxies or getproxies(), **kwargs)
         response.encoding = 'utf-8'
         return response
