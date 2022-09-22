@@ -197,6 +197,12 @@ class Tag:
     url: str
     count: int
 
+    def __eq__(self, other: Union[Tag, str]) -> bool:
+        if isinstance(other, Tag):
+            return self.id == other.id
+        elif isinstance(other, str):
+            return self.name == other
+
     @classmethod
     def get(cls, tags: List[Tag], property_: str) -> str:
         """
