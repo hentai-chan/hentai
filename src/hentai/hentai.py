@@ -932,7 +932,7 @@ class Utils(object):
     @staticmethod
     def browse_homepage(start_page: int, end_page: int, handler: RequestHandler=RequestHandler(), progressbar: bool=False) -> Set[Hentai]:
         """
-        Return a list of `Hentai` objects that are currently featured on the homepage
+        Return a set of `Hentai` objects that are currently featured on the homepage
         in range of `[start_page, end_page]`. Each page contains as much as 25 results.
         Enable `progressbar` for status feedback in terminal applications.
         """
