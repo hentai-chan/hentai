@@ -24,7 +24,7 @@ class TestUtils(unittest.TestCase):
 
     def test_random_hentai(self):
         random_hentai = Utils.get_random_hentai()
-        self.assertEqual(type(random_hentai.json), dict, msg=f"Failing URL: {random_hentai.url} (possibility: doesn't exists(?) or blocked by Cloudflare)")
+        self.assertEqual(type(random_hentai.json), dict, msg=f"Failing URL: {random_hentai.url} (resource might not exist or is blocked by Cloudflare protection)")
 
     def test_download_queue(self):
         Utils.download([self.tiny_evil], progressbar=True, zip_dir=True)
