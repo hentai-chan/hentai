@@ -5,10 +5,6 @@ import random
 import unittest
 import platform
 from pathlib import Path
-from urllib.parse import urljoin
-
-import requests
-
 from src.hentai import Format, Hentai, Option, Sort, Utils
 
 remove_file = lambda file: file.unlink() if file.exists() else None
