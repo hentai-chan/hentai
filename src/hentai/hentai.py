@@ -451,7 +451,7 @@ class RequestHandler(object):
     _backoff_factor = 1
     _user_agent = None
     _proxies = None
-    _enable_alt_client = True
+    _enable_alt_client = False
 
     def __init__(self,
                  timeout: Tuple[float, float]=_timeout,
@@ -536,6 +536,7 @@ class Hentai(RequestHandler):
     HOME = "https://nhentai.net/"
     _URL = urljoin(HOME, '/g/')
     _API = urljoin(HOME, '/api/gallery/')
+    _enable_alt_client = True
 
     def __init__(self,
                  id_: int=0,
@@ -545,14 +546,15 @@ class Hentai(RequestHandler):
                  backoff_factor: int=RequestHandler._backoff_factor,
                  user_agent: str=RequestHandler._user_agent,
                  proxies: dict=RequestHandler._proxies,
+                 enable_alt_client: bool=_enable_alt_client,
                  json: Optional[dict]=None):
         """
         Start a request session and parse meta data from <https://nhentai.net> for this `id`.
         """
         if id_ and not json:
             self.__id = id_
-            super().__init__(timeout, total, status_forcelist, backoff_factor, user_agent, proxies)
-            self.__handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor, self.user_agent, self.proxies)
+            super().__init__(timeout, total, status_forcelist, backoff_factor, user_agent, proxies, enable_alt_client)
+            self.__handler = RequestHandler(self.timeout, self.total, self.status_forcelist, self.backoff_factor, self.user_agent, self.proxies, enable_alt_client)
             self.__url = urljoin(Hentai._URL, str(self.id))
             self.__api = urljoin(Hentai._API, str(self.id))
             self.__response = self.handler.get(self.api)
