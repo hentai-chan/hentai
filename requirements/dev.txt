@@ -1,4 +1,4 @@
 -r release.txt
-check-manifest==0.48
+check-manifest==0.49
 pytest==7.1.1
 
